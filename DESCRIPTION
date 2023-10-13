@@ -1,0 +1,23 @@
+Package: clustOpt
+Version: 0.1
+Date: 2023-10-11
+Title: Choosing a resolution parameter for single cell omics clustering
+Description: Optimal clustering resolution parameters determined through Random Forests, a silhouette score-based assessment of clustering validity, and subject-wise cross-validation.
+Authors@R: c(person("Natalie", "Elphick", role = c("aut", "cre"), email = "natalie.elphick@gladstone.ucsf.edu"),
+	person("Reuben", "Thomas", role = c("aut"), email = "reuben.thomas@gladstone.ucsf.edu"))
+Depends:
+    R (>= 4.3),
+    methods
+Imports:
+    foreach,
+    doParallel,
+    future,
+    ranger,
+    Seurat (>= 4.3),
+    dplyr (>= 1.1.3)
+License: MIT + file LICENSE
+RoxygenNote: 7.2.3
+Encoding: UTF-8
+Collate: 
+    'utils.R'
+    'clustOpt.R'
