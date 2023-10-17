@@ -17,7 +17,7 @@ check_size <- function(input, verbose = TRUE) {
   if (!methods::is(input, "Seurat")) {
     stop("Input must be a seurat object")
   }
-  if (ncol(input) >= 2E5 | Seurat::Assays(input) != "sketch") {
+  if (ncol(input) >= 2E5) {
     if (verbose) {
       warning(paste0(
         "Over 200,000 cells detected, reccommend running with ",

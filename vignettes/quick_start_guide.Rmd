@@ -1,0 +1,42 @@
+---
+title: "clustOpt: Quickstart Guide"
+output:
+  html_document:
+    theme: united
+    df_print: kable
+  pdf_document: default
+date: 'Compiled: `r Sys.Date()`'
+vignette: >
+  %\VignetteIndexEntry{clustOpt: Quickstart Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(Seurat)
+# Only v5 Seurat Assays are supported
+options(Seurat.object.assay.version = "v5")
+# Only needs to be set for analyzing large datasets
+options(future.globals.maxSize = 1e9)
+library(clustOpt)
+```
+
+```{r load_data}
+# Read in a leverage score based subsample (1% of total cells) of the AIDA dataset
+input <- readRDS("../data/test/10589_cells_AIDA.rds")
+input
+```
+
+
+```{r}
+tmp <- clust_opt(input,subject_ids = "donor_id",plan = "multisession")
+
+```
+

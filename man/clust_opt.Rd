@@ -7,12 +7,13 @@
 clust_opt(
   input,
   ndim,
-  normalization = "SCT",
+  plan = multicore,
+  dtype = "scRNA",
   sketch_size = NULL,
   subject_ids,
   seed = 1,
   res_range = c(0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
-  ncore = 12,
+  ncore = 4,
   verbose = TRUE
 )
 }
@@ -21,16 +22,22 @@ clust_opt(
 
 \item{ndim}{Number of principal components to use.}
 
-\item{normalization}{Method to use for normalizing counts}
+\item{plan}{Type of future::plan for parallelization, "multicore" or 
+"multisession". Use "multisession" if running in RStudio or on a Windows OS.}
+
+\item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
+is "scRNA". CyTOF data is expected to be arcsinh normalized.}
 
 \item{subject_ids}{Metadata field that identifies unique samples.}
 
 \item{res_range}{Range of resolutions to test.}
 
-\item{ncore}{Number of cores, should match the number of resolutions being
-tested.}
-
 \item{verbose}{print messages.}
+
+\item{norm_method}{Method to use for normalizing counts, "SCT" or "log",
+default is "SCT". Ignored if dtype = "CyTOF".}
+
+\item{ncores}{Number of cores}
 
 \item{within_batch}{Batch variable, for a given sample only those with the 
 same value for the batch variable will be used for training.}
