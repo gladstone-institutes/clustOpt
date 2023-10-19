@@ -2,17 +2,19 @@
 % Please edit documentation in R/clustOpt.R
 \name{clust_opt}
 \alias{clust_opt}
-\title{clust_opt: Runs the main resolution optimization algorithm}
+\title{Runs the main resolution optimization algorithm}
 \usage{
 clust_opt(
   input,
   ndim,
-  plan = multicore,
+  plan = "multicore",
   dtype = "scRNA",
+  tmp_dir = "~/tmp",
   sketch_size = NULL,
   subject_ids,
   seed = 1,
   res_range = c(0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
+  within_batch = NA,
   ncore = 4,
   verbose = TRUE
 )
@@ -22,7 +24,7 @@ clust_opt(
 
 \item{ndim}{Number of principal components to use.}
 
-\item{plan}{Type of future::plan for parallelization, "multicore" or 
+\item{plan}{Type of future::plan for parallelization, "multicore" or
 "multisession". Use "multisession" if running in RStudio or on a Windows OS.}
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
@@ -32,20 +34,17 @@ is "scRNA". CyTOF data is expected to be arcsinh normalized.}
 
 \item{res_range}{Range of resolutions to test.}
 
+\item{within_batch}{Batch variable, for a given sample only those with the
+same value for the batch variable will be used for training.}
+
 \item{verbose}{print messages.}
 
-\item{norm_method}{Method to use for normalizing counts, "SCT" or "log",
-default is "SCT". Ignored if dtype = "CyTOF".}
-
-\item{ncores}{Number of cores}
-
-\item{within_batch}{Batch variable, for a given sample only those with the 
-same value for the batch variable will be used for training.}
+\item{ncores}{Number of cores.}
 }
 \value{
 A data.frame containing a distribution of silhouette scores for each
 resolution.
 }
 \description{
-clust_opt: Runs the main resolution optimization algorithm
+Runs the main resolution optimization algorithm
 }

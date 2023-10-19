@@ -9,8 +9,8 @@ Depends:
     R (>= 4.3),
     methods
 Imports:
-    foreach,
-    doFuture,
+    future.apply,
+    progressr,
     future,
     ranger,
     Seurat (>= 4.3),

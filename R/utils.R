@@ -47,9 +47,6 @@ leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
     }
     sketch_size <- ncol(input) * 0.1
   }
-
-  options(Seurat.object.assay.version = "v5")
-  options(future.globals.maxSize = 1e9)
   
   input <- Seurat::NormalizeData(input)
   input <- Seurat::FindVariableFeatures(input)
@@ -61,7 +58,7 @@ leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
   )
   Seurat::DefaultAssay(input) <- "sketch"
   # Return only the sketch assay
-  Seurat::DietSeurat(input, assays = "sketch")
+  input <- Seurat::DietSeurat(input, assays = "sketch")
 }
 
 

@@ -23,21 +23,21 @@ RUN Rscript -e 'BiocManager::install("glmGamPoi")'
 RUN Rscript -e 'install.packages("ggpubr")'
 RUN Rscript -e 'install.packages("hdf5r")'
 RUN Rscript -e 'install.packages("pheatmap")'
-RUN Rscript -e 'install.packages("reticulate")'
 RUN Rscript -e 'install.packages("devtools")'
 RUN Rscript -e 'install.packages("remotes")'
+RUN Rscript -e 'install.packages("future.apply")'
+RUN Rscript -e 'install.packages("progressr")'
+RUN Rscript -e 'install.packages("ranger")'
 
 # Install seurat v5 packages
-RUN Rscript -e 'remotes::install_github("satijalab/azimuth", "seurat5")'
 RUN Rscript -e 'remotes::install_github("satijalab/seurat", "seurat5")'
+RUN Rscript -e 'remotes::install_github("satijalab/azimuth", "seurat5")'
 RUN Rscript -e 'remotes::install_github("satijalab/seurat-data", "seurat5")'
 RUN Rscript -e 'remotes::install_github("mojaveazure/seurat-object", "seurat5")'
 RUN Rscript -e 'remotes::install_github("satijalab/seurat-wrappers", "seurat5")'
 RUN Rscript -e 'remotes::install_github("stuart-lab/signac", "seurat5")'
 RUN Rscript -e 'remotes::install_github("bnprks/BPCells")'
 
-# Install python packages
-RUN Rscript -e 'reticulate::py_install("geosketch")'
 
 
 WORKDIR /opt

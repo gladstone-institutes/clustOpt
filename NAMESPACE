@@ -3,3 +3,5 @@
 export(check_size)
 export(clust_opt)
 export(leverage_sketch)
+export(prep_test)
+export(prep_train)

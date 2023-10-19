@@ -19,24 +19,69 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, warning=FALSE, echo=FALSE}
 library(Seurat)
 # Only v5 Seurat Assays are supported
 options(Seurat.object.assay.version = "v5")
 # Only needs to be set for analyzing large datasets
 options(future.globals.maxSize = 1e9)
+library(dplyr)
 library(clustOpt)
+set.seed(1)
 ```
 
 ```{r load_data}
 # Read in a leverage score based subsample (1% of total cells) of the AIDA dataset
-input <- readRDS("../data/test/10589_cells_AIDA.rds")
-input
+input <- readRDS("../inst/extdata/10589_cells_AIDA.rds")
+
+input <- input |>
+  SCTransform(vst.flavor = "v2", verbose = FALSE) |>
+  RunPCA(verbose = FALSE)
+```
+
+```{r data_summary}
+input@meta.data %>%
+  group_by(self_reported_ethnicity) %>%
+  summarise(n_donors = n_distinct(donor_id))
+  
 ```
 
 
+```{r elbowplot}
+ElbowPlot(input)
+```
+
+```{r UMAP, fig.width=15, warning=FALSE}
+input <- RunUMAP(input,dims = 1:10)
+
+DimPlot(input, group.by = "cell_type",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE,
+        pt.size = .2)
+```
+
+The leverage score based subsample (sketch) of 1% cells captures a surprisingly large amount of the variation between cell types.
+
+```{r, fig.width=15}
+DimPlot(input,
+        group.by = "self_reported_ethnicity",
+        split.by = "self_reported_ethnicity",
+        order = T,
+        pt.size = .5,
+        alpha = .5) +
+  NoLegend()
+```
+
+
+
 ```{r}
-tmp <- clust_opt(input,subject_ids = "donor_id",plan = "multisession")
+tmp <- clust_opt(input,
+                 subject_ids = "self_reported_ethnicity",
+                 plan = "multisession",
+                 ndim = 10,
+                 ncore = 4,
+                 verbose = TRUE)
 
 ```
 

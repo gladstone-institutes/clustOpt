@@ -79,7 +79,7 @@ rownames(mouse) <- gene_mapping$HGNC.symbol[match(rownames(mouse), gene_mapping$
 
 mouse <- CreateSeuratObject(mouse)
 
-dir.create("~/Dropbox (Gladstone)/Work/Test_data/1Million_mouse_brain_cells_10X/mouse_data",
+dir.create("~/Dropbox (Gladstone)/Work/Test_data/mouse_bone_marrow_annotated_tabula_muris_cellxgene/mouse_data",
   recursive = T,
   showWarnings = F
 )
@@ -87,7 +87,7 @@ dir.create("~/Dropbox (Gladstone)/Work/Test_data/1Million_mouse_brain_cells_10X/
 saveRDS(
   object = mouse,
   file = "1M_neurons_mouse_with_human_gene_names.Rds",
-  destdir = "~/Dropbox (Gladstone)/Work/Test_data/1Million_mouse_brain_cells_10X/mouse_data"
+  destdir = "~/Dropbox (Gladstone)/Work/Test_data/mouse_bone_marrow_annotated_tabula_muris_cellxgene/mouse_data"
 )
 
 
