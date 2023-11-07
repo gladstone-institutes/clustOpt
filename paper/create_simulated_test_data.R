@@ -16,17 +16,16 @@ params.batches <- newSplatPopParams(similarity.scale = 4,
                                     batch.facLoc = 0.1,
                                     batch.facScale = 0.2)
 
-sim <- splatPopSimulate(vcf = mockVCF(),
-                                    gff = mockGFF(), 
-                                    params = params.batches, sparsify = TRUE)
+sim <- splatPopSimulate(params = params.batches, sparsify = TRUE)
 
 
 sim <- CreateSeuratObject(sim@assays@data$counts,
   meta.data = as.data.frame(sim@colData)
 )
 sim <- NormalizeData(sim)
+sim <- ScaleData(sim)
 sim <- FindVariableFeatures(sim)
 sim <- RunPCA(sim,layer = "data")
 
 
-sim <- RunUMAP(sim, dims = 1:15)
+sim <- RunUMAP(sim, dims = 1:10)

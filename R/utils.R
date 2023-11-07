@@ -4,9 +4,10 @@ NULL
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Functions
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#' check_size: Checks if input Seurat object is small enough to run
-#' sil_score
-#'
+#' @title check_size
+#' @description
+#' Checks if input Seurat object is small enough to run sil_score
+#' @seealso [sil_score()]
 #' @param input object to check
 #' @param verbose print warning about size
 #' @return NULL

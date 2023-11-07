@@ -12,6 +12,8 @@ NULL
 #' @param ndim Number of principal components to use.
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized.
+#' @param tmp_dir Temporary directory to train and test store on-disk matrices.
+#' Defaults to ~/tmp
 #' @param res_range Range of resolutions to test.
 #' @param ncores Number of cores.
 #' @param verbose print messages.
@@ -38,7 +40,7 @@ clust_opt <- function(input,
                       ),
                       within_batch = NA,
                       ncore = 4,
-                      verbose = TRUE) {
+                      verbose = FALSE) {
   sample_names <- as.vector((unique(input@meta.data[[subject_ids]])))
 
   if (!(dtype %in% c("CyTOF", "scRNA"))) {
@@ -64,9 +66,13 @@ clust_opt <- function(input,
     "Found ", nrow(runs),
     " combinations of test sample and resolution"
   ))
-  res_list <- vector("list", nrow(runs))
+  
+  
+  all_res_list <- vector("list", nrow(runs))
   iter <- 1
   for (sam in unique(runs[, 1])) {
+    res_list <- vector("list", length(res_range))
+    
     future::plan("sequential")
     message(paste0("Holdout sample: ", sam))
     if (verbose) {
@@ -116,7 +122,8 @@ clust_opt <- function(input,
       resolution = res_range,
       verbose = verbose
     )
-
+    message("Clustering complete..")
+    
     # Iterate through the combinations in parallel
     progressr::handlers("progress")
     progressr::with_progress({
@@ -126,12 +133,17 @@ clust_opt <- function(input,
         FUN = function(x) {
           p()
           return(train)
-        },X = list(res_range), future.seed = TRUE
+        },
+        X = list(res_range),
+        future.seed = TRUE
       )
     })
+    #message(result)
     res_list[[iter]] <- result
     iter <- iter + 1
+    
   }
+  return(result)
 }
 
 #' Prepare training data for random forest

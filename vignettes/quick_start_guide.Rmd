@@ -40,9 +40,7 @@ input <- input |>
 ```
 
 ```{r data_summary}
-input@meta.data %>%
-  group_by(self_reported_ethnicity) %>%
-  summarise(n_donors = n_distinct(donor_id))
+
   
 ```
 
@@ -77,11 +75,12 @@ DimPlot(input,
 
 ```{r}
 tmp <- clust_opt(input,
+                 res_range = c(.01,.1),
                  subject_ids = "self_reported_ethnicity",
                  plan = "multisession",
                  ndim = 10,
                  ncore = 4,
-                 verbose = TRUE)
+                 verbose = T)
 
 ```
 

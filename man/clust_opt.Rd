@@ -16,7 +16,7 @@ clust_opt(
   res_range = c(0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
   within_batch = NA,
   ncore = 4,
-  verbose = TRUE
+  verbose = FALSE
 )
 }
 \arguments{
@@ -29,6 +29,9 @@ clust_opt(
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
 is "scRNA". CyTOF data is expected to be arcsinh normalized.}
+
+\item{tmp_dir}{Temporary directory to train and test store on-disk matrices.
+Defaults to ~/tmp}
 
 \item{subject_ids}{Metadata field that identifies unique samples.}
 

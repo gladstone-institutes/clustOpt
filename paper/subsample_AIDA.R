@@ -58,7 +58,7 @@ h_data <- open_matrix_dir(dir = count_dir)
 h_data <- Azimuth:::ConvertEnsembleToSymbol(mat = h_data, species = "human")
 
 human_pbmc <- CreateSeuratObject(h_data,
-  meta.data = LoadH5ADobs(path = opt$input)
+  meta.data = LoadH5ADobs(path = opt$input) # Associate Metadata
 )
 rm(h_data)
 

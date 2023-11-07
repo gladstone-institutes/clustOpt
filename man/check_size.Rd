@@ -2,8 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{check_size}
 \alias{check_size}
-\title{check_size: Checks if input Seurat object is small enough to run
-sil_score}
+\title{check_size}
 \usage{
 check_size(input, verbose = TRUE)
 }
@@ -13,6 +12,8 @@ check_size(input, verbose = TRUE)
 \item{verbose}{print warning about size}
 }
 \description{
-check_size: Checks if input Seurat object is small enough to run
-sil_score
+Checks if input Seurat object is small enough to run sil_score
+}
+\seealso{
+[sil_score()]
 }
