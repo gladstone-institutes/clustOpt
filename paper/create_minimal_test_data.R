@@ -3,12 +3,12 @@ options(Seurat.object.assay.version = "v5")
 # needs to be set for large dataset analysis
 options(future.globals.maxSize = 1e9)
 library(BPCells)
-library(Azimuth)
-library(tidyverse)
 
 set.seed(42)
 
-# function to remove unused factor levels from the test data
+# Functions ---------------------------------------------------------------
+
+# function to remove unused factor levels from the seurat metadata
 refine_metadata_levels <- function(seurat_data){
   for (i in base::colnames(seurat_data@meta.data)){
     if (base::is.factor(seurat_data@meta.data[[i]])){
@@ -29,18 +29,21 @@ refine_metadata_levels <- function(seurat_data){
   return (seurat_data)
 }
 
-input <- "/Users/nelphick/Dropbox (Gladstone)/Work/Test_data/mapping_the_developing_human_immune_system_across_organs_HCA/9fcfb360-e8b2-47b9-a9ed-7af4d06b7f04/Visium10X_data_LI.h5ad"
+
+# Read in input data ------------------------------------------------------
+
+# https://data.humancellatlas.org/explore/projects/f2078d5f-2e7d-4844-8552-f7c41a231e52
+input <- "~/Dropbox (Gladstone)/Work/Test_data/eQTLAutoimmune/eQTLAutoimmune.h5ad"
 
 h_data <- open_matrix_anndata_hdf5(
   path = input
 )
-count_dir <- paste0("/Users/nelphick/Dropbox (Gladstone)/Work/Test_data/mapping_the_developing_human_immune_system_across_organs_HCA/9fcfb360-e8b2-47b9-a9ed-7af4d06b7f04/","/raw_count_dir")
-dir.create(count_dir,showWarnings = F, recursive = T)
+count_dir <- paste0("~/Dropbox (Gladstone)/Work/Test_data/eQTLAutoimmune/",
+                    "/raw_count_dir")
 
 # Write the matrix to a directory
 write_matrix_dir(
   mat = h_data,
-  overwrite = TRUE,
   dir = count_dir
 )
 

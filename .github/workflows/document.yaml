@@ -7,6 +7,7 @@ on:
 name: Document
 
 jobs:
+  timeout-minutes: 20
   document:
     runs-on: ubuntu-latest
     env:

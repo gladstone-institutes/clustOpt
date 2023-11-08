@@ -8,6 +8,7 @@ on:
 name: Style
 
 jobs:
+  timeout-minutes: 20
   style:
     runs-on: ubuntu-latest
     env:

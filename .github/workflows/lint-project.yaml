@@ -7,6 +7,7 @@ on:
 name: lint-project
 
 jobs:
+  timeout-minutes: 20
   lint-project:
     runs-on: ubuntu-latest
     env:
