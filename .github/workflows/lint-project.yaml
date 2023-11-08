@@ -7,9 +7,9 @@ on:
 name: lint-project
 
 jobs:
-  timeout-minutes: 20
   lint-project:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
