@@ -9,9 +9,9 @@ name: Document
 jobs:
   document:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 20
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
