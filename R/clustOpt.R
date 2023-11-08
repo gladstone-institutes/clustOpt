@@ -58,21 +58,21 @@ clust_opt <- function(input,
     message("Input is small enough to run with all cells")
   }
   set.seed(seed)
-  
-  
+
+
   # Get every combination of test sample and resolution
   runs <- expand.grid(sample_names, res_range)
   message(paste0(
     "Found ", nrow(runs),
     " combinations of test sample and resolution"
   ))
-  
-  
+
+
   all_res_list <- vector("list", nrow(runs))
   iter <- 1
   for (sam in unique(runs[, 1])) {
     res_list <- vector("list", length(res_range))
-    
+
     future::plan("sequential")
     message(paste0("Holdout sample: ", sam))
     if (verbose) {
@@ -103,7 +103,7 @@ clust_opt <- function(input,
       )),
       " shared genes between testing and training data"
     ))
-    
+
     train <- Seurat::RunPCA(train,
       npcs = ndim,
       verbose = FALSE,
@@ -116,32 +116,31 @@ clust_opt <- function(input,
     )
     # Set up parallelization
     future::plan(plan, workers = ncore)
-    
+
     train <- Seurat::FindClusters(
       object = train,
       resolution = res_range,
       verbose = verbose
     )
-    message("Clustering complete..")
+    if (verbose) {
+      message("Clustering complete..")
+    }
+    
+    if (verbose) {
+      message("Project the cells in the test data onto the train PCs..")
+    }
+    
     
     # Iterate through the combinations in parallel
     progressr::handlers("progress")
     progressr::with_progress({
       p <- progressr::progressor(along = res_range)
-      result <- future.apply::future_lapply(
-        future.packages = c("Seurat"),
-        FUN = function(x) {
-          p()
-          return(train)
-        },
-        X = list(res_range),
-        future.seed = TRUE
-      )
+      result <- foreach::foreach(res = res_range) %dopar% {
+        p()
+        print(res)
+      }
     })
-    #message(result)
-    res_list[[iter]] <- result
-    iter <- iter + 1
-    
+    result <- list(train,test)
   }
   return(result)
 }
@@ -177,30 +176,28 @@ prep_train <- function(input,
       if (length(this_batch) > 1) {
         stop("More than one batch found for this sample")
       }
-      
+
       train_cells <- input@meta.data |>
         dplyr::filter(get(subject_ids) != test_id &
           get(within_batch) == this_batch) |>
         rownames()
       train_seurat <- subset(input, cells = train_cells)
-      
+
       # Normalize the training samples
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = DefaultAssay(train_seurat),
-        vst.flavor = "v2",
         verbose = FALSE
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
       return(train_seurat)
     } else {
       # Return all other samples
-      Idents(input) <- subject_ids
-      train_cells <- WhichCells(object = input,idents = test_id, invert = TRUE)
+      Seurat::Idents(input) <- subject_ids
+      train_cells <- Seurat::WhichCells(object = input, idents = test_id, invert = TRUE)
       train_seurat <- subset(input, cells = train_cells)
       # Normalize the training samples
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = DefaultAssay(train_seurat),
-        vst.flavor = "v2",
         verbose = FALSE
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
@@ -226,21 +223,19 @@ prep_test <- function(input,
                       dtype = "scRNA",
                       test_id) {
   if (dtype == "scRNA") {
-    
-    Idents(input) <- subject_ids
-    test_cells <- WhichCells(object = input,idents = test_id)
+    Seurat::Idents(input) <- subject_ids
+    test_cells <- Seurat::WhichCells(object = input, idents = test_id)
     test_seurat <- subset(input, cells = test_cells)
-    
+
     test_seurat <- Seurat::SCTransform(test_seurat,
-      vst.flavor = "v2",
-      assay = DefaultAssay(test_seurat),
+      assay = Seurat::DefaultAssay(test_seurat),
       verbose = FALSE,
       variable.features.n = length(rownames(test_seurat)),
       return.only.var.genes = FALSE,
       min_cells = 1
     )
     test_seurat <- Seurat::DietSeurat(test_seurat, assays = "SCT")
-    
+
     return(test_seurat)
   } else {
     return(NULL)

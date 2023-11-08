@@ -9,7 +9,7 @@ Depends:
     R (>= 4.3),
     methods
 Imports:
-    future.apply,
+    doFuture,
     progressr,
     future,
     ranger,

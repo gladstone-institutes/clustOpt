@@ -27,6 +27,8 @@ options(Seurat.object.assay.version = "v5")
 options(future.globals.maxSize = 1e9)
 library(dplyr)
 library(clustOpt)
+library(foreach)
+library(doFuture)
 set.seed(1)
 ```
 
@@ -74,6 +76,8 @@ DimPlot(input,
 
 
 ```{r}
+
+registerDoFuture()
 tmp <- clust_opt(input,
                  res_range = c(.01,.1),
                  subject_ids = "self_reported_ethnicity",
@@ -81,6 +85,32 @@ tmp <- clust_opt(input,
                  ndim = 10,
                  ncore = 4,
                  verbose = T)
+
+
+common_features <- intersect(
+    rownames(test@assays[["SCT"]]@scale.data),
+    VariableFeatures(train))
+# Extract the loadings for common features from the training data
+loadings_common_features <- Loadings(train[["pca"]]) %>%
+  as_tibble(rownames = "Features") %>%
+  filter(Features %in% common_features) %>%
+  as.matrix()
+
+rownames(loadings_common_features) <- loadings_common_features[, 1]
+loadings_common_features <- loadings_common_features[, -1]
+class(loadings_common_features) <- "numeric"
+  
+pca_train_data <- as.matrix(train[["SCT"]]@scale.data)[common_features, ] %>%
+    t() %*% loadings_common_features
+
+# Project the cells in the test data onto the PCs
+# identified using the training data
+pca_test_data <- as.matrix(test[["SCT"]]@scale.data)[common_features, ] %>%
+    t() %*% loadings_common_features
+
+train <- tmp[[1]] 
+test <- tmp[[2]] 
+tmp[[1]]@assays$SCT$scale.data |> useful::corner()
 
 ```
 
