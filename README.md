@@ -4,7 +4,7 @@
 <!-- badges: end -->
    
 # clustOpt
-*Authors: Reuben Thomas, Natalie Elphick and Ayushi Agrawal*
+*Authors: Min-Gyoung Shin, Reuben Thomas, Natalie Elphick and Ayushi Agrawal*
 
 ## Background
 Seurat uses a modularity optimization based clustering algorithm to cluster cells in a shared nearest neighbor graph. By default it uses a C++ implementation of the Louvian algorithm ([Blondel et al. 2008](https://doi.org/10.1088/1742-5468/2008/10/P10008)) described in [A smart local moving algorithm for large-scale modularity-based community detection](http://www.ludowaltman.nl/slm/) by Waltman and van Eck (2013). It first calculates the k-nearest neighbors, construct the SNN graph, and then optimizes the modularity function to determine clusters.
