@@ -34,83 +34,93 @@ set.seed(1)
 
 ```{r load_data}
 # Read in a leverage score based subsample (1% of total cells) of the AIDA dataset
-input <- readRDS("../inst/extdata/10589_cells_AIDA.rds")
+input <- readRDS("../inst/extdata/1000_sketch_ROSMAP.Rds")
 
 input <- input |>
-  SCTransform(vst.flavor = "v2", verbose = FALSE) |>
+  SCTransform(verbose = FALSE) |>
   RunPCA(verbose = FALSE)
-```
-
-```{r data_summary}
-
-  
 ```
 
 
 ```{r elbowplot}
-ElbowPlot(input)
+ElbowPlot(input,ndims = 50)
 ```
 
-```{r UMAP, fig.width=15, warning=FALSE}
-input <- RunUMAP(input,dims = 1:10)
+```{r UMAP, warning=FALSE}
+input <- RunUMAP(input,dims = 1:20)
 
-DimPlot(input, group.by = "cell_type",
-        label = TRUE,
-        label.box = TRUE,
-        repel = TRUE,
-        pt.size = .2)
+DimPlot(input,
+        group.by = "projid",
+        pt.size = 1)
 ```
 
-The leverage score based subsample (sketch) of 1% cells captures a surprisingly large amount of the variation between cell types.
 
 ```{r, fig.width=15}
 DimPlot(input,
-        group.by = "self_reported_ethnicity",
-        split.by = "self_reported_ethnicity",
-        order = T,
-        pt.size = .5,
-        alpha = .5) +
-  NoLegend()
+        group.by = "broad.cell.type",
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE,
+        pt.size = 2) 
 ```
 
 
 
 ```{r}
-
-registerDoFuture()
-tmp <- clust_opt(input,
-                 res_range = c(.01,.1),
-                 subject_ids = "self_reported_ethnicity",
-                 plan = "multisession",
-                 ndim = 10,
-                 ncore = 4,
-                 verbose = T)
+test_sam <- "11302830"
+Seurat::DefaultAssay(input) <- "RNA"
+input <- Seurat::DietSeurat(input, assays = "RNA")
 
 
-common_features <- intersect(
+test <- prep_test(input,
+                  subject_ids = "projid",
+                  test_id = test_sam,
+                  dtype = "scRNA")
+train <- prep_train(input,
+                  subject_ids = "projid",
+                  test_id = test_sam,
+                  dtype = "scRNA")
+
+message(paste0(
+      "Found ",
+      length(intersect(
+        rownames(test@assays[["SCT"]]@scale.data),
+        Seurat::VariableFeatures(train)
+      )),
+      " shared genes between testing and training data"
+    ))
+
+message(sprintf(
+  "Found %d (%.2f%%) shared genes between testing and training data",
+  length(intersect(
     rownames(test@assays[["SCT"]]@scale.data),
-    VariableFeatures(train))
-# Extract the loadings for common features from the training data
-loadings_common_features <- Loadings(train[["pca"]]) %>%
-  as_tibble(rownames = "Features") %>%
-  filter(Features %in% common_features) %>%
-  as.matrix()
+    Seurat::VariableFeatures(train)
+  )),
+  length(intersect(
+    rownames(test@assays[["SCT"]]@scale.data),
+    Seurat::VariableFeatures(train)
+  )) / length(rownames(train@assays[["SCT"]]@scale.data)) * 100
+))
+train <- RunPCA(train)
+train <- FindNeighbors(train,dims = 1:20)
+train <- FindClusters(train,resolution = c(.01,.1,.2))
 
-rownames(loadings_common_features) <- loadings_common_features[, 1]
-loadings_common_features <- loadings_common_features[, -1]
-class(loadings_common_features) <- "numeric"
-  
-pca_train_data <- as.matrix(train[["SCT"]]@scale.data)[common_features, ] %>%
-    t() %*% loadings_common_features
+tmp <- project_PCA(train,test,ndim = 20)
 
-# Project the cells in the test data onto the PCs
-# identified using the training data
-pca_test_data <- as.matrix(test[["SCT"]]@scale.data)[common_features, ] %>%
-    t() %*% loadings_common_features
 
-train <- tmp[[1]] 
-test <- tmp[[2]] 
-tmp[[1]]@assays$SCT$scale.data |> useful::corner()
+
+
+
+# registerDoFuture()
+# tmp <- clust_opt(input,
+#                  res_range = c(.01,.1),
+#                  subject_ids = "projid",
+#                  plan = "multisession",
+#                  ndim = 10,
+#                  ncore = 4,
+#                  verbose = T)
+
+
 
 ```
 

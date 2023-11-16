@@ -67,8 +67,6 @@ clust_opt <- function(input,
     " combinations of test sample and resolution"
   ))
 
-
-  all_res_list <- vector("list", nrow(runs))
   iter <- 1
   for (sam in unique(runs[, 1])) {
     res_list <- vector("list", length(res_range))
@@ -95,15 +93,18 @@ clust_opt <- function(input,
       test_id = sam
     )
 
-    message(paste0(
-      "Found ",
+    message(sprintf(
+      "Found %d (%.2f%%) shared genes between testing and training data",
       length(intersect(
         rownames(test@assays[["SCT"]]@scale.data),
         Seurat::VariableFeatures(train)
       )),
-      " shared genes between testing and training data"
+      length(intersect(
+        rownames(test@assays[["SCT"]]@scale.data),
+        Seurat::VariableFeatures(train)
+      )) / length(rownames(train@assays[["SCT"]]@scale.data)) * 100
     ))
-
+    
     train <- Seurat::RunPCA(train,
       npcs = ndim,
       verbose = FALSE,
@@ -129,7 +130,10 @@ clust_opt <- function(input,
     if (verbose) {
       message("Project the cells in the test data onto the train PCs..")
     }
-    
+    train_clusters <- train@meta.data |>
+      select(contains("SCT_snn_res"))
+
+    df_list <- project_PCA(train,test)
     
     # Iterate through the combinations in parallel
     progressr::handlers("progress")
@@ -161,7 +165,7 @@ clust_opt <- function(input,
 prep_train <- function(input,
                        subject_ids,
                        dtype = "scRNA",
-                       within_batch,
+                       within_batch = NA,
                        test_id) {
   if (dtype == "scRNA") {
     # If within_batch is provided, then use only training samples from the
@@ -185,7 +189,7 @@ prep_train <- function(input,
 
       # Normalize the training samples
       train_seurat <- Seurat::SCTransform(train_seurat,
-        assay = DefaultAssay(train_seurat),
+        assay = Seurat::DefaultAssay(train_seurat),
         verbose = FALSE
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
@@ -240,4 +244,76 @@ prep_test <- function(input,
   } else {
     return(NULL)
   }
+}
+#' Project Training and Test Seurat Objects onto Principal Components
+#'
+#' This function projects both training and test Seurat objects onto a set of 
+#' principal components derived from the training data. 
+#'
+#' @param train_seurat A Seurat object representing the training data set.
+#' @param test_seurat A Seurat object representing the test data set.
+#' @param ndim The number of principal components to use for projection.
+#'
+#' @details 
+#' The function first identifies features that are common between the training 
+#' and test data sets. It then extracts the PCA loadings from the training data 
+#' for these common features. Both training and test data are projected onto 
+#' these loadings. Finally, the function selects the specified number of 
+#' dimensions (principal components) for the output.
+#'
+#' The function performs checks to ensure that both `train_seurat` and 
+#' `test_seurat` are Seurat objects and that `ndim` is a positive integer.
+#'
+#' @return 
+#' A list containing two elements: `train_df` and `test_df`. Each is a matrix 
+#' of the projected data for the training and test sets, respectively, using 
+#' the specified number of principal components.
+#'
+#' 
+#' @export
+#'
+project_PCA <- function(train_seurat, test_seurat, ndim) {
+  # Validate input
+  if (!("Seurat" %in% class(train_seurat)) || !("Seurat" %in% class(test_seurat))) {
+    stop("Both train_seurat and test_seurat must be Seurat objects")
+  }
+  if (!is.numeric(ndim) || ndim <= 0) {
+    stop("ndim must be a positive integer")
+  }
+  
+  # Features present in both the training variable features and test sample
+  common_features <- base::intersect(
+    rownames(test_seurat@assays[["SCT"]]@scale.data),
+    Seurat::VariableFeatures(train_seurat)
+  )
+  
+  # Extract the loadings for common features from the training data
+  loadings_common_features <- Seurat::Loadings(train_seurat[["pca"]]) |>
+    tibble::as_tibble(rownames = "Features") |>
+    dplyr::filter(Features %in% common_features) |>
+    base::as.matrix()
+  
+  rownames(loadings_common_features) <- loadings_common_features[, 1]
+  loadings_common_features <- loadings_common_features[, -1]
+  class(loadings_common_features) <- "numeric"
+  
+  # Function to project data
+  project_data <- function(seurat_obj) {
+    scale_data <- as.matrix(seurat_obj[["SCT"]]@scale.data)[common_features, ]
+    t(scale_data) %*% loadings_common_features
+  }
+  
+  # Project the cells in the training and test data onto the PCs
+  pca_train_data <- project_data(train_seurat)
+  pca_test_data <- project_data(test_seurat)
+  
+  # Clearing large objects and triggering garbage collection
+  rm(loadings_common_features, common_features, train_seurat, test_seurat)
+  gc()
+  
+  # Select the number of dimensions to train with
+  list(
+    train_df = pca_train_data[, 1:ndim, drop = FALSE],
+    test_df = pca_test_data[, 1:ndim, drop = FALSE]
+  )
 }

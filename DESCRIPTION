@@ -11,6 +11,7 @@ Depends:
     R (>= 4.3),
     methods
 Imports:
+    foreach,
     doFuture,
     progressr,
     future,
