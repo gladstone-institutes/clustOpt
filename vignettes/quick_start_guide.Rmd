@@ -43,84 +43,39 @@ input <- input |>
 
 
 ```{r elbowplot}
-ElbowPlot(input,ndims = 50)
+ElbowPlot(input, ndims = 50)
 ```
 
 ```{r UMAP, warning=FALSE}
-input <- RunUMAP(input,dims = 1:20)
+input <- RunUMAP(input, dims = 1:20)
 
 DimPlot(input,
-        group.by = "projid",
-        pt.size = 1)
+  group.by = "projid",
+  pt.size = 1
+)
 ```
 
 
 ```{r, fig.width=15}
 DimPlot(input,
-        group.by = "broad.cell.type",
-        label = TRUE,
-        label.box = TRUE,
-        repel = TRUE,
-        pt.size = 2) 
+  group.by = "broad.cell.type",
+  label = TRUE,
+  label.box = TRUE,
+  repel = TRUE,
+  pt.size = 2
+)
 ```
 
 
 
 ```{r}
-test_sam <- "11302830"
-Seurat::DefaultAssay(input) <- "RNA"
-input <- Seurat::DietSeurat(input, assays = "RNA")
 
-
-test <- prep_test(input,
-                  subject_ids = "projid",
-                  test_id = test_sam,
-                  dtype = "scRNA")
-train <- prep_train(input,
-                  subject_ids = "projid",
-                  test_id = test_sam,
-                  dtype = "scRNA")
-
-message(paste0(
-      "Found ",
-      length(intersect(
-        rownames(test@assays[["SCT"]]@scale.data),
-        Seurat::VariableFeatures(train)
-      )),
-      " shared genes between testing and training data"
-    ))
-
-message(sprintf(
-  "Found %d (%.2f%%) shared genes between testing and training data",
-  length(intersect(
-    rownames(test@assays[["SCT"]]@scale.data),
-    Seurat::VariableFeatures(train)
-  )),
-  length(intersect(
-    rownames(test@assays[["SCT"]]@scale.data),
-    Seurat::VariableFeatures(train)
-  )) / length(rownames(train@assays[["SCT"]]@scale.data)) * 100
-))
-train <- RunPCA(train)
-train <- FindNeighbors(train,dims = 1:20)
-train <- FindClusters(train,resolution = c(.01,.1,.2))
-
-tmp <- project_PCA(train,test,ndim = 20)
-
-
-
-
-
-# registerDoFuture()
-# tmp <- clust_opt(input,
-#                  res_range = c(.01,.1),
-#                  subject_ids = "projid",
-#                  plan = "multisession",
-#                  ndim = 10,
-#                  ncore = 4,
-#                  verbose = T)
-
-
-
+doRNG::registerDoRNG()
+tmp <- clust_opt(input,
+                 res_range = c(.01,.1),
+                 subject_ids = "projid",
+                 plan = "multisession",
+                 ndim = 10,
+                 ncore = 4,
+                 verbose = T)
 ```
-

@@ -104,7 +104,7 @@ clust_opt <- function(input,
         Seurat::VariableFeatures(train)
       )) / length(rownames(train@assays[["SCT"]]@scale.data)) * 100
     ))
-    
+
     train <- Seurat::RunPCA(train,
       npcs = ndim,
       verbose = FALSE,
@@ -126,26 +126,65 @@ clust_opt <- function(input,
     if (verbose) {
       message("Clustering complete..")
     }
-    
+
     if (verbose) {
       message("Project the cells in the test data onto the train PCs..")
     }
     train_clusters <- train@meta.data |>
       select(contains("SCT_snn_res"))
 
-    df_list <- project_PCA(train,test)
-    
+    df_list <- project_PCA(train, test, ndim)
+    rm(train, test)
     # Iterate through the combinations in parallel
     progressr::handlers("progress")
     progressr::with_progress({
       p <- progressr::progressor(along = res_range)
       result <- foreach::foreach(res = res_range) %dopar% {
         p()
-        print(res)
+        # Get cluster assignments for this res
+        train_df <- df_list[[1]] %>%
+          mutate(clusters = train_clusters |>
+            select(contains(as.character(res))) |> pull())
+        # Train model
+        rf <- ranger::ranger(as.factor(clusters) ~ .,
+          data = train_df,
+          num.trees = 1000,
+          write.forest = TRUE,
+          num.threads = 1
+        )
+        rm(train_df)
+        
+        # Predict on the hold out sample
+        predicted <- stats::predict(rf, df_list[[2]])
+        predicted <- ranger::predictions(predicted)
+        predicted_clusters_table <- base::table(predicted)
+        rm(rf)
+        sil <- cluster::silhouette(
+          as.numeric(as.character(predicted)),
+          dist(df_list[[2]])
+        )
+        # Set values to NA if there is only one cluster
+        if (class(sil) == "logical") {
+          sil_mean <- NA
+          sil_group_mean <- NA
+        } else {
+          sil_summary <- summary(sil)
+          sil_mean <- sil_summary$avg.width
+          sil_group_mean <- mean(sil_summary$clus.avg.widths)
+        }
+        list(
+          resolution = res,
+          test_sample = "Placeholder",
+          avg_width = sil_mean,
+          cluster_avg_widths = sil_group_mean,
+          n_predicted_clusters = length(unique(as.character(predicted))),
+          min_predicted_cell_per_cluster = min(predicted_clusters_table),
+          max_predicted_cell_per_cluster = max(predicted_clusters_table)
+        )
       }
     })
-    result <- list(train,test)
   }
+  
   return(result)
 }
 
@@ -201,7 +240,7 @@ prep_train <- function(input,
       train_seurat <- subset(input, cells = train_cells)
       # Normalize the training samples
       train_seurat <- Seurat::SCTransform(train_seurat,
-        assay = DefaultAssay(train_seurat),
+        assay = Seurat::DefaultAssay(train_seurat),
         verbose = FALSE
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
@@ -247,29 +286,27 @@ prep_test <- function(input,
 }
 #' Project Training and Test Seurat Objects onto Principal Components
 #'
-#' This function projects both training and test Seurat objects onto a set of 
-#' principal components derived from the training data. 
+#' This function projects both training and test Seurat objects onto a set of
+#' principal components derived from the training data.
 #'
 #' @param train_seurat A Seurat object representing the training data set.
 #' @param test_seurat A Seurat object representing the test data set.
 #' @param ndim The number of principal components to use for projection.
 #'
-#' @details 
-#' The function first identifies features that are common between the training 
-#' and test data sets. It then extracts the PCA loadings from the training data 
-#' for these common features. Both training and test data are projected onto 
-#' these loadings. Finally, the function selects the specified number of 
+#' @details
+#' Identifies features that are common between the training
+#' and test data sets. It then extracts the PCA loadings from the training data
+#' for these common features. Both training and test data are projected onto
+#' these loadings. Finally, the function selects the specified number of
 #' dimensions (principal components) for the output.
 #'
-#' The function performs checks to ensure that both `train_seurat` and 
-#' `test_seurat` are Seurat objects and that `ndim` is a positive integer.
 #'
-#' @return 
-#' A list containing two elements: `train_df` and `test_df`. Each is a matrix 
-#' of the projected data for the training and test sets, respectively, using 
+#' @return
+#' A list containing two elements: `train_df` and `test_df`. Each is a matrix
+#' of the projected data for the training and test sets, respectively, using
 #' the specified number of principal components.
 #'
-#' 
+#'
 #' @export
 #'
 project_PCA <- function(train_seurat, test_seurat, ndim) {
@@ -280,40 +317,41 @@ project_PCA <- function(train_seurat, test_seurat, ndim) {
   if (!is.numeric(ndim) || ndim <= 0) {
     stop("ndim must be a positive integer")
   }
-  
+
   # Features present in both the training variable features and test sample
   common_features <- base::intersect(
     rownames(test_seurat@assays[["SCT"]]@scale.data),
     Seurat::VariableFeatures(train_seurat)
   )
-  
+
   # Extract the loadings for common features from the training data
   loadings_common_features <- Seurat::Loadings(train_seurat[["pca"]]) |>
     tibble::as_tibble(rownames = "Features") |>
     dplyr::filter(Features %in% common_features) |>
-    base::as.matrix()
-  
+    as.matrix()
+
   rownames(loadings_common_features) <- loadings_common_features[, 1]
   loadings_common_features <- loadings_common_features[, -1]
   class(loadings_common_features) <- "numeric"
-  
+
   # Function to project data
   project_data <- function(seurat_obj) {
     scale_data <- as.matrix(seurat_obj[["SCT"]]@scale.data)[common_features, ]
     t(scale_data) %*% loadings_common_features
   }
-  
+
   # Project the cells in the training and test data onto the PCs
   pca_train_data <- project_data(train_seurat)
   pca_test_data <- project_data(test_seurat)
+
+  rm(loadings_common_features)
   
-  # Clearing large objects and triggering garbage collection
-  rm(loadings_common_features, common_features, train_seurat, test_seurat)
-  gc()
-  
+
   # Select the number of dimensions to train with
   list(
-    train_df = pca_train_data[, 1:ndim, drop = FALSE],
-    test_df = pca_test_data[, 1:ndim, drop = FALSE]
+    train_df = pca_train_data[, 1:ndim, drop = FALSE] |>
+      as.data.frame(),
+    test_df = pca_test_data[, 1:ndim, drop = FALSE] |>
+      as.data.frame()
   )
 }

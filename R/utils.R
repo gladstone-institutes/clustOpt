@@ -16,7 +16,7 @@ NULL
 #'
 check_size <- function(input, verbose = TRUE) {
   if (!methods::is(input, "Seurat")) {
-    stop("Input must be a seurat object")
+    stop("Input must be a Seurat object")
   }
   if (ncol(input) >= 2E5) {
     if (verbose) {

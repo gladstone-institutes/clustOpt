@@ -4,7 +4,7 @@
 \alias{prep_train}
 \title{Prepare training data for random forest}
 \usage{
-prep_train(input, subject_ids, dtype = "scRNA", within_batch, test_id)
+prep_train(input, subject_ids, dtype = "scRNA", within_batch = NA, test_id)
 }
 \arguments{
 \item{input}{Seurat object}

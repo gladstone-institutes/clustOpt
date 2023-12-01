@@ -60,7 +60,7 @@ h_data <- open_matrix_dir(dir = paste0("~/Dropbox (Gladstone)/Work/Test_data",
 
 human[["RNA"]]$counts <- h_data
 rm(h_data)
-gc()
+
 
 # Pre-sketch metadata
 pre_sketch_mdata <- table(human@meta.data$broad.cell.type,

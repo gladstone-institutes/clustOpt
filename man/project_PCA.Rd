@@ -14,21 +14,21 @@ project_PCA(train_seurat, test_seurat, ndim)
 \item{ndim}{The number of principal components to use for projection.}
 }
 \value{
-A list containing two elements: `train_df` and `test_df`. Each is a matrix 
-of the projected data for the training and test sets, respectively, using 
+A list containing two elements: `train_df` and `test_df`. Each is a matrix
+of the projected data for the training and test sets, respectively, using
 the specified number of principal components.
 }
 \description{
-This function projects both training and test Seurat objects onto a set of 
+This function projects both training and test Seurat objects onto a set of
 principal components derived from the training data.
 }
 \details{
-The function first identifies features that are common between the training 
-and test data sets. It then extracts the PCA loadings from the training data 
-for these common features. Both training and test data are projected onto 
-these loadings. Finally, the function selects the specified number of 
+The function first identifies features that are common between the training
+and test data sets. It then extracts the PCA loadings from the training data
+for these common features. Both training and test data are projected onto
+these loadings. Finally, the function selects the specified number of
 dimensions (principal components) for the output.
 
-The function performs checks to ensure that both `train_seurat` and 
+The function performs checks to ensure that both `train_seurat` and
 `test_seurat` are Seurat objects and that `ndim` is a positive integer.
 }
