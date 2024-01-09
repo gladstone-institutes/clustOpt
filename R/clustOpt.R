@@ -12,15 +12,12 @@ NULL
 #' @param ndim Number of principal components to use.
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized.
-#' @param tmp_dir Temporary directory to train and test store on-disk matrices.
-#' Defaults to ~/tmp
 #' @param res_range Range of resolutions to test.
 #' @param ncores Number of cores.
 #' @param verbose print messages.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
-#' @param plan Type of future::plan for parallelization, "multicore" or
-#' "multisession". Use "multisession" if running in RStudio or on a Windows OS.
+#' @param num.trees Number of trees to use in the random forest.
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
 #'
@@ -28,9 +25,7 @@ NULL
 #'
 clust_opt <- function(input,
                       ndim,
-                      plan = "multicore",
                       dtype = "scRNA",
-                      tmp_dir = "~/tmp",
                       sketch_size = NULL,
                       subject_ids,
                       seed = 1,
@@ -40,7 +35,8 @@ clust_opt <- function(input,
                       ),
                       within_batch = NA,
                       ncore = 4,
-                      verbose = FALSE) {
+                      verbose = FALSE,
+                      num.trees = 1000) {
   sample_names <- as.vector((unique(input@meta.data[[subject_ids]])))
 
   if (!(dtype %in% c("CyTOF", "scRNA"))) {
@@ -66,12 +62,12 @@ clust_opt <- function(input,
     "Found ", nrow(runs),
     " combinations of test sample and resolution"
   ))
-
-  iter <- 1
+  
+  # Set up progress logging
+  progressr::handlers("progress")
+  p <- progressr::progressor(along = unique(runs[, 1]))
+  result <- NULL
   for (sam in unique(runs[, 1])) {
-    res_list <- vector("list", length(res_range))
-
-    future::plan("sequential")
     message(paste0("Holdout sample: ", sam))
     if (verbose) {
       message(paste0("Preparing training data.."))
@@ -115,8 +111,6 @@ clust_opt <- function(input,
       dims = 1:ndim,
       verbose = verbose
     )
-    # Set up parallelization
-    future::plan(plan, workers = ncore)
 
     train <- Seurat::FindClusters(
       object = train,
@@ -131,61 +125,29 @@ clust_opt <- function(input,
       message("Project the cells in the test data onto the train PCs..")
     }
     train_clusters <- train@meta.data |>
-      select(contains("SCT_snn_res"))
+      dplyr::select(dplyr::contains("SCT_snn_res"))
 
     df_list <- project_PCA(train, test, ndim)
     rm(train, test)
-    # Iterate through the combinations in parallel
-    progressr::handlers("progress")
-    progressr::with_progress({
-      p <- progressr::progressor(along = res_range)
-      result <- foreach::foreach(res = res_range) %dopar% {
-        p()
-        # Get cluster assignments for this res
-        train_df <- df_list[[1]] %>%
-          mutate(clusters = train_clusters |>
-            select(contains(as.character(res))) |> pull())
-        # Train model
-        rf <- ranger::ranger(as.factor(clusters) ~ .,
-          data = train_df,
-          num.trees = 1000,
-          write.forest = TRUE,
-          num.threads = 1
+    
+    this_result <- future.apply::future_lapply(
+      1:nrow(runs),
+      function(i) {
+        train_random_forest(
+          res = runs[i, 2],
+          df_list = df_list,
+          train_clusters = train_clusters,
+          sam = runs[i, 1],
+          num.trees = num.trees
         )
-        rm(train_df)
-        
-        # Predict on the hold out sample
-        predicted <- stats::predict(rf, df_list[[2]])
-        predicted <- ranger::predictions(predicted)
-        predicted_clusters_table <- base::table(predicted)
-        rm(rf)
-        sil <- cluster::silhouette(
-          as.numeric(as.character(predicted)),
-          dist(df_list[[2]])
-        )
-        # Set values to NA if there is only one cluster
-        if (class(sil) == "logical") {
-          sil_mean <- NA
-          sil_group_mean <- NA
-        } else {
-          sil_summary <- summary(sil)
-          sil_mean <- sil_summary$avg.width
-          sil_group_mean <- mean(sil_summary$clus.avg.widths)
-        }
-        list(
-          resolution = res,
-          test_sample = "Placeholder",
-          avg_width = sil_mean,
-          cluster_avg_widths = sil_group_mean,
-          n_predicted_clusters = length(unique(as.character(predicted))),
-          min_predicted_cell_per_cluster = min(predicted_clusters_table),
-          max_predicted_cell_per_cluster = max(predicted_clusters_table)
-        )
-      }
-    })
+      },
+      future.seed = 42
+    )
+    result <- c(result, this_result)
+    p()
   }
   
-  return(result)
+  purrr::map_df(result,.f = as.data.frame)
 }
 
 #' Prepare training data for random forest
@@ -236,7 +198,9 @@ prep_train <- function(input,
     } else {
       # Return all other samples
       Seurat::Idents(input) <- subject_ids
-      train_cells <- Seurat::WhichCells(object = input, idents = test_id, invert = TRUE)
+      train_cells <- Seurat::WhichCells(object = input,
+                                        idents = test_id,
+                                        invert = TRUE)
       train_seurat <- subset(input, cells = train_cells)
       # Normalize the training samples
       train_seurat <- Seurat::SCTransform(train_seurat,
@@ -311,7 +275,8 @@ prep_test <- function(input,
 #'
 project_PCA <- function(train_seurat, test_seurat, ndim) {
   # Validate input
-  if (!("Seurat" %in% class(train_seurat)) || !("Seurat" %in% class(test_seurat))) {
+  if (!("Seurat" %in% class(train_seurat)) ||
+      !("Seurat" %in% class(test_seurat))) {
     stop("Both train_seurat and test_seurat must be Seurat objects")
   }
   if (!is.numeric(ndim) || ndim <= 0) {
@@ -345,7 +310,7 @@ project_PCA <- function(train_seurat, test_seurat, ndim) {
   pca_test_data <- project_data(test_seurat)
 
   rm(loadings_common_features)
-  
+
 
   # Select the number of dimensions to train with
   list(
@@ -354,4 +319,72 @@ project_PCA <- function(train_seurat, test_seurat, ndim) {
     test_df = pca_test_data[, 1:ndim, drop = FALSE] |>
       as.data.frame()
   )
+}
+
+#' Train the random forest and predict on the test sample
+#' @param res Resolution to train on
+#' @param df_list List containing training and test data
+#' @param train_clusters Cluster assignments for the training data
+#' @param sam Test sample
+#' @return A list containing the resolution, silhouette score, and number of
+#' predicted clusters.
+#' @export
+#'
+train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
+  # Get cluster assignments for this res
+  train_df <- df_list[[1]] |>
+    dplyr::mutate(clusters = train_clusters |>
+             dplyr::select(dplyr::contains(as.character(res))) |>
+             dplyr::pull())
+
+  # Train model
+  rf <- ranger::ranger(as.factor(clusters) ~ .,
+    data = train_df,
+    num.trees = num.trees,
+    write.forest = TRUE,
+    num.threads = 1
+  )
+  rm(train_df)
+
+  # Predict on the hold out sample
+  predicted <- stats::predict(rf, df_list[[2]])
+  predicted <- ranger::predictions(predicted)
+  predicted_clusters_table <- base::table(predicted)
+  rm(rf)
+  sil <- calculate_silhouette_score(predicted, df_list[[2]])
+
+  list(
+    resolution = res,
+    test_sample = sam, 
+    avg_width = sil$avg_width,
+    cluster_avg_widths = sil$group_avg_width,
+    n_predicted_clusters = length(unique(as.character(predicted))),
+    min_predicted_cell_per_cluster = min(predicted_clusters_table),
+    max_predicted_cell_per_cluster = max(predicted_clusters_table)
+  )
+}
+
+#' Calculate silhouette score
+#' @param predicted Cluster assignments
+#' @param data_frame Data frame containing the data
+#' @return A list containing the average silhouette score and the average
+#' silhouette score for each cluster.
+#' @export
+#' 
+calculate_silhouette_score <- function(predicted, data_frame) {
+  sil <- cluster::silhouette(
+    as.numeric(as.character(predicted)),
+    dist(data_frame)
+  )
+
+  # Check if there is only one cluster
+  if (class(sil) == "logical") {
+    return(list(avg_width = NA, group_avg_width = NA))
+  } else {
+    sil_summary <- summary(sil)
+    return(list(
+      avg_width = sil_summary$avg.width,
+      group_avg_width = mean(sil_summary$clus.avg.widths)
+    ))
+  }
 }

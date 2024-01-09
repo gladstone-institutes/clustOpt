@@ -62,6 +62,13 @@ human[["RNA"]]$counts <- h_data
 rm(h_data)
 
 
+# Randomly select 10 projids (donors)
+projids <- sample(unique(human@meta.data$projid), 10)
+human <- subset(human, projid %in% projids)
+
+
+
+
 # Pre-sketch metadata
 pre_sketch_mdata <- table(human@meta.data$broad.cell.type,
                           human@meta.data$projid) |>
@@ -72,8 +79,8 @@ pre_sketch_mdata <- table(human@meta.data$broad.cell.type,
 
 human <- NormalizeData(human) |>
   FindVariableFeatures()
-# Sketch 1000 cells
-human <- SketchData(object = human, ncells = 1000)
+# Sketch 5000 cells
+human <- SketchData(object = human, ncells = 5000)
 
 
 DefaultAssay(human) <- "sketch"
@@ -105,5 +112,5 @@ write_csv(x = post_sketch_mdata,
                  "minimal_test_data_rosmap/post-sketch_metadata.csv"))
 saveRDS(
   object = human,
-  file = "~/Dropbox (Gladstone)/Work/Test_data/minimal_test_data_rosmap/1000_sketch_ROSMAP.Rds"
+  file = "~/Dropbox (Gladstone)/Work/Test_data/minimal_test_data_rosmap/5000_sketch_ROSMAP.Rds"
 )

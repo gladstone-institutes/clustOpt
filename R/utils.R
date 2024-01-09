@@ -1,9 +1,9 @@
 #'
 NULL
 
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Functions
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #' @title check_size
 #' @description
 #' Checks if input Seurat object is small enough to run sil_score
@@ -61,5 +61,3 @@ leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
   # Return only the sketch assay
   input <- Seurat::DietSeurat(input, assays = "sketch")
 }
-
-
