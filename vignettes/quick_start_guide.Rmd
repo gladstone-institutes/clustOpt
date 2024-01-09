@@ -31,8 +31,8 @@ library(future)
 set.seed(1)
 ```
 
+Read in a leverage score based sketch of 5000 cells from 10 donorsin the AIDA dataset
 ```{r load_data}
-# Read in a leverage score based subsample (1% of total cells) of the AIDA dataset
 input <- readRDS("../inst/extdata/5000_sketch_ROSMAP.Rds")
 
 input <- input |>
@@ -66,12 +66,16 @@ DimPlot(input,
 ```
 
 
+Model training is parallelized with `future` and `future.batchtools` can be used to parallelize training using HPC job schedulers.
 
-```{r}
-plan("multisession", workers = 4)
+```{r clustOpt}
+plan("multisession", workers = 10)
 
 sil_dist <- clust_opt(input,
-  res_range = c(0.01, 0.1),
+  res_range = c(
+    0.02, 0.04, 0.06, 0.08, 0.1,
+    0.2, 0.4, 0.6, 0.8
+  ),
   subject_ids = "projid",
   ndim = 20,
   verbose = F
@@ -81,20 +85,23 @@ sil_dist <- clust_opt(input,
 plan("sequential")
 ```
 
+## Plotting the silhouette score distributions
 
-```{r}
-library(ggplot2)
+```{r plotting}
+create_sil_plots(sil_dist)
+```
 
-# Basic plots of the sil score distribution across cells
-sil_dist %>%
-  ggplot(aes(x = as.factor(resolution), y = avg_width)) +
-  geom_boxplot() +
-  theme_bw() +
-  labs(x = "Resolution", y = "Avg. Silhouette Score Across All Cells")
+The local maximum in the mean silhouette scores at 0.1 indicates that this clustering resolution is the most reproducible across all biological samples.
 
-sil_dist %>%
-  ggplot(aes(x = as.factor(resolution), y = cluster_avg_widths)) +
-  geom_boxplot() +
-  theme_bw() +
-  labs(x = "Resolution", y = "Avg. Silhouette Score Across Clusters")
+## Comparison to the cell annotations
+
+```{r cluster}
+input <- FindNeighbors(input, dims = 1:20, verbose = F)
+input <- FindClusters(input, resolution = 0.1)
+
+DimPlot(input,
+  group.by = "broad.cell.type",
+  split.by = "seurat_clusters",
+  ncol = 2
+)
 ```

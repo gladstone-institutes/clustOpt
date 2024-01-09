@@ -23,12 +23,9 @@ This function projects both training and test Seurat objects onto a set of
 principal components derived from the training data.
 }
 \details{
-The function first identifies features that are common between the training
+Identifies features that are common between the training
 and test data sets. It then extracts the PCA loadings from the training data
 for these common features. Both training and test data are projected onto
 these loadings. Finally, the function selects the specified number of
 dimensions (principal components) for the output.
-
-The function performs checks to ensure that both `train_seurat` and
-`test_seurat` are Seurat objects and that `ndim` is a positive integer.
 }

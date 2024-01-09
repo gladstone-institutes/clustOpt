@@ -66,6 +66,7 @@ clust_opt <- function(input,
   # Set up progress logging
   progressr::handlers("progress")
   p <- progressr::progressor(along = unique(runs[, 1]))
+  
   result <- NULL
   for (sam in unique(runs[, 1])) {
     message(paste0("Holdout sample: ", sam))

@@ -6,8 +6,7 @@ NULL
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #' @title check_size
 #' @description
-#' Checks if input Seurat object is small enough to run sil_score
-#' @seealso [sil_score()]
+#' Checks if input Seurat object is small enough to run clustOpt
 #' @param input object to check
 #' @param verbose print warning about size
 #' @return NULL
@@ -19,12 +18,6 @@ check_size <- function(input, verbose = TRUE) {
     stop("Input must be a Seurat object")
   }
   if (ncol(input) >= 2E5) {
-    if (verbose) {
-      warning(paste0(
-        "Over 200,000 cells detected, reccommend running with ",
-        "downsample = 'sketch'"
-      ))
-    }
     return(TRUE)
   } else {
     return(FALSE)
@@ -60,4 +53,27 @@ leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
   Seurat::DefaultAssay(input) <- "sketch"
   # Return only the sketch assay
   input <- Seurat::DietSeurat(input, assays = "sketch")
+}
+
+#' @title sil_summary
+#' @description 
+#' Summarises the silhouette score distribution output by clustOpt
+#' @param input output of clustOpt
+#' @return A data.frame summarising the silhouette score distribution
+#'
+#' @export
+#'
+sil_summary <- function(input) {
+  input |>
+    dplyr::group_by(resolution) |>
+    dplyr::summarize(
+      mean_score = base::mean(avg_width, na.rm = TRUE),
+      variance_score = stats::var(avg_width, na.rm = TRUE),
+      standard_error_score = stats::sd(avg_width,
+                                      na.rm = TRUE) / sqrt(length(avg_width)),
+      cluster_mean_score = base::mean(cluster_avg_widths, na.rm = TRUE),
+      cluster_variance_score = stats::var(cluster_avg_widths, na.rm = TRUE),
+      cluster_standard_error_score = stats::sd(cluster_avg_widths, na.rm = TRUE) /
+        sqrt(length(avg_width))
+    )
 }

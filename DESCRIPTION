@@ -22,6 +22,7 @@ Encoding: UTF-8
 Collate: 
     'utils.R'
     'clustOpt.R'
+    'plot.R'
 Suggests: 
     knitr,
     rmarkdown,

@@ -12,8 +12,5 @@ check_size(input, verbose = TRUE)
 \item{verbose}{print warning about size}
 }
 \description{
-Checks if input Seurat object is small enough to run sil_score
-}
-\seealso{
-[sil_score()]
+Checks if input Seurat object is small enough to run clustOpt
 }
