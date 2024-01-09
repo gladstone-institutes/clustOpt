@@ -27,14 +27,13 @@ options(Seurat.object.assay.version = "v5")
 options(future.globals.maxSize = 1e9)
 library(dplyr)
 library(clustOpt)
-library(foreach)
-library(doFuture)
+library(future)
 set.seed(1)
 ```
 
 ```{r load_data}
 # Read in a leverage score based subsample (1% of total cells) of the AIDA dataset
-input <- readRDS("../inst/extdata/1000_sketch_ROSMAP.Rds")
+input <- readRDS("../inst/extdata/5000_sketch_ROSMAP.Rds")
 
 input <- input |>
   SCTransform(verbose = FALSE) |>
@@ -69,13 +68,33 @@ DimPlot(input,
 
 
 ```{r}
+plan("multisession", workers = 4)
 
-doRNG::registerDoRNG()
-tmp <- clust_opt(input,
-                 res_range = c(.01,.1),
-                 subject_ids = "projid",
-                 plan = "multisession",
-                 ndim = 10,
-                 ncore = 4,
-                 verbose = T)
+sil_dist <- clust_opt(input,
+  res_range = c(0.01, 0.1),
+  subject_ids = "projid",
+  ndim = 20,
+  verbose = F
+) |> progressr::with_progress()
+
+# Shut down stray workers
+plan("sequential")
+```
+
+
+```{r}
+library(ggplot2)
+
+# Basic plots of the sil score distribution across cells
+sil_dist %>%
+  ggplot(aes(x = as.factor(resolution), y = avg_width)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(x = "Resolution", y = "Avg. Silhouette Score Across All Cells")
+
+sil_dist %>%
+  ggplot(aes(x = as.factor(resolution), y = cluster_avg_widths)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(x = "Resolution", y = "Avg. Silhouette Score Across Clusters")
 ```
