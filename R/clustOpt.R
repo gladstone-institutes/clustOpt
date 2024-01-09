@@ -5,6 +5,8 @@ NULL
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Functions
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#' @title clust_opt
+#' @description
 #' Runs the main resolution optimization algorithm
 #'
 #' @param input Seurat object
@@ -54,7 +56,7 @@ clust_opt <- function(input,
     message("Input is small enough to run with all cells")
   }
   set.seed(seed)
-
+  
 
   # Get every combination of test sample and resolution
   runs <- expand.grid(sample_names, res_range)
@@ -151,6 +153,8 @@ clust_opt <- function(input,
   purrr::map_df(result,.f = as.data.frame)
 }
 
+#' @title prep_train
+#' @description
 #' Prepare training data for random forest
 #'
 #' @param input Seurat object
@@ -215,6 +219,9 @@ prep_train <- function(input,
     return(NULL)
   }
 }
+
+#' @title prep_test
+#' @description
 #' Prepare test data for random forest
 #'
 #' @param input Seurat object
@@ -249,6 +256,9 @@ prep_test <- function(input,
     return(NULL)
   }
 }
+
+#' @title project_PCA
+#' @description
 #' Project Training and Test Seurat Objects onto Principal Components
 #'
 #' This function projects both training and test Seurat objects onto a set of
@@ -322,6 +332,8 @@ project_PCA <- function(train_seurat, test_seurat, ndim) {
   )
 }
 
+#' @title train_random_forest
+#' @description
 #' Train the random forest and predict on the test sample
 #' @param res Resolution to train on
 #' @param df_list List containing training and test data
@@ -364,7 +376,8 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
     max_predicted_cell_per_cluster = max(predicted_clusters_table)
   )
 }
-
+#' @title calculate_silhouette_score
+#' @description
 #' Calculate silhouette score
 #' @param predicted Cluster assignments
 #' @param data_frame Data frame containing the data
