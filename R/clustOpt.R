@@ -144,7 +144,7 @@ clust_opt <- function(input,
           num.trees = num.trees
         )
       },
-      future.seed = 42
+      future.seed = TRUE
     )
     result <- c(result, this_result)
     p()
