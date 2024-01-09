@@ -44,7 +44,7 @@ create_sil_plots <- function(sil_dist) {
     ggplot2::geom_point(colour = "#619CFF") +
     ggplot2::geom_line(colour = "#619CFF") +
     ggplot2::theme_bw() +
-    labs(x = "Resolution", y = "Avg. Silhouette Score Across All Cells")
+    ggplot2::labs(x = "Resolution", y = "Avg. Silhouette Score Across All Cells")
 
   plot4 <- ggplot2::ggplot(
     sil_summary,
