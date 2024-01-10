@@ -24,7 +24,7 @@ jobs:
         shell: Rscript {0}
 
       - name: Lint root directory
-        run: lintr::lint_dir()
+        run: lintr::lint_dir("R")
         shell: Rscript {0}
         env:
           LINTR_ERROR_ON_LINT: true

@@ -7,16 +7,15 @@
 clust_opt(
   input,
   ndim,
-  plan = "multicore",
   dtype = "scRNA",
-  tmp_dir = "~/tmp",
   sketch_size = NULL,
   subject_ids,
   seed = 1,
   res_range = c(0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
   within_batch = NA,
   ncore = 4,
-  verbose = FALSE
+  verbose = FALSE,
+  num.trees = 1000
 )
 }
 \arguments{
@@ -24,14 +23,8 @@ clust_opt(
 
 \item{ndim}{Number of principal components to use.}
 
-\item{plan}{Type of future::plan for parallelization, "multicore" or
-"multisession". Use "multisession" if running in RStudio or on a Windows OS.}
-
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
 is "scRNA". CyTOF data is expected to be arcsinh normalized.}
-
-\item{tmp_dir}{Temporary directory to train and test store on-disk matrices.
-Defaults to ~/tmp}
 
 \item{subject_ids}{Metadata field that identifies unique samples.}
 
@@ -41,6 +34,8 @@ Defaults to ~/tmp}
 same value for the batch variable will be used for training.}
 
 \item{verbose}{print messages.}
+
+\item{num.trees}{Number of trees to use in the random forest.}
 
 \item{ncores}{Number of cores.}
 }

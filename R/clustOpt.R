@@ -5,15 +5,19 @@ NULL
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Functions
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#' @title clust_opt
+#' @description
 #' Runs the main resolution optimization algorithm
 #'
 #' @param input Seurat object
-#' @param subject_ids Metadata field that identifies unique samples.
 #' @param ndim Number of principal components to use.
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
-#' is "scRNA". CyTOF data is expected to be arcsinh normalized.
+#' is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts slot)
+#' and sketching is not implemented for CyTOF.
+#' @param sketch_size Number of cells to use for sketching.
+#' @param subject_ids Metadata field that identifies unique samples.
+#' @param seed Random seed.
 #' @param res_range Range of resolutions to test.
-#' @param ncores Number of cores.
 #' @param verbose print messages.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
@@ -34,7 +38,6 @@ clust_opt <- function(input,
                         0.2, 0.4, 0.6, 0.8, 1, 1.2
                       ),
                       within_batch = NA,
-                      ncore = 4,
                       verbose = FALSE,
                       num.trees = 1000) {
   sample_names <- as.vector((unique(input@meta.data[[subject_ids]])))
@@ -43,16 +46,19 @@ clust_opt <- function(input,
     stop("dtype is not one of 'CyTOF' or 'scRNA'")
   }
 
-  # Clear any previous normalizations
-  Seurat::DefaultAssay(input) <- "RNA"
-  input <- Seurat::DietSeurat(input, assays = "RNA")
+  if (dtype == "scRNA") {
+    # Clear any previous normalizations
+    Seurat::DefaultAssay(input) <- "RNA"
+    input <- Seurat::DietSeurat(input, assays = "RNA")
 
-  if (check_size(input) || !is.null(sketch_size)) {
-    message("Sketching input data")
-    input <- leverage_sketch(input, sketch_size)
-  } else {
-    message("Input is small enough to run with all cells")
+    if (check_size(input) || !is.null(sketch_size)) {
+      message("Sketching input data")
+      input <- leverage_sketch(input, sketch_size)
+    } else {
+      message("Input is small enough to run with all cells")
+    }
   }
+
   set.seed(seed)
 
 
@@ -62,10 +68,11 @@ clust_opt <- function(input,
     "Found ", nrow(runs),
     " combinations of test sample and resolution"
   ))
-  
+
   # Set up progress logging
   progressr::handlers("progress")
   p <- progressr::progressor(along = unique(runs[, 1]))
+
   result <- NULL
   for (sam in unique(runs[, 1])) {
     message(paste0("Holdout sample: ", sam))
@@ -88,48 +95,75 @@ clust_opt <- function(input,
       subject_ids = subject_ids,
       test_id = sam
     )
+    if (dtype == "scRNA") {
+      message(sprintf(
+        "Found %d (%.2f%%) shared genes between testing and training data",
+        length(intersect(
+          rownames(test@assays[["SCT"]]@scale.data),
+          Seurat::VariableFeatures(train)
+        )),
+        length(intersect(
+          rownames(test@assays[["SCT"]]@scale.data),
+          Seurat::VariableFeatures(train)
+        )) / length(rownames(train@assays[["SCT"]]@scale.data)) * 100
+      ))
+    }
 
-    message(sprintf(
-      "Found %d (%.2f%%) shared genes between testing and training data",
-      length(intersect(
-        rownames(test@assays[["SCT"]]@scale.data),
-        Seurat::VariableFeatures(train)
-      )),
-      length(intersect(
-        rownames(test@assays[["SCT"]]@scale.data),
-        Seurat::VariableFeatures(train)
-      )) / length(rownames(train@assays[["SCT"]]@scale.data)) * 100
-    ))
+    if (dtype == "scRNA") {
+      train <- Seurat::RunPCA(train,
+        npcs = ndim,
+        verbose = FALSE,
+        assay = "SCT"
+      )
+      train <- Seurat::FindNeighbors(
+        object = train,
+        dims = 1:ndim,
+        verbose = verbose
+      )
 
-    train <- Seurat::RunPCA(train,
-      npcs = ndim,
-      verbose = FALSE,
-      assay = "SCT"
-    )
-    train <- Seurat::FindNeighbors(
-      object = train,
-      dims = 1:ndim,
-      verbose = verbose
-    )
-
-    train <- Seurat::FindClusters(
-      object = train,
-      resolution = res_range,
-      verbose = verbose
-    )
+      train <- Seurat::FindClusters(
+        object = train,
+        resolution = res_range,
+        verbose = verbose
+      )
+    } else {
+      train <- Seurat::ScaleData(train, features = NULL, verbose = verbose)
+      train <- Seurat::FindVariableFeatures(train,
+        selection.method = "vst", nfeatures = ndim
+      )
+      train <- Seurat::RunPCA(train,
+        npcs = ndim, approx = FALSE,
+        verbose = verbose
+      )
+      train <- Seurat::FindNeighbors(
+        object = train, dims = 1:ndim,
+        verbose = verbose
+      )
+      train <- Seurat::FindClusters(
+        object = train, resolution = res_range,
+        verbose = verbose
+      )
+    }
     if (verbose) {
       message("Clustering complete..")
     }
 
-    if (verbose) {
-      message("Project the cells in the test data onto the train PCs..")
-    }
-    train_clusters <- train@meta.data |>
-      dplyr::select(dplyr::contains("SCT_snn_res"))
+    if (dtype == "scRNA") {
+      train_clusters <- train@meta.data |>
+        dplyr::select(dplyr::contains("SCT_snn_res"))
+      if (verbose) {
+        message("Project the cells in the test data onto the train PCs..")
+      }
+      df_list <- project_PCA(train, test, ndim)
+      rm(train, test)
+    } else {
+      train_clusters <- train@meta.data |>
+        dplyr::select(dplyr::contains("RNA_snn_res"))
 
-    df_list <- project_PCA(train, test, ndim)
-    rm(train, test)
-    
+      df_list <- prepare_CyTOF(train, test)
+      rm(train, test)
+    }
+
     this_result <- future.apply::future_lapply(
       1:nrow(runs),
       function(i) {
@@ -141,15 +175,17 @@ clust_opt <- function(input,
           num.trees = num.trees
         )
       },
-      future.seed = 42
+      future.seed = TRUE
     )
     result <- c(result, this_result)
     p()
   }
-  
-  purrr::map_df(result,.f = as.data.frame)
+
+  purrr::map_df(result, .f = as.data.frame)
 }
 
+#' @title prep_train
+#' @description
 #' Prepare training data for random forest
 #'
 #' @param input Seurat object
@@ -198,9 +234,11 @@ prep_train <- function(input,
     } else {
       # Return all other samples
       Seurat::Idents(input) <- subject_ids
-      train_cells <- Seurat::WhichCells(object = input,
-                                        idents = test_id,
-                                        invert = TRUE)
+      train_cells <- Seurat::WhichCells(
+        object = input,
+        idents = test_id,
+        invert = TRUE
+      )
       train_seurat <- subset(input, cells = train_cells)
       # Normalize the training samples
       train_seurat <- Seurat::SCTransform(train_seurat,
@@ -211,9 +249,39 @@ prep_train <- function(input,
       return(train_seurat)
     }
   } else {
-    return(NULL)
+    if (!is.na(within_batch)) {
+      # Get the batch of test_id
+      this_batch <- input@meta.data |>
+        dplyr::filter(get(subject_ids) == test_id) |>
+        dplyr::pull(get(within_batch)) |>
+        unique()
+
+      if (length(this_batch) > 1) {
+        stop("More than one batch found for this sample")
+      }
+
+      train_cells <- input@meta.data |>
+        dplyr::filter(get(subject_ids) != test_id &
+          get(within_batch) == this_batch) |>
+        rownames()
+      train_seurat <- subset(input, cells = train_cells)
+      return(train_seurat)
+    } else {
+      # Return all other samples
+      Seurat::Idents(input) <- subject_ids
+      train_cells <- Seurat::WhichCells(
+        object = input,
+        idents = test_id,
+        invert = TRUE
+      )
+      train_seurat <- subset(input, cells = train_cells)
+      return(train_seurat)
+    }
   }
 }
+
+#' @title prep_test
+#' @description
 #' Prepare test data for random forest
 #'
 #' @param input Seurat object
@@ -245,9 +313,15 @@ prep_test <- function(input,
 
     return(test_seurat)
   } else {
-    return(NULL)
+    Seurat::Idents(input) <- subject_ids
+    test_cells <- Seurat::WhichCells(object = input, idents = test_id)
+    test_seurat <- subset(input, cells = test_cells)
+    return(test_seurat)
   }
 }
+
+#' @title project_PCA
+#' @description
 #' Project Training and Test Seurat Objects onto Principal Components
 #'
 #' This function projects both training and test Seurat objects onto a set of
@@ -276,7 +350,7 @@ prep_test <- function(input,
 project_PCA <- function(train_seurat, test_seurat, ndim) {
   # Validate input
   if (!("Seurat" %in% class(train_seurat)) ||
-      !("Seurat" %in% class(test_seurat))) {
+    !("Seurat" %in% class(test_seurat))) {
     stop("Both train_seurat and test_seurat must be Seurat objects")
   }
   if (!is.numeric(ndim) || ndim <= 0) {
@@ -321,6 +395,8 @@ project_PCA <- function(train_seurat, test_seurat, ndim) {
   )
 }
 
+#' @title train_random_forest
+#' @description
 #' Train the random forest and predict on the test sample
 #' @param res Resolution to train on
 #' @param df_list List containing training and test data
@@ -334,8 +410,8 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
   # Get cluster assignments for this res
   train_df <- df_list[[1]] |>
     dplyr::mutate(clusters = train_clusters |>
-             dplyr::select(dplyr::contains(as.character(res))) |>
-             dplyr::pull())
+      dplyr::select(dplyr::contains(as.character(res))) |>
+      dplyr::pull())
 
   # Train model
   rf <- ranger::ranger(as.factor(clusters) ~ .,
@@ -355,7 +431,7 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
 
   list(
     resolution = res,
-    test_sample = sam, 
+    test_sample = sam,
     avg_width = sil$avg_width,
     cluster_avg_widths = sil$group_avg_width,
     n_predicted_clusters = length(unique(as.character(predicted))),
@@ -363,14 +439,15 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
     max_predicted_cell_per_cluster = max(predicted_clusters_table)
   )
 }
-
+#' @title calculate_silhouette_score
+#' @description
 #' Calculate silhouette score
 #' @param predicted Cluster assignments
 #' @param data_frame Data frame containing the data
 #' @return A list containing the average silhouette score and the average
 #' silhouette score for each cluster.
 #' @export
-#' 
+#'
 calculate_silhouette_score <- function(predicted, data_frame) {
   sil <- cluster::silhouette(
     as.numeric(as.character(predicted)),
@@ -387,4 +464,29 @@ calculate_silhouette_score <- function(predicted, data_frame) {
       group_avg_width = mean(sil_summary$clus.avg.widths)
     ))
   }
+}
+
+#' @title prepare_CyTOF
+#' @description
+#' Prepare CyTOF data for random forest
+#'
+#' @param train_seurat A Seurat object representing the training data set.
+#' @param test_seurat A Seurat object representing the test data set.
+#'
+#' @return A list of the training and test data formatted for RF
+#' @export
+#'
+prepare_CyTOF <- function(train_seurat, test_seurat) {
+  list(
+    Seurat::GetAssayData(train_seurat, slot = "counts", assay = "RNA") |>
+      as.data.frame() |>
+      t() |>
+      tibble::as_tibble(rownames = "CellID") |>
+      dplyr::select(CellID, everything()),
+    Seurat::GetAssayData(test_seurat, slot = "counts", assay = "RNA") |>
+      as.data.frame() |>
+      t() |>
+      tibble::as_tibble(rownames = "CellID") |>
+      dplyr::select(CellID, everything())
+  )
 }
