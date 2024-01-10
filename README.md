@@ -19,7 +19,7 @@ This package provides a way to choose a resolution paramter that minimizes sampl
 ## Installation   
 Currently the only way to install is by using the package`devtools`:    
 ```
-install.packages("gladstone-institutes/clustOpt")
+devtools::install_github("gladstone-institutes/clustOpt")
 ```
 If you get an error message and everything is spelled correctly, follow these steps before trying again:
 ```
