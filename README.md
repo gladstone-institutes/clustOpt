@@ -21,7 +21,7 @@ Currently the only way to install is by using the package`devtools`:
 ```
 install.packages("gladstone-institutes/clustOpt")
 ```
-If you get a 404 message and everything is spelled correctly, follow these steps before trying again:
+If you get an error message and everything is spelled correctly, follow these steps before trying again:
 ```
 #set config
 usethis::use_git_config(user.name = "YourName", user.email = "your@mail.com")
