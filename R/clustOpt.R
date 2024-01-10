@@ -10,12 +10,13 @@ NULL
 #' Runs the main resolution optimization algorithm
 #'
 #' @param input Seurat object
-#' @param subject_ids Metadata field that identifies unique samples.
 #' @param ndim Number of principal components to use.
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized.
+#' @param sketch_size Number of cells to use for sketching.
+#' @param subject_ids Metadata field that identifies unique samples.
+#' @param seed Random seed.
 #' @param res_range Range of resolutions to test.
-#' @param ncores Number of cores.
 #' @param verbose print messages.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
@@ -36,7 +37,6 @@ clust_opt <- function(input,
                         0.2, 0.4, 0.6, 0.8, 1, 1.2
                       ),
                       within_batch = NA,
-                      ncore = 4,
                       verbose = FALSE,
                       num.trees = 1000) {
   sample_names <- as.vector((unique(input@meta.data[[subject_ids]])))

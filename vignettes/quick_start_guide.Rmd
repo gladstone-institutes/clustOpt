@@ -31,7 +31,7 @@ library(future)
 set.seed(1)
 ```
 
-Read in a leverage score based sketch of 5000 cells from 10 donorsin the AIDA dataset
+Read in a leverage score based sketch of 5000 cells from 10 donors in the ROSMAP dataset
 ```{r load_data}
 input <- readRDS("../inst/extdata/5000_sketch_ROSMAP.Rds")
 
