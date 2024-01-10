@@ -13,13 +13,13 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
+knitr::opts_chunk$set(dev = "png",
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-```{r setup, warning=FALSE, echo=FALSE}
+```{r setup, warning=FALSE, echo=FALSE, dpi=400}
 library(Seurat)
 # Only v5 Seurat Assays are supported
 options(Seurat.object.assay.version = "v5")
@@ -32,6 +32,7 @@ set.seed(1)
 ```
 
 Read in a leverage score based sketch of 5000 cells from 10 donors in the ROSMAP dataset
+
 ```{r load_data}
 input <- readRDS("../inst/extdata/5000_sketch_ROSMAP.Rds")
 
@@ -40,8 +41,7 @@ input <- input |>
   RunPCA(verbose = FALSE)
 ```
 
-
-```{r elbowplot}
+```{r elbowplot, cache=TRUE}
 ElbowPlot(input, ndims = 50)
 ```
 
@@ -50,21 +50,19 @@ input <- RunUMAP(input, dims = 1:20)
 
 DimPlot(input,
   group.by = "projid",
-  pt.size = 1
+  pt.size = .8
 )
 ```
 
-
-```{r, fig.width=15}
+```{r}
 DimPlot(input,
   group.by = "broad.cell.type",
   label = TRUE,
   label.box = TRUE,
   repel = TRUE,
-  pt.size = 2
+  pt.size = .8
 )
 ```
-
 
 Model training is parallelized with `future` and `future.batchtools` can be used to parallelize training using HPC job schedulers.
 
@@ -100,8 +98,7 @@ input <- FindNeighbors(input, dims = 1:20, verbose = F)
 input <- FindClusters(input, resolution = 0.1)
 
 DimPlot(input,
-  group.by = "broad.cell.type",
-  split.by = "seurat_clusters",
-  ncol = 2
+  group.by = "seurat_clusters",
+  pt.size = .8
 )
 ```
