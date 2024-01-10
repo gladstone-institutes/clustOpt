@@ -13,10 +13,22 @@ The resolution parameter controls the granularity of the communities (clusters) 
 
 There are many potential sources of noise in scRNA-seq data that can result in clusters that are technical artifacts. The stability of a given cluster can also be impacted by a sample-specific variation. Since downstream analysis relies heavily on the assumption that clusters are defined by the biological variation of interest, it is important to choose a resolution that minimizes the effect of technical variation on cluster membership.
 
-## Goal
-This package provides a way to choose a resolution paramter that minimizes sample-specific effects on cluster membership. It uses random forest (RF) models with an approach similar to leave one out cross validation, where each sample is held out and the rest are used to train a RF to predict the cluster labels for the held out sample. This is done across a range of resolution values to generate a distribution of silhouette scores for the held out sample across the iterations. This silhouette score distribution is then used to choose a resultion value whose mean silhouette score results in a local maximum.
-
-## Current Status
-Currently implemented in an Rscript, this repo will be used to turn it into a package and incorporate some performance improvements.
+This package provides a way to choose a resolution paramter that minimizes sample-specific effects on cluster membership. It uses random forest (RF) models with an approach similar to leave one out cross validation, where each sample is held out and the rest are used to train a RF to predict the cluster labels for the held out sample. This is done across a range of resolution values to generate a distribution of silhouette scores for the held out sample across the iterations. This silhouette score distribution is then used to choose a resultion value whose mean silhouette score results in a local maximum.   
 
 
+## Installation   
+Currently the only way to install is by using the package`devtools`:    
+```
+install.packages("gladstone-institutes/clustOpt")
+```
+If you get a 404 message and everything is spelled correctly, follow these steps before trying again:
+```
+#set config
+usethis::use_git_config(user.name = "YourName", user.email = "your@mail.com")
+
+#Go to github page to generate token
+usethis::create_github_token() 
+
+#paste your PAT into pop-up that follows...
+credentials::set_github_pat()
+```
