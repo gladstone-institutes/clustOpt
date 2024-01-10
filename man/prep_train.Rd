@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustOpt.R
 \name{prep_train}
 \alias{prep_train}
-\title{Prepare training data for random forest}
+\title{prep_train}
 \usage{
 prep_train(input, subject_ids, dtype = "scRNA", within_batch = NA, test_id)
 }

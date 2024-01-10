@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustOpt.R
 \name{calculate_silhouette_score}
 \alias{calculate_silhouette_score}
-\title{Calculate silhouette score}
+\title{calculate_silhouette_score}
 \usage{
 calculate_silhouette_score(predicted, data_frame)
 }

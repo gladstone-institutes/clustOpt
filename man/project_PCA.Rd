@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustOpt.R
 \name{project_PCA}
 \alias{project_PCA}
-\title{Project Training and Test Seurat Objects onto Principal Components}
+\title{project_PCA}
 \usage{
 project_PCA(train_seurat, test_seurat, ndim)
 }
@@ -19,6 +19,8 @@ of the projected data for the training and test sets, respectively, using
 the specified number of principal components.
 }
 \description{
+Project Training and Test Seurat Objects onto Principal Components
+
 This function projects both training and test Seurat objects onto a set of
 principal components derived from the training data.
 }

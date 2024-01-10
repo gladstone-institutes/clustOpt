@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{create_sil_plots}
 \alias{create_sil_plots}
-\title{Silhouette score distribution plots}
+\title{create_sil_plots}
 \usage{
 create_sil_plots(sil_dist)
 }

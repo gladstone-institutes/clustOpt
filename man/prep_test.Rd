@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustOpt.R
 \name{prep_test}
 \alias{prep_test}
-\title{Prepare test data for random forest}
+\title{prep_test}
 \usage{
 prep_test(input, subject_ids, dtype = "scRNA", test_id)
 }

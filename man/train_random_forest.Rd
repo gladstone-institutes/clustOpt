@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustOpt.R
 \name{train_random_forest}
 \alias{train_random_forest}
-\title{Train the random forest and predict on the test sample}
+\title{train_random_forest}
 \usage{
 train_random_forest(res, df_list, train_clusters, sam, num.trees)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustOpt.R
 \name{clust_opt}
 \alias{clust_opt}
-\title{Runs the main resolution optimization algorithm}
+\title{clust_opt}
 \usage{
 clust_opt(
   input,
@@ -13,7 +13,6 @@ clust_opt(
   seed = 1,
   res_range = c(0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
   within_batch = NA,
-  ncore = 4,
   verbose = FALSE,
   num.trees = 1000
 )
@@ -24,9 +23,14 @@ clust_opt(
 \item{ndim}{Number of principal components to use.}
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
-is "scRNA". CyTOF data is expected to be arcsinh normalized.}
+is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts slot)
+and sketching is not implemented for CyTOF.}
+
+\item{sketch_size}{Number of cells to use for sketching.}
 
 \item{subject_ids}{Metadata field that identifies unique samples.}
+
+\item{seed}{Random seed.}
 
 \item{res_range}{Range of resolutions to test.}
 
@@ -36,8 +40,6 @@ same value for the batch variable will be used for training.}
 \item{verbose}{print messages.}
 
 \item{num.trees}{Number of trees to use in the random forest.}
-
-\item{ncores}{Number of cores.}
 }
 \value{
 A data.frame containing a distribution of silhouette scores for each
