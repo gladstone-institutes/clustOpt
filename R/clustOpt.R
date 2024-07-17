@@ -165,7 +165,7 @@ clust_opt <- function(input,
     }
 
     this_result <- future.apply::future_lapply(
-      1:nrow(runs),
+      rownames(runs[runs$Var1 == sam,]),
       function(i) {
         train_random_forest(
           res = runs[i, 2],
