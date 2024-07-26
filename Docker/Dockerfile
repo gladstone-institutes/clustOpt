@@ -15,10 +15,11 @@ RUN apt-get update && apt-get upgrade -y \
 RUN Rscript -e 'install.packages(c("optparse", "remotes"))'
 RUN Rscript -e 'install.packages(c("foreach","doParallel"))'
 RUN Rscript -e 'install.packages(c("tidyverse"))'
-RUN Rscript -e 'remotes::install_github("spatstat/spatstat.core")'
+#RUN Rscript -e 'remotes::install_github("spatstat/spatstat.core")'
+RUN Rscript -e 'devtools::install_version("spatstat", version = "1.64-1")'
 RUN Rscript -e 'install.packages("ranger")'
 RUN Rscript -e 'install.packages("BiocManager")'
-RUN Rscript -e 'remotes::install_github("cran/Matrix", ref = "1.5-3")'
+RUN Rscript -e 'remotes::install_github("cran/Matrix", ref = "1.7-0")'
 RUN Rscript -e 'BiocManager::install("glmGamPoi")'
 RUN Rscript -e 'install.packages("ggpubr")'
 RUN Rscript -e 'install.packages("hdf5r")'
@@ -31,13 +32,12 @@ RUN Rscript -e 'install.packages("ranger")'
 
 # Install seurat v5 packages
 RUN Rscript -e 'remotes::install_github("satijalab/seurat", "seurat5")'
-RUN Rscript -e 'remotes::install_github("satijalab/azimuth", "seurat5")'
-RUN Rscript -e 'remotes::install_github("satijalab/seurat-data", "seurat5")'
-RUN Rscript -e 'remotes::install_github("mojaveazure/seurat-object", "seurat5")'
-RUN Rscript -e 'remotes::install_github("satijalab/seurat-wrappers", "seurat5")'
-RUN Rscript -e 'remotes::install_github("stuart-lab/signac", "seurat5")'
+RUN Rscript -e 'remotes::install_github("satijalab/azimuth", "master")'
+RUN Rscript -e 'remotes::install_github("satijalab/seurat-data", "master")'
+#RUN Rscript -e 'remotes::install_version("SeuratObject", "5.0.2")'
+RUN Rscript -e 'remotes::install_github("satijalab/seurat-wrappers", "master")'
+RUN Rscript -e 'remotes::install_github("stuart-lab/signac", "master")'
 RUN Rscript -e 'remotes::install_github("bnprks/BPCells")'
-
 
 
 WORKDIR /opt

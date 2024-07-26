@@ -180,7 +180,13 @@ clust_opt <- function(input,
     }
 
     this_result <- future.apply::future_lapply(
+<<<<<<< HEAD
       seq_len(nrow(runs)),
+||||||| d571bce
+      1:nrow(runs),
+=======
+      rownames(runs[runs$Var1 == sam,]),
+>>>>>>> main
       function(i) {
         train_random_forest(
           res = runs[i, 2],

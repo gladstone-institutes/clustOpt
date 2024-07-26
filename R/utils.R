@@ -70,13 +70,28 @@ sil_summary <- function(input) {
       median_score = stats::median(avg_width, na.rm = TRUE),
       variance_score = stats::var(avg_width, na.rm = TRUE),
       standard_error_score = stats::sd(avg_width,
+<<<<<<< HEAD
         na.rm = TRUE
       ) / sqrt(length(avg_width)),
       cluster_median_score = stats::median(cluster_median_widths, na.rm = TRUE),
       cluster_variance_score = stats::var(cluster_median_widths, na.rm = TRUE),
       cluster_standard_error_score = stats::sd(cluster_median_widths, na.rm = TRUE) /
         sqrt(length(avg_width))
+||||||| d571bce
+                                      na.rm = TRUE) / sqrt(length(avg_width)),
+      cluster_mean_score = base::mean(cluster_avg_widths, na.rm = TRUE),
+      cluster_variance_score = stats::var(cluster_avg_widths, na.rm = TRUE),
+      cluster_standard_error_score = stats::sd(cluster_avg_widths, na.rm = TRUE) /
+        sqrt(length(avg_width))
+=======
+                                      na.rm = TRUE) / sqrt(length(avg_width)),
+      cluster_mean_score = base::mean(cluster_avg_widths, na.rm = TRUE),
+      cluster_variance_score = stats::var(cluster_avg_widths, na.rm = TRUE),
+      cluster_standard_error_score = stats::sd(cluster_avg_widths, na.rm = TRUE) /
+        sqrt(length(cluster_avg_widths))
+>>>>>>> main
     )
+<<<<<<< HEAD
 }
 #' Convert a Seurat object to BPCells on-disk format
 #'
@@ -143,3 +158,8 @@ convert_seurat_to_bpcells <- function(seurat_obj, output_dir = NULL,
   # Return the updated Seurat object
   return(seurat_obj)
 }
+||||||| d571bce
+}
+=======
+}
+>>>>>>> main
