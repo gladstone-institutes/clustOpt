@@ -33,6 +33,9 @@ if (is.na(opt$input) | is.na(opt$output_dir) ) {
 }
 
 
+# Packages and settings ---------------------------------------------------
+
+
 library(Seurat)
 options(Seurat.object.assay.version = "v5")
 # needs to be set for large dataset analysis
@@ -40,6 +43,14 @@ options(future.globals.maxSize = 1e9)
 library(BPCells)
 library(Azimuth)
 library(tidyverse)
+
+
+
+# Functions ---------------------------------------------------------------
+
+
+
+# Process -----------------------------------------------------------------
 
 h_data <- open_matrix_anndata_hdf5(
   path = opt$input

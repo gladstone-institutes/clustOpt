@@ -13,7 +13,8 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(dev = "png",
+knitr::opts_chunk$set(
+  dev = "png",
   collapse = TRUE,
   comment = "#>"
 )
@@ -46,7 +47,7 @@ ElbowPlot(input, ndims = 50)
 ```
 
 ```{r UMAP, warning=FALSE}
-input <- RunUMAP(input, dims = 1:20)
+input <- RunUMAP(input, dims = 1:20, verbose = FALSE)
 
 DimPlot(input,
   group.by = "projid",
@@ -64,19 +65,19 @@ DimPlot(input,
 )
 ```
 
-Model training is parallelized with `future` and `future.batchtools` can be used to parallelize training using HPC job schedulers.
+Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers.
 
 ```{r clustOpt}
-plan("multisession", workers = 10)
+plan("multisession", workers = 12)
 
 sil_dist <- clust_opt(input,
   res_range = c(
     0.02, 0.04, 0.06, 0.08, 0.1,
-    0.2, 0.4, 0.6, 0.8
+    0.2, 0.4, 0.6, 0.8, 1, 1.2
   ),
   subject_ids = "projid",
   ndim = 20,
-  verbose = F
+  verbose = FALSE
 ) |> progressr::with_progress()
 
 # Shut down stray workers
@@ -86,7 +87,8 @@ plan("sequential")
 ## Plotting the silhouette score distributions
 
 ```{r plotting}
-create_sil_plots(sil_dist)
+create_sil_plots(sil_dist) |>
+  gridExtra::grid.arrange()
 ```
 
 The local maximum in the mean silhouette scores at 0.1 indicates that this clustering resolution is the most reproducible across all biological samples.
@@ -94,7 +96,7 @@ The local maximum in the mean silhouette scores at 0.1 indicates that this clust
 ## Comparison to the cell annotations
 
 ```{r cluster}
-input <- FindNeighbors(input, dims = 1:20, verbose = F)
+input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
 input <- FindClusters(input, resolution = 0.1)
 
 DimPlot(input,

@@ -9,12 +9,12 @@ clust_opt(
   ndim,
   dtype = "scRNA",
   sketch_size = NULL,
+  skip_sketch = FALSE,
   subject_ids,
-  seed = 1,
   res_range = c(0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
   within_batch = NA,
   verbose = FALSE,
-  num.trees = 1000
+  num_trees = 1000
 )
 }
 \arguments{
@@ -23,14 +23,12 @@ clust_opt(
 \item{ndim}{Number of principal components to use.}
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
-is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts slot)
-and sketching is not implemented for CyTOF.}
+is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
+ slot) and sketching is not implemented for CyTOF.}
 
 \item{sketch_size}{Number of cells to use for sketching.}
 
 \item{subject_ids}{Metadata field that identifies unique samples.}
-
-\item{seed}{Random seed.}
 
 \item{res_range}{Range of resolutions to test.}
 
