@@ -21,6 +21,8 @@ NULL
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
 #' @param num.trees Number of trees to use in the random forest.
+#' @param train_with Should odd or even PCs be used for training (default
+#' "even")
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
 #'
@@ -38,8 +40,9 @@ clust_opt <- function(input,
                       ),
                       within_batch = NA,
                       verbose = FALSE,
-                      num_trees = 1000) {
-  sample_names <- as.vector((unique(input@meta.data[[subject_ids]])))
+                      num_trees = 1000,
+                      train_with = "even") {
+  sample_names <- as.vector(unique(input@meta.data[[subject_ids]]))
 
   if (!(dtype %in% c("CyTOF", "scRNA"))) {
     stop("dtype is not one of 'CyTOF' or 'scRNA'")
@@ -91,51 +94,44 @@ clust_opt <- function(input,
       within_batch = within_batch,
       test_id = sam
     )
+
     if (verbose) {
       message(paste0("Preparing test data.."))
     }
+
     test <- prep_test(
       input = input,
       dtype = dtype,
       subject_ids = subject_ids,
       test_id = sam
     )
+
     if (dtype == "scRNA") {
-      message(sprintf(
-        "Found %d (%.2f%%) shared genes between testing and training data",
-        length(intersect(
-          rownames(test@assays[["SCT"]]@scale.data),
-          Seurat::VariableFeatures(train)
-        )),
-        length(intersect(
-          rownames(test@assays[["SCT"]]@scale.data),
-          Seurat::VariableFeatures(train)
-        )) / length(rownames(train@assays[["SCT"]]@scale.data)) * 100
-      ))
-    }
-    # Add switch here to select odd or even
-    if (dtype == "scRNA") {
+      train_pca <- switch(train_with,
+        odd = "even_pca",
+        even = "odd_pca"
+      )
+
       train <- Seurat::RunPCA(train,
         npcs = ndim,
         verbose = FALSE,
         assay = "SCT"
       )
-      # Separate even or odd PCA dimensions
-      # 2 reductions
-      # Even PCA and Odd PCA
-      
+
+      # Create 2 separate PCA reductions "even_pca" and "odd_pca"
+      train <- split_pca_dimensions(train)
+
       train <- Seurat::FindNeighbors(
         object = train,
-        dims = 1:ndim,
-        verbose = verbose
-        # reduction = "[switch]_pca"
+        dims = 1:ncol(train@reductions[[train_pca]]@cell.embeddings),
+        verbose = verbose,
+        reduction = train_pca
       )
 
       train <- Seurat::FindClusters(
         object = train,
         resolution = res_range,
         verbose = verbose
-        # reduction = "[switch]_pca"
       )
     } else {
       train <- Seurat::ScaleData(train, features = NULL, verbose = verbose)
@@ -148,14 +144,14 @@ clust_opt <- function(input,
       )
 
       train <- Seurat::FindNeighbors(
-        object = train, dims = 1:ndim,
+        object = train,
+        dims = 1:ndim,
         verbose = verbose
-        # reduction = "[switch]_pca"
       )
       train <- Seurat::FindClusters(
-        object = train, resolution = res_range,
+        object = train,
+        resolution = res_range,
         verbose = verbose
-        # reduction = "[switch]_pca"
       )
     }
     if (verbose) {
@@ -165,22 +161,24 @@ clust_opt <- function(input,
     if (dtype == "scRNA") {
       train_clusters <- train@meta.data |>
         dplyr::select(dplyr::contains("SCT_snn_res"))
-      
+
       if (verbose) {
         message("Project the cells in the test data onto the train PCs..")
       }
-      df_list <- project_pca(train, test, ndim) # Add switch here to select opposite of PCs that were used for clustering
+
+      df_list <- project_pca(train, test, train_with)
+
       rm(train, test)
     } else {
       train_clusters <- train@meta.data |>
         dplyr::select(dplyr::contains("RNA_snn_res"))
 
-      df_list <- prepare_cytof(train, test) # Add switch here to select opposite of PCs that were used for clustering
+      df_list <- prepare_cytof(train, test)
       rm(train, test)
     }
 
     this_result <- future.apply::future_lapply(
-      seq_len(nrow(runs)),
+      rownames(runs[runs$Var1 == sam, ]),
       function(i) {
         train_random_forest(
           res = runs[i, 2],
@@ -188,7 +186,6 @@ clust_opt <- function(input,
           train_clusters = train_clusters,
           sam = runs[i, 1],
           num.trees = num_trees
-          # Add switch here to select odd or even
         )
       },
       future.seed = TRUE
@@ -198,6 +195,59 @@ clust_opt <- function(input,
   }
 
   purrr::map_df(res, .f = as.data.frame)
+}
+
+#' @title split_pca_dimensions
+#' @description
+#' Takes a Seurat object with an existing PCA reduction and splits the
+#' dimensions into even and odd PC dimensions. New reductions are
+#' created and named "even_pca" and "odd_pca". The last PC will be
+#' removed if there are an odd number of PCs.
+#'
+#' @param input Seurat object
+#' @param balance Balance the number of even and odd PC dimensions, default
+#' is TRUE
+#'
+#' @return Seurat object with new PCA reductions
+#' @export
+#' @examples
+#' \dontrun{
+#' seurat_obj <- CreateSeuratObject(counts = matrix(rnorm(1000), ncol = 10))
+#' seurat_obj <- RunPCA(seurat_obj)
+#' seurat_obj <- split_pca_by_parity(seurat_obj)
+#' }
+split_pca_dimensions <- function(input, balance = TRUE) {
+  if (!inherits(input, "Seurat")) {
+    stop("Input must be a Seurat object")
+  }
+  if (!"pca" %in% names(input@reductions)) {
+    stop("Seurat object must have a PCA reduction")
+  }
+
+  pca <- input@reductions$pca
+  dims <- ncol(pca@cell.embeddings)
+
+  if (dims %% 2 == 1 & balance) {
+    dims <- dims - 1
+  }
+
+  even_dims <- seq(2, dims, by = 2)
+  odd_dims <- seq(1, dims, by = 2)
+
+  even_pca <- pca
+  even_pca@cell.embeddings <- even_pca@cell.embeddings[, even_dims]
+  even_pca@feature.loadings <- even_pca@feature.loadings[, even_dims]
+  even_pca@key <- "even_pca_"
+
+  odd_pca <- pca
+  odd_pca@cell.embeddings <- odd_pca@cell.embeddings[, odd_dims]
+  odd_pca@feature.loadings <- odd_pca@feature.loadings[, odd_dims]
+  odd_pca@key <- "odd_pca_"
+
+  input@reductions$even_pca <- even_pca
+  input@reductions$odd_pca <- odd_pca
+
+  return(input)
 }
 
 #' @title prep_train
@@ -345,14 +395,14 @@ prep_test <- function(input,
 #'
 #' @param train_seurat A Seurat object representing the training data set.
 #' @param test_seurat A Seurat object representing the test data set.
-#' @param ndim The number of principal components to use for projection.
+#' @param train_with Train the models with even or odd PCs only (default is even)
 #'
 #' @details
 #' Identifies features that are common between the training
-#' and test data sets. It then extracts the PCA loadings from the training data
-#' for these common features. Both training and test data are projected onto
-#' these loadings. Finally, the function selects the specified number of
-#' dimensions (principal components) for the output.
+#' and test data sets. Extracts the PCA loadings from the training data
+#' for common features. If train_with = "even", then projection is performed with
+#' only the odd PCs. Both training and test data are projected onto these loadings.
+#' Data is also projected onto loadings from all PCs for cluster scoring.
 #'
 #'
 #' @return
@@ -363,14 +413,10 @@ prep_test <- function(input,
 #'
 #' @export
 #'
-project_pca <- function(train_seurat, test_seurat, ndim) {
+project_pca <- function(train_seurat, test_seurat, train_with) {
   # Validate input
-  if (!("Seurat" %in% class(train_seurat)) ||
-    !("Seurat" %in% class(test_seurat))) {
+  if (!inherits(train_seurat, "Seurat") || !inherits(test_seurat, "Seurat")) {
     stop("Both train_seurat and test_seurat must be Seurat objects")
-  }
-  if (!is.numeric(ndim) || ndim <= 0) {
-    stop("ndim must be a positive integer")
   }
 
   # Features present in both the training variable features and test sample
@@ -378,37 +424,64 @@ project_pca <- function(train_seurat, test_seurat, ndim) {
     rownames(test_seurat@assays[["SCT"]]@scale.data),
     Seurat::VariableFeatures(train_seurat)
   )
+  n_shared_genes <- length(common_features)
+  total_genes <- length(rownames(train_seurat@assays[["SCT"]]@scale.data))
+  message(sprintf(
+    "Found %d (%.2f%%) shared genes used for projecting test data",
+    n_shared_genes,
+    (n_shared_genes / total_genes) * 100
+  ))
 
-  # Extract the loadings for common features from the training data
-  # ** Project the cells in the training and test data onto the opposite PCs (if even is used for clustering, use odd PCs)
-  # Subset to ndim, then select odd or even
-  loadings_common_features <- Seurat::Loadings(train_seurat[["pca"]]) |>
-    tibble::as_tibble(rownames = "features") |>
-    dplyr::filter(features %in% common_features) |> # nolint
-    as.matrix()
+  # Project the cells in the training and test data onto the opposite PCs
+  # (if even is used for clustering, use odd PCs for training and prediction)
 
-  rownames(loadings_common_features) <- loadings_common_features[, 1]
-  loadings_common_features <- loadings_common_features[, -1]
-  class(loadings_common_features) <- "numeric"
+  project_data <- function(seurat_obj, train_with) {
+    reduction <- switch(train_with,
+      even = "even_pca",
+      odd = "odd_pca"
+    )
 
-  # Function to project data
-  project_data <- function(seurat_obj) {
+    loadings_common_features <- Seurat::Loadings(train_seurat[[reduction]]) |>
+      tibble::as_tibble(rownames = "features") |>
+      dplyr::filter(features %in% common_features) |>
+      as.matrix()
+
+    rownames(loadings_common_features) <- loadings_common_features[, 1]
+    loadings_common_features <- loadings_common_features[, -1]
+    class(loadings_common_features) <- "numeric"
     scale_data <- as.matrix(seurat_obj[["SCT"]]@scale.data)[common_features, ]
+
     t(scale_data) %*% loadings_common_features
   }
 
-  # Project the cells in the training and test data onto the opposite PCs (if even is used for clustering, use odd PCs)
-  pca_train_data <- project_data(train_seurat)
-  pca_test_data <- project_data(test_seurat)
+  project_all <- function(seurat_obj) {
+    loadings_common_features <- Seurat::Loadings(train_seurat[["pca"]]) |>
+      tibble::as_tibble(rownames = "features") |>
+      dplyr::filter(features %in% common_features) |>
+      as.matrix()
 
-  rm(loadings_common_features)
+    rownames(loadings_common_features) <- loadings_common_features[, 1]
+    loadings_common_features <- loadings_common_features[, -1]
+    class(loadings_common_features) <- "numeric"
+    scale_data <- as.matrix(seurat_obj[["SCT"]]@scale.data)[common_features, ]
 
+    t(scale_data) %*% loadings_common_features
+  }
 
-  # Select the number of dimensions to train with
+  # Project the cells in the training and test data onto the opposite PCs
+  pca_train_data <- project_data(train_seurat, train_with)
+  pca_test_data <- project_data(test_seurat, train_with)
+  pca_test_eval_data <- project_all(test_seurat)
+  pca_train_eval_data <- project_all(train_seurat)
+
   list(
-    train_df = pca_train_data[, 1:ndim, drop = FALSE] |>
+    train_projected_data = pca_train_data |>
       as.data.frame(),
-    test_df = pca_test_data[, 1:ndim, drop = FALSE] |>
+    test_projected_data = pca_test_data |>
+      as.data.frame(),
+    test_eval_only_proj_data = pca_test_eval_data |>
+      as.data.frame(),
+    train_eval_only_proj_data = pca_train_eval_data |>
       as.data.frame()
   )
 }
@@ -426,11 +499,11 @@ project_pca <- function(train_seurat, test_seurat, ndim) {
 #'
 train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
   # Get cluster assignments for this res
-  train_df <- df_list[[1]] |>
+  train_df <- df_list[["train_projected_data"]] |>
     dplyr::mutate(clusters = train_clusters |>
       dplyr::select(dplyr::contains(as.character(res))) |>
       dplyr::pull())
-  
+
   # Train model
   rf <- ranger::ranger(as.factor(clusters) ~ .,
     data = train_df,
@@ -441,11 +514,11 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
   rm(train_df)
 
   # Predict on the hold out sample
-  predicted <- stats::predict(rf, df_list[[2]])
+  predicted <- stats::predict(rf, df_list[["test_projected_data"]])
   predicted <- ranger::predictions(predicted)
   predicted_clusters_table <- base::table(predicted)
   rm(rf)
-  sil <- calculate_silhouette_score(predicted, df_list[[2]]) # Replace df_list[[2]] with an independent PCA using total dimensions totally independent of the training
+  sil <- calculate_silhouette_score(predicted, df_list[["test_eval_only_proj_data"]]) 
 
   list(
     resolution = res,

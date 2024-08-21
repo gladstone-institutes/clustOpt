@@ -4,3 +4,5 @@ Seurat
 dplyr
 clustOpt
 future
+tidyr
+ggplot2

@@ -4,14 +4,14 @@
 \alias{project_pca}
 \title{project_pca}
 \usage{
-project_pca(train_seurat, test_seurat, ndim)
+project_pca(train_seurat, test_seurat, train_with)
 }
 \arguments{
 \item{train_seurat}{A Seurat object representing the training data set.}
 
 \item{test_seurat}{A Seurat object representing the test data set.}
 
-\item{ndim}{The number of principal components to use for projection.}
+\item{train_with}{Train the models with even or odd PCs only (default is even)}
 }
 \value{
 A list containing two elements: `train_df` and `test_df`. Each is a matrix
@@ -26,8 +26,8 @@ principal components derived from the training data.
 }
 \details{
 Identifies features that are common between the training
-and test data sets. It then extracts the PCA loadings from the training data
-for these common features. Both training and test data are projected onto
-these loadings. Finally, the function selects the specified number of
-dimensions (principal components) for the output.
+and test data sets. Extracts the PCA loadings from the training data
+for common features. If train_with = "even", then projection is performed with
+only the odd PCs. Both training and test data are projected onto these loadings.
+Data is also projected onto loadings from all PCs for cluster scoring.
 }
