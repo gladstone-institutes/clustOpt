@@ -60,11 +60,11 @@ input <- input |>
   RunPCA(verbose = FALSE)
 ```
 
-```{r elbowplot, cache=TRUE}
+```{r elbowplot}
 ElbowPlot(input, ndims = 50)
 ```
 
-```{r UMAP, warning=FALSE}
+```{r UMAP}
 input <- RunUMAP(input, dims = 1:20, verbose = FALSE)
 
 DimPlot(input,
@@ -95,7 +95,7 @@ sil_dist <- clust_opt(input,
   subject_ids = "donor_id",
   ndim = 20,
   verbose = FALSE,
-  train_with = "odd"
+  train_with = "even"
 ) |>
   progressr::with_progress() # Optional, just adds progress bar
 

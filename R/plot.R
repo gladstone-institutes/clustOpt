@@ -14,6 +14,8 @@ NULL
 #' @return A list of ggplot objects
 #' @export
 #'
+#' @importFrom ggplot2 ggplot aes geom_boxplot theme_bw
+#' @importFrom ggplot2 labs geom_errorbar geom_point geom_line
 create_sil_plots <- function(sil_dist) {
   sil_summary <- sil_summary(sil_dist)
 

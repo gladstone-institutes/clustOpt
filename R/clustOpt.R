@@ -15,19 +15,26 @@ NULL
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
 #'  slot) and sketching is not implemented for CyTOF.
 #' @param sketch_size Number of cells to use for sketching.
+#' @param skip_sketch Skip sketching, by default any input with more than
+#' 200,000 cells is sketched to 10\% of the cells.
 #' @param subject_ids Metadata field that identifies unique samples.
 #' @param res_range Range of resolutions to test.
 #' @param verbose print messages.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
-#' @param num.trees Number of trees to use in the random forest.
+#' @param num_trees Number of trees to use in the random forest.
 #' @param train_with Should odd or even PCs be used for training (default
 #' "even")
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
 #'
 #' @export
-#'
+#' @importFrom Seurat DefaultAssay DietSeurat RunPCA FindNeighbors FindClusters 
+#' @importFrom Seurat ScaleData FindVariableFeatures
+#' @importFrom dplyr select contains
+#' @importFrom future.apply future_lapply
+#' @importFrom progressr progressor handlers
+#' @importFrom purrr map_df
 clust_opt <- function(input,
                       ndim,
                       dtype = "scRNA",
@@ -210,12 +217,7 @@ clust_opt <- function(input,
 #'
 #' @return Seurat object with new PCA reductions
 #' @export
-#' @examples
-#' \dontrun{
-#' seurat_obj <- CreateSeuratObject(counts = matrix(rnorm(1000), ncol = 10))
-#' seurat_obj <- RunPCA(seurat_obj)
-#' seurat_obj <- split_pca_by_parity(seurat_obj)
-#' }
+#' @import Seurat
 split_pca_dimensions <- function(input, balance = TRUE) {
   if (!inherits(input, "Seurat")) {
     stop("Input must be a Seurat object")
@@ -265,6 +267,8 @@ split_pca_dimensions <- function(input, balance = TRUE) {
 #'
 #' @export
 #'
+#' @importFrom dplyr filter pull
+#' @importFrom Seurat SCTransform DefaultAssay DietSeurat Idents WhichCells
 prep_train <- function(input,
                        subject_ids,
                        dtype = "scRNA",
@@ -359,6 +363,7 @@ prep_train <- function(input,
 #'
 #' @export
 #'
+#' @importFrom Seurat SCTransform DefaultAssay DietSeurat Idents WhichCells
 prep_test <- function(input,
                       subject_ids,
                       dtype = "scRNA",
@@ -413,6 +418,9 @@ prep_test <- function(input,
 #'
 #' @export
 #'
+#' @importFrom Seurat VariableFeatures Loadings
+#' @importFrom tibble as_tibble
+#' @importFrom dplyr filter
 project_pca <- function(train_seurat, test_seurat, train_with) {
   # Validate input
   if (!inherits(train_seurat, "Seurat") || !inherits(test_seurat, "Seurat")) {
@@ -495,8 +503,11 @@ project_pca <- function(train_seurat, test_seurat, train_with) {
 #' @param sam Test sample
 #' @return A list containing the resolution, silhouette score, and number of
 #' predicted clusters.
-#' @export
 #'
+#' @export
+#' @importFrom dplyr mutate select contains pull
+#' @importFrom ranger ranger predictions
+#' @importFrom stats predict
 train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
   # Get cluster assignments for this res
   train_df <- df_list[["train_projected_data"]] |>
@@ -537,8 +548,9 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
 #' @param data_frame Data frame containing the data
 #' @return A list containing the average silhouette score and the average
 #' silhouette score for each cluster.
-#' @export
 #'
+#' @export
+#' @importFrom stats dist
 calculate_silhouette_score <- function(predicted, data_frame) {
   sil <- cluster::silhouette(
     as.numeric(as.character(predicted)),
@@ -567,6 +579,9 @@ calculate_silhouette_score <- function(predicted, data_frame) {
 #' @return A list of the training and test data formatted for RF
 #' @export
 #'
+#' @importFrom Seurat GetAssayData
+#' @importFrom tibble as_tibble
+#' @importFrom dplyr select everything
 prepare_cytof <- function(train_seurat, test_seurat) {
   list(
     Seurat::GetAssayData(train_seurat, slot = "counts", assay = "RNA") |>

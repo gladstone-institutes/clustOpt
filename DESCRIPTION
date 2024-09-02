@@ -8,12 +8,13 @@ Authors@R: c(person("Natalie", "Elphick", role = c("aut", "cre"), email = "natal
 	person("Min-Gyoung", "Shin", role = c("aut"), email = "mingyoung.shin@gladstone.ucsf.edu"),
 	person("Ayushi", "Agrawal", role = c("aut"), email = "ayushi.agrawal@gladstone.ucsf.edu"))
 Depends:
-    R (>= 4.3),
-    methods
+    R (>= 4.3)
 Imports:
     progressr,
     future,
+    future.apply,
     ranger,
+    tidyr,
     Seurat (>= 5.1.0),
     dplyr (>= 1.1.3),
     ggplot2 (>= 3.3.5),

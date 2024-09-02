@@ -29,6 +29,9 @@ is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
 
 \item{sketch_size}{Number of cells to use for sketching.}
 
+\item{skip_sketch}{Skip sketching, by default any input with more than
+200,000 cells is sketched to 10\% of the cells.}
+
 \item{subject_ids}{Metadata field that identifies unique samples.}
 
 \item{res_range}{Range of resolutions to test.}
@@ -38,10 +41,10 @@ same value for the batch variable will be used for training.}
 
 \item{verbose}{print messages.}
 
+\item{num_trees}{Number of trees to use in the random forest.}
+
 \item{train_with}{Should odd or even PCs be used for training (default
 "even")}
-
-\item{num.trees}{Number of trees to use in the random forest.}
 }
 \value{
 A data.frame containing a distribution of silhouette scores for each

@@ -21,10 +21,3 @@ dimensions into even and odd PC dimensions. New reductions are
 created and named "even_pca" and "odd_pca". The last PC will be
 removed if there are an odd number of PCs.
 }
-\examples{
-\dontrun{
-seurat_obj <- CreateSeuratObject(counts = matrix(rnorm(1000), ncol = 10))
-seurat_obj <- RunPCA(seurat_obj)
-seurat_obj <- split_pca_by_parity(seurat_obj)
-}
-}

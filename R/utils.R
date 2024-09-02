@@ -12,7 +12,6 @@ NULL
 #' @return NULL
 #'
 #' @export
-#'
 check_size <- function(input, verbose = TRUE) {
   if (!methods::is(input, "Seurat")) {
     stop("Input must be a Seurat object")
@@ -34,6 +33,8 @@ check_size <- function(input, verbose = TRUE) {
 #'
 #' @export
 #'
+#' @importFrom Seurat NormalizeData FindVariableFeatures 
+#' @importFrom Seurat SketchData DefaultAssay DietSeurat
 leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
   if (is.null(sketch_size)) {
     if (verbose) {
@@ -62,7 +63,7 @@ leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
 #' @return A data.frame summarising the silhouette score distribution
 #'
 #' @export
-#'
+#' @importFrom dplyr group_by summarize
 sil_summary <- function(input) {
   input |>
     dplyr::group_by(resolution) |>
