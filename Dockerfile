@@ -14,8 +14,9 @@ RUN R -e 'install.packages("pak", repos = "https://cloud.r-project.org")'
 # Install using using pak (update the DESCRIPTION for new builds)
 RUN R -e 'pak::pkg_install(pkg = ".", dependencies = TRUE)'
 
-# Add optparse to make passing args to Rscripts easier
+# Install some extra packages to make running clustOpt in Rscripts easier
 RUN R -e 'pak::pkg_install(pkg = "optparse")'
+RUN R -e 'pak::pkg_install(pkg = "readr")'
 
 # Default command
 CMD ["/bin/bash"]
