@@ -55,7 +55,7 @@ test_that("Projection respects chosen PCs and avoids data leakage", {
   test_seurat <- prep_test(seurat_obj, subject_ids = "donor_id", test_id = "JP_RIK_H079")
 
   # Perform the projection
-  result <- project_pca(train_seurat, test_seurat, train_with = "even")
+  result <- project_pca(train_seurat, test_seurat, train_with = "even", verbose = TRUE)
 
   # Verify that the PCs used for clustering (odd PCs in this case) are NOT used for training and testing
   # This assumes that even PCs are used for clustering, so odd PCs should be used for training/prediction.

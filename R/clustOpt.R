@@ -128,17 +128,21 @@ clust_opt <- function(input,
       # Create 2 separate PCA reductions "even_pca" and "odd_pca"
       train <- split_pca_dimensions(train)
 
+      if (verbose) {
+        message(sprintf("Clustering with %s", train_pca))
+      }
+
       train <- Seurat::FindNeighbors(
         object = train,
         dims = 1:ncol(train@reductions[[train_pca]]@cell.embeddings),
-        verbose = verbose,
+        verbose = FALSE,
         reduction = train_pca
       )
 
       train <- Seurat::FindClusters(
         object = train,
         resolution = res_range,
-        verbose = verbose
+        verbose = FALSE
       )
     } else {
       train <- Seurat::ScaleData(train, features = NULL, verbose = verbose)
@@ -146,19 +150,20 @@ clust_opt <- function(input,
         selection.method = "vst", nfeatures = ndim
       )
       train <- Seurat::RunPCA(train,
-        npcs = ndim, approx = FALSE,
-        verbose = verbose
+        npcs = ndim,
+        approx = FALSE,
+        verbose = FALSE
       )
 
       train <- Seurat::FindNeighbors(
         object = train,
         dims = 1:ndim,
-        verbose = verbose
+        verbose = FALSE
       )
       train <- Seurat::FindClusters(
         object = train,
         resolution = res_range,
-        verbose = verbose
+        verbose = FALSE
       )
     }
     if (verbose) {
@@ -169,11 +174,8 @@ clust_opt <- function(input,
       train_clusters <- train@meta.data |>
         dplyr::select(dplyr::contains("SCT_snn_res"))
 
-      if (verbose) {
-        message("Project the cells in the test data onto the train PCs..")
-      }
 
-      df_list <- project_pca(train, test, train_with)
+      df_list <- project_pca(train, test, train_with, verbose = verbose)
 
       rm(train, test)
     } else {
@@ -285,7 +287,7 @@ prep_train <- function(input,
         unique()
 
       if (length(this_batch) > 1) {
-        stop("More than one batch found for this sample")
+        stop(paste0("More than one batch found for this sample: ", test_id))
       }
 
       train_cells <- input@meta.data |>
@@ -401,6 +403,7 @@ prep_test <- function(input,
 #' @param train_seurat A Seurat object representing the training data set.
 #' @param test_seurat A Seurat object representing the test data set.
 #' @param train_with Train the models with even or odd PCs only (default is even)
+#' @param verbose print messages
 #'
 #' @details
 #' Identifies features that are common between the training
@@ -421,12 +424,21 @@ prep_test <- function(input,
 #' @importFrom Seurat VariableFeatures Loadings
 #' @importFrom tibble as_tibble
 #' @importFrom dplyr filter
-project_pca <- function(train_seurat, test_seurat, train_with) {
+project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
   # Validate input
   if (!inherits(train_seurat, "Seurat") || !inherits(test_seurat, "Seurat")) {
     stop("Both train_seurat and test_seurat must be Seurat objects")
   }
+  reduction <- switch(train_with,
+      even = "even_pca",
+      odd = "odd_pca"
+  )
 
+  if (verbose) {
+    message(sprintf("Training with data projected onto %s", reduction))
+  }
+
+    
   # Features present in both the training variable features and test sample
   common_features <- base::intersect(
     rownames(test_seurat@assays[["SCT"]]@scale.data),
@@ -439,15 +451,12 @@ project_pca <- function(train_seurat, test_seurat, train_with) {
     n_shared_genes,
     (n_shared_genes / total_genes) * 100
   ))
+  
 
   # Project the cells in the training and test data onto the opposite PCs
   # (if even is used for clustering, use odd PCs for training and prediction)
 
-  project_data <- function(seurat_obj, train_with) {
-    reduction <- switch(train_with,
-      even = "even_pca",
-      odd = "odd_pca"
-    )
+  project_data <- function(seurat_obj) {
 
     loadings_common_features <- Seurat::Loadings(train_seurat[[reduction]]) |>
       tibble::as_tibble(rownames = "features") |>
@@ -477,8 +486,8 @@ project_pca <- function(train_seurat, test_seurat, train_with) {
   }
 
   # Project the cells in the training and test data onto the opposite PCs
-  pca_train_data <- project_data(train_seurat, train_with)
-  pca_test_data <- project_data(test_seurat, train_with)
+  pca_train_data <- project_data(train_seurat)
+  pca_test_data <- project_data(test_seurat)
   pca_test_eval_data <- project_all(test_seurat)
   pca_train_eval_data <- project_all(train_seurat)
 

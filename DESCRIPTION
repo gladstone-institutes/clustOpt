@@ -8,7 +8,7 @@ Authors@R: c(person("Natalie", "Elphick", role = c("aut", "cre"), email = "natal
 	person("Min-Gyoung", "Shin", role = c("aut"), email = "mingyoung.shin@gladstone.ucsf.edu"),
 	person("Ayushi", "Agrawal", role = c("aut"), email = "ayushi.agrawal@gladstone.ucsf.edu"))
 Depends:
-    R (>= 4.3)
+    R (>= 4.4)
 Imports:
     progressr,
     future,
