@@ -16,6 +16,7 @@ NULL
 #' and sketching is not implemented for CyTOF.
 #' @param sketch_size Number of cells to use for sketching.
 #' @param subject_ids Metadata field that identifies unique samples.
+#' @param group_variable Metadata field that identifies the groups to be checked.
 #' @param seed Random seed.
 #' @param res_range Range of resolutions to test.
 #' @param verbose print messages.
@@ -32,6 +33,7 @@ clust_opt <- function(input,
                       dtype = "scRNA",
                       sketch_size = NULL,
                       subject_ids,
+                      group_variable,
                       seed = 1,
                       res_range = c(
                         0.02, 0.04, 0.06, 0.08, 0.1,
@@ -40,8 +42,6 @@ clust_opt <- function(input,
                       within_batch = NA,
                       verbose = FALSE,
                       num.trees = 1000) {
-  sample_names <- as.vector((unique(input@meta.data[[subject_ids]])))
-
   if (!(dtype %in% c("CyTOF", "scRNA"))) {
     stop("dtype is not one of 'CyTOF' or 'scRNA'")
   }
@@ -60,6 +60,14 @@ clust_opt <- function(input,
   }
 
   set.seed(seed)
+
+  # Get sample information
+  sample_names <- get_valid_samples_by_group(input, subject_ids, group_variable)
+  if (is.null(sample_names)) {
+    stop(paste0("Unable to perform cluster resolution optimization for this data. ",
+                "Insufficient replicates (at least 3 required per group) of samples with ",
+                "greater than 100 cells."))
+  }
 
 
   # Get every combination of test sample and resolution
