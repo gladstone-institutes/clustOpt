@@ -70,10 +70,10 @@ sil_summary <- function(input) {
       mean_score = base::mean(avg_width, na.rm = TRUE),
       variance_score = stats::var(avg_width, na.rm = TRUE),
       standard_error_score = stats::sd(avg_width,
-                                      na.rm = TRUE) / sqrt(length(avg_width)),
+                                      na.rm = TRUE) / sqrt(sum(!is.na(avg_width))),
       cluster_mean_score = base::mean(cluster_avg_widths, na.rm = TRUE),
       cluster_variance_score = stats::var(cluster_avg_widths, na.rm = TRUE),
       cluster_standard_error_score = stats::sd(cluster_avg_widths, na.rm = TRUE) /
-        sqrt(length(cluster_avg_widths))
+        sqrt(sum(!is.na(cluster_avg_widths)))
     )
 }
