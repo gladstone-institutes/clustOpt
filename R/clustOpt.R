@@ -40,8 +40,7 @@ clust_opt <- function(input,
                       within_batch = NA,
                       verbose = FALSE,
                       num.trees = 1000) {
-  sample_names <- as.vector((unique(input@meta.data[[subject_ids]])))
-
+  
   if (!(dtype %in% c("CyTOF", "scRNA"))) {
     stop("dtype is not one of 'CyTOF' or 'scRNA'")
   }
@@ -60,6 +59,13 @@ clust_opt <- function(input,
   }
 
   set.seed(seed)
+
+  # Get sample information
+  sample_names <- get_valid_samples(input, subject_ids)
+  if (is.null(sample_names)) {
+    stop(paste0("Unable to perform cluster resolution optimization for this data. ",
+                "There are less than 3 samples with at least 100 cells."))
+  }
 
 
   # Get every combination of test sample and resolution
