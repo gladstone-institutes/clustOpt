@@ -55,6 +55,47 @@ leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
   input <- Seurat::DietSeurat(input, assays = "sketch")
 }
 
+#' @title get_valid_samples
+#' @description
+#' Checks if there are at least 3 samples with 100 or more cells, returning valid sample names if the condition is met.
+#' @param input A Seurat object containing metadata
+#' @param subject_ids The name of the metadata column containing sample IDs
+#' @return A vector of sample names meeting the criteria, or NULL if the requirement is not met
+#' @details
+#' This function inspects the metadata to ensure there are at least 3 samples with 100 or more cells. 
+#' If this condition is not satisfied, the function returns NULL and issues a warning.
+#' @examples
+#' # Assuming `seurat_obj` is a Seurat object with a metadata column "sample_id":
+#' get_valid_samples(seurat_obj, "sample_id")
+#' @export
+#'
+get_valid_samples <- function(input, subject_ids) {
+
+  # Summarize the number of cells per sample
+  sample_summary <- input@meta.data %>%
+    group_by(!!sym(subject_ids)) %>%  # Group by the specified subject IDs
+    summarize(cell_count = n(), .groups = "drop") %>%
+    ungroup()
+
+  # Filter samples to include only those with at least 100 cells
+  sufficient_samples <- sample_summary %>%
+    filter(cell_count >= 100)
+
+  # Check if there are at least 3 samples with >= 100 cells
+  if (nrow(sufficient_samples) < 3) {
+    warning("There are fewer than 3 samples with >= 100 cells.")  # Warning if criterion is not met
+    return(NULL)  # Return NULL if the condition is not satisfied
+  }
+
+  # Retrieve sample names that meet the requirements
+  valid_samples <- sufficient_samples %>%
+    pull(!!sym(subject_ids))
+
+  # Return the list of valid sample names with confirmation message
+  message("There are sufficient samples. Returning the sample names that meet the criteria.")
+  return(valid_samples) 
+}
+
 #' @title sil_summary
 #' @description 
 #' Summarises the silhouette score distribution output by clustOpt
