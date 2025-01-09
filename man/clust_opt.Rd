@@ -15,7 +15,9 @@ clust_opt(
   within_batch = NA,
   verbose = FALSE,
   num_trees = 1000,
-  train_with = "even"
+  split_method = "odd_even",
+  train_with = "A",
+  min_cells = 50
 )
 }
 \arguments{
@@ -25,7 +27,7 @@ clust_opt(
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
 is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
- slot) and sketching is not implemented for CyTOF.}
+slot) and sketching is not implemented for CyTOF.}
 
 \item{sketch_size}{Number of cells to use for sketching.}
 
@@ -39,12 +41,17 @@ is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
 \item{within_batch}{Batch variable, for a given sample only those with the
 same value for the batch variable will be used for training.}
 
-\item{verbose}{print messages.}
+\item{verbose}{Output messages.}
 
 \item{num_trees}{Number of trees to use in the random forest.}
 
-\item{train_with}{Should odd or even PCs be used for training (default
-"even")}
+\item{split_method}{Which method of PCA splitting (for train and test) should
+be used "odd_even" or "var_balanced", default is "odd_even".}
+
+\item{train_with}{Either A or B, for split_method = "odd_even" A is odd and
+B is even. Default is A}
+
+\item{min_cells}{Minimum cells per subject, default is 50}
 }
 \value{
 A data.frame containing a distribution of silhouette scores for each

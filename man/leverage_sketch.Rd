@@ -2,8 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{leverage_sketch}
 \alias{leverage_sketch}
-\title{leverage_sketch: Uses leverage score based sampling to reduce the size of the
-input Seurat object and create a sketch assay using this subsample}
+\title{leverage_sketch}
 \usage{
 leverage_sketch(input, sketch_size, verbose = TRUE)
 }
@@ -18,6 +17,6 @@ leverage_sketch(input, sketch_size, verbose = TRUE)
 Seurat object with sketch assay
 }
 \description{
-leverage_sketch: Uses leverage score based sampling to reduce the size of the
+Uses leverage score based sampling to reduce the size of the
 input Seurat object and create a sketch assay using this subsample
 }

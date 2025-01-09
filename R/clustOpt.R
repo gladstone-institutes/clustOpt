@@ -1,4 +1,4 @@
-#' @include utils.R
+#' @include utils.R pca_split.R
 #'
 NULL
 
@@ -13,23 +13,26 @@ NULL
 #' @param ndim Number of principal components to use.
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
-#'  slot) and sketching is not implemented for CyTOF.
+#' slot) and sketching is not implemented for CyTOF.
 #' @param sketch_size Number of cells to use for sketching.
 #' @param skip_sketch Skip sketching, by default any input with more than
 #' 200,000 cells is sketched to 10\% of the cells.
 #' @param subject_ids Metadata field that identifies unique samples.
 #' @param res_range Range of resolutions to test.
-#' @param verbose print messages.
+#' @param verbose Output messages.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
 #' @param num_trees Number of trees to use in the random forest.
-#' @param train_with Should odd or even PCs be used for training (default
-#' "even")
+#' @param split_method Which method of PCA splitting (for train and test) should
+#' be used "odd_even" or "var_balanced", default is "odd_even".
+#' @param train_with Either A or B, for split_method = "odd_even" A is odd and
+#' B is even. Default is A
+#' @param min_cells Minimum cells per subject, default is 50
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
 #'
 #' @export
-#' @importFrom Seurat DefaultAssay DietSeurat RunPCA FindNeighbors FindClusters 
+#' @importFrom Seurat DefaultAssay DietSeurat RunPCA FindNeighbors FindClusters
 #' @importFrom Seurat ScaleData FindVariableFeatures
 #' @importFrom dplyr select contains
 #' @importFrom future.apply future_lapply
@@ -48,8 +51,16 @@ clust_opt <- function(input,
                       within_batch = NA,
                       verbose = FALSE,
                       num_trees = 1000,
-                      train_with = "even") {
-  sample_names <- as.vector(unique(input@meta.data[[subject_ids]]))
+                      split_method = "odd_even",
+                      train_with = "A",
+                      min_cells = 50) {
+  # Make sure a seed is set, only setting if the user has not set one
+  if (!exists(".Random.seed", envir = .GlobalEnv)) {
+    t <- as.integer(Sys.time())
+    message("Setting seed: ", t)
+    set.seed(t)
+  }
+
 
   if (!(dtype %in% c("CyTOF", "scRNA"))) {
     stop("dtype is not one of 'CyTOF' or 'scRNA'")
@@ -69,18 +80,19 @@ clust_opt <- function(input,
     }
   }
 
-  # Make sure a seed is set
-  if (!exists(".Random.seed", envir = .GlobalEnv)) {
-    t <- as.integer(Sys.time())
-    message("Setting seed: ", t)
-    set.seed(t)
+  sample_names <- get_valid_samples(input, subject_ids, min_cells)
+  if (is.null(sample_names)) {
+    stop(paste0(
+      "Unable to perform cluster resolution optimization for this data. ",
+      "There are less than 3 subjects with at least", min_cells, "cells."
+    ))
   }
 
   # Get every combination of test sample and resolution
   runs <- expand.grid(sample_names, res_range)
   message(paste0(
     "Found ", nrow(runs),
-    " combinations of test sample and resolution"
+    " combinations of test subject and resolution"
   ))
 
   # Set up progress logging
@@ -89,7 +101,7 @@ clust_opt <- function(input,
 
   res <- NULL
   for (sam in unique(runs[, 1])) {
-    message(paste0("Holdout sample: ", sam))
+    message(paste0("Holdout subject: ", sam))
     if (verbose) {
       message(paste0("Preparing training data.."))
     }
@@ -114,29 +126,29 @@ clust_opt <- function(input,
     )
 
     if (dtype == "scRNA") {
-      train_pca <- switch(train_with,
-        odd = "even_pca",
-        even = "odd_pca"
-      )
-
       train <- Seurat::RunPCA(train,
         npcs = ndim,
         verbose = FALSE,
         assay = "SCT"
       )
 
-      # Create 2 separate PCA reductions "even_pca" and "odd_pca"
-      train <- split_pca_dimensions(train)
+      clust_pca <- switch(train_with,
+        B = "A_pca",
+        A = "B_pca"
+      )
+
+      # Create 2 separate PCA reductions
+      train <- split_pca_dimensions(train, split_method, verbose)
 
       if (verbose) {
-        message(sprintf("Clustering with %s", train_pca))
+        message(sprintf("Clustering with %s", clust_pca))
       }
 
       train <- Seurat::FindNeighbors(
         object = train,
-        dims = 1:ncol(train@reductions[[train_pca]]@cell.embeddings),
+        dims = seq_len(ncol(train@reductions[[clust_pca]]@cell.embeddings)),
         verbose = FALSE,
-        reduction = train_pca
+        reduction = clust_pca
       )
 
       train <- Seurat::FindClusters(
@@ -194,7 +206,7 @@ clust_opt <- function(input,
           df_list = df_list,
           train_clusters = train_clusters,
           sam = runs[i, 1],
-          num.trees = num_trees
+          num_trees = num_trees
         )
       },
       future.seed = TRUE
@@ -206,53 +218,6 @@ clust_opt <- function(input,
   purrr::map_df(res, .f = as.data.frame)
 }
 
-#' @title split_pca_dimensions
-#' @description
-#' Takes a Seurat object with an existing PCA reduction and splits the
-#' dimensions into even and odd PC dimensions. New reductions are
-#' created and named "even_pca" and "odd_pca". The last PC will be
-#' removed if there are an odd number of PCs.
-#'
-#' @param input Seurat object
-#' @param balance Balance the number of even and odd PC dimensions, default
-#' is TRUE
-#'
-#' @return Seurat object with new PCA reductions
-#' @export
-#' @import Seurat
-split_pca_dimensions <- function(input, balance = TRUE) {
-  if (!inherits(input, "Seurat")) {
-    stop("Input must be a Seurat object")
-  }
-  if (!"pca" %in% names(input@reductions)) {
-    stop("Seurat object must have a PCA reduction")
-  }
-
-  pca <- input@reductions$pca
-  dims <- ncol(pca@cell.embeddings)
-
-  if (dims %% 2 == 1 & balance) {
-    dims <- dims - 1
-  }
-
-  even_dims <- seq(2, dims, by = 2)
-  odd_dims <- seq(1, dims, by = 2)
-
-  even_pca <- pca
-  even_pca@cell.embeddings <- even_pca@cell.embeddings[, even_dims]
-  even_pca@feature.loadings <- even_pca@feature.loadings[, even_dims]
-  even_pca@key <- "even_pca_"
-
-  odd_pca <- pca
-  odd_pca@cell.embeddings <- odd_pca@cell.embeddings[, odd_dims]
-  odd_pca@feature.loadings <- odd_pca@feature.loadings[, odd_dims]
-  odd_pca@key <- "odd_pca_"
-
-  input@reductions$even_pca <- even_pca
-  input@reductions$odd_pca <- odd_pca
-
-  return(input)
-}
 
 #' @title prep_train
 #' @description
@@ -402,15 +367,16 @@ prep_test <- function(input,
 #'
 #' @param train_seurat A Seurat object representing the training data set.
 #' @param test_seurat A Seurat object representing the test data set.
-#' @param train_with Train the models with even or odd PCs only (default is even)
+#' @param train_with Which set A or B should be used for training
 #' @param verbose print messages
 #'
 #' @details
 #' Identifies features that are common between the training
 #' and test data sets. Extracts the PCA loadings from the training data
-#' for common features. If train_with = "even", then projection is performed with
-#' only the odd PCs. Both training and test data are projected onto these loadings.
-#' Data is also projected onto loadings from all PCs for cluster scoring.
+#' for common features. If train_with = "A", then projection is performed
+#' with only the B PCs. Both training and test data are projected onto these
+#' loadings. Data is also projected onto loadings from all PCs for cluster
+#' scoring after training is complete.
 #'
 #'
 #' @return
@@ -430,15 +396,15 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
     stop("Both train_seurat and test_seurat must be Seurat objects")
   }
   reduction <- switch(train_with,
-      even = "even_pca",
-      odd = "odd_pca"
+    A = "A_pca",
+    B = "B_pca"
   )
 
   if (verbose) {
     message(sprintf("Training with data projected onto %s", reduction))
   }
 
-    
+
   # Features present in both the training variable features and test sample
   common_features <- base::intersect(
     rownames(test_seurat@assays[["SCT"]]@scale.data),
@@ -451,13 +417,12 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
     n_shared_genes,
     (n_shared_genes / total_genes) * 100
   ))
-  
+
 
   # Project the cells in the training and test data onto the opposite PCs
   # (if even is used for clustering, use odd PCs for training and prediction)
 
   project_data <- function(seurat_obj) {
-
     loadings_common_features <- Seurat::Loadings(train_seurat[[reduction]]) |>
       tibble::as_tibble(rownames = "features") |>
       dplyr::filter(features %in% common_features) |>
@@ -510,6 +475,7 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
 #' @param df_list List containing training and test data
 #' @param train_clusters Cluster assignments for the training data
 #' @param sam Test sample
+#' @param num_trees Number of trees for the random forest
 #' @return A list containing the resolution, silhouette score, and number of
 #' predicted clusters.
 #'
@@ -517,7 +483,7 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
 #' @importFrom dplyr mutate select contains pull
 #' @importFrom ranger ranger predictions
 #' @importFrom stats predict
-train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
+train_random_forest <- function(res, df_list, train_clusters, sam, num_trees) {
   # Get cluster assignments for this res
   train_df <- df_list[["train_projected_data"]] |>
     dplyr::mutate(clusters = train_clusters |>
@@ -527,7 +493,7 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
   # Train model
   rf <- ranger::ranger(as.factor(clusters) ~ .,
     data = train_df,
-    num.trees = num.trees,
+    num.trees = num_trees,
     write.forest = TRUE,
     num.threads = 1
   )
@@ -538,7 +504,10 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
   predicted <- ranger::predictions(predicted)
   predicted_clusters_table <- base::table(predicted)
   rm(rf)
-  sil <- calculate_silhouette_score(predicted, df_list[["test_eval_only_proj_data"]]) 
+  sil <- calculate_silhouette_score(
+    predicted,
+    df_list[["test_eval_only_proj_data"]]
+  )
 
   list(
     resolution = res,
@@ -560,6 +529,7 @@ train_random_forest <- function(res, df_list, train_clusters, sam, num.trees) {
 #'
 #' @export
 #' @importFrom stats dist
+#' @importFrom cluster silhouette
 calculate_silhouette_score <- function(predicted, data_frame) {
   sil <- cluster::silhouette(
     as.numeric(as.character(predicted)),

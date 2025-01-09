@@ -16,16 +16,19 @@ vignette: >
 knitr::opts_chunk$set(
   dev = "png",
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  echo = TRUE,
+  warning = FALSE,
+  dpi = 300
 )
 ```
 
-```{r setup, warning=FALSE, echo=FALSE, dpi=400, fig.height=5, fig.width=5}
+```{r setup, message=FALSE}
 library(Seurat)
 # Only v5 Seurat Assays are supported
 options(Seurat.object.assay.version = "v5")
 # Only needs to be set for analyzing large datasets
-options(future.globals.maxSize = 1e9)
+options(future.globals.maxSize = 1e20)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -38,8 +41,12 @@ Read in the tutorial dataset. This data was generated from the [Asian Immune Div
 
 ```{r load_data}
 input <- readRDS(
-  "../inst/extdata/1000_cell_sketch_10_donors_2_celltypes_AIDA.rds"
+  system.file(
+    "extdata",
+    "1000_cell_sketch_10_donors_2_celltypes_AIDA.rds",
+    package = "clustOpt"
   )
+)
 ```
 
 
@@ -84,6 +91,14 @@ DimPlot(input,
   coord_fixed()
 ```
 
+```{r}
+DimPlot(input,
+  group.by = "author_cell_type",
+  pt.size = .8
+) +
+  coord_fixed()
+```
+
 Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation.
 
 ```{r clustOpt, warning=FALSE}
@@ -97,7 +112,8 @@ sil_dist <- clust_opt(input,
   subject_ids = "donor_id",
   ndim = 20,
   verbose = TRUE,
-  train_with = "even"
+  split_method = "odd_even",
+  train_with = "B"
 ) |>
   progressr::with_progress() # Optional, just adds progress bar
 
@@ -116,13 +132,13 @@ plots[[3]]
 plots[[4]]
 ```
 
-The local maximum in the mean silhouette scores at 0.1 indicates that this clustering resolution is the most reproducible across all biological samples.
+The median silhouette scores start going down at 0.06, indicating that this clustering resolution is reproducible across all biological samples. For larger datasets with more celltypes, a local maximum in the mean silhouette is a clear signal of the most reproducible resolution.
 
 ## Comparison to the cell annotations
 
 ```{r cluster}
 input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.04)
+input <- FindClusters(input, resolution = 0.06)
 
 DimPlot(input,
   group.by = "seurat_clusters",
@@ -131,7 +147,7 @@ DimPlot(input,
 ```
 
 ```{r}
-# Add a step where we evaluate this chosen resolution against the reference
-# annotations using wRI and silhouette score
+# TO DO: Add a step where we evaluate this chosen resolution against the
+# reference annotations using wRI and silhouette score
 ```
 

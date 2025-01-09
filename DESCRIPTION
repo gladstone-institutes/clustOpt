@@ -1,5 +1,5 @@
 Package: clustOpt
-Version: 0.5
+Version: 0.9
 Date: 2023-10-11
 Title: Choosing a resolution parameter for single cell omics clustering
 Description: Optimal clustering resolution parameters determined through Random Forests, a silhouette score-based assessment of clustering validity, and subject-wise cross-validation.
@@ -11,25 +11,26 @@ Depends:
     R (>= 4.4)
 Imports:
     progressr,
-    future,
     future.apply,
     ranger,
-    tidyr,
-    glmGamPoi,
+    cluster,
     Seurat (>= 5.1.0),
     dplyr (>= 1.1.3),
     ggplot2 (>= 3.3.5),
-    purrr (>= 0.3.4)
+    purrr (>= 0.3.4),
+    tibble (>= 3.2.1)
 License: MIT + file LICENSE
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 Collate: 
+    'pca_split.R'
     'utils.R'
     'clustOpt.R'
     'plot.R'
 Suggests: 
     knitr,
     rmarkdown,
+    tidyr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

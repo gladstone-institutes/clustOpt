@@ -3,8 +3,8 @@ library(clustOpt)
 
 # Example test file for create_sil_plots function
 test_that("create_sil_plots returns a list of ggplot objects", {
-  # Create a mock sil_dist object (ensure this structure matches what create_sil_plots expects)
-  # Example sil_dist could be a data frame or tibble with columns `resolution`, `avg_width`, etc.
+  # Create a mock sil_dist object (ensure this structure matches what
+  # create_sil_plots expects)
   sil_dist <- data.frame(
     resolution = c(1, 1, 2, 2),
     avg_width = runif(4),

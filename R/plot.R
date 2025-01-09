@@ -35,7 +35,10 @@ create_sil_plots <- function(sil_dist) {
     )) +
     ggplot2::geom_boxplot() +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Resolution", y = "Median Silhouette Score Across Clusters")
+    ggplot2::labs(
+      x = "Resolution",
+      y = "Median Silhouette Score Across Clusters"
+    )
 
   plot3 <- ggplot2::ggplot(
     sil_summary,
@@ -52,7 +55,10 @@ create_sil_plots <- function(sil_dist) {
     ggplot2::geom_point(colour = "#619CFF") +
     ggplot2::geom_line(colour = "#619CFF") +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Resolution", y = "Median Silhouette Score Across All Cells")
+    ggplot2::labs(
+      x = "Resolution",
+      y = "Median Silhouette Score Across All Cells"
+    )
 
   plot4 <- ggplot2::ggplot(
     sil_summary,
@@ -73,7 +79,10 @@ create_sil_plots <- function(sil_dist) {
     ggplot2::geom_point(colour = "#619CFF") +
     ggplot2::geom_line(colour = "#619CFF") +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Resolution", y = "Median Silhouette Score Across Clusters")
+    ggplot2::labs(
+      x = "Resolution",
+      y = "Median Silhouette Score Across Clusters"
+    )
 
   list(plot1, plot2, plot3, plot4)
 }
