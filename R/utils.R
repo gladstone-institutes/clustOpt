@@ -12,7 +12,7 @@ NULL
 #'
 #' @export
 check_size <- function(input) {
-  if (!inherits(result_obj, "Seurat")) {
+  if (!inherits(input, "Seurat")) {
     stop("Input must be a Seurat object")
   }
   if (ncol(input) >= 2E5) {

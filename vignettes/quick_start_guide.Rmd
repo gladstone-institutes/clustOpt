@@ -39,7 +39,7 @@ set.seed(42)
 
 Read in the tutorial dataset. This data was generated from the [Asian Immune Diversity Atlas](https://doi.org/10.1101/2024.06.30.601119) (data freeze v1). It contains only B cells and NK cells from 20 donors which have been sketched to 1000 cells using the leverage score based method of Seurat's SketchData function.
 
-```{r load_data}
+```{r load_data, cache=TRUE}
 input <- readRDS(
   system.file(
     "extdata",
