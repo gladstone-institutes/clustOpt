@@ -4,7 +4,7 @@
 \alias{project_pca}
 \title{project_pca}
 \usage{
-project_pca(train_seurat, test_seurat, train_with, verbose)
+project_pca(train_seurat, test_seurat, train_with, dtype, verbose)
 }
 \arguments{
 \item{train_seurat}{A Seurat object representing the training data set.}
@@ -12,6 +12,8 @@ project_pca(train_seurat, test_seurat, train_with, verbose)
 \item{test_seurat}{A Seurat object representing the test data set.}
 
 \item{train_with}{Which set A or B should be used for training}
+
+\item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF"}
 
 \item{verbose}{print messages}
 }

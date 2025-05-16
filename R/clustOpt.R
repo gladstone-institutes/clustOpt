@@ -66,19 +66,16 @@ clust_opt <- function(input,
     stop("dtype is not one of 'CyTOF' or 'scRNA'")
   }
 
-  if (dtype == "scRNA") {
-    # Clear any previous normalizations
-    Seurat::DefaultAssay(input) <- "RNA"
-    input <- Seurat::DietSeurat(input, assays = "RNA")
-    if (!skip_sketch) {
-      if (check_size(input) || !is.null(sketch_size)) {
-        message("Sketching input data")
-        input <- leverage_sketch(input, sketch_size)
-      } else {
-        message("Input is small enough to run with all cells")
-      }
+
+  if (!skip_sketch) {
+    if (check_size(input) || !is.null(sketch_size)) {
+      message("Sketching input data")
+      input <- leverage_sketch(input, sketch_size, dtype)
+    } else {
+      message("Input is small enough to run with all cells")
     }
   }
+
 
   sample_names <- get_valid_samples(input, subject_ids, min_cells)
   if (is.null(sample_names)) {
@@ -166,12 +163,20 @@ clust_opt <- function(input,
         approx = FALSE,
         verbose = FALSE
       )
+      clust_pca <- switch(train_with,
+        B = "A_pca",
+        A = "B_pca"
+      )
 
+      # Create 2 separate PCA reductions
+      train <- split_pca_dimensions(train, split_method, verbose)
       train <- Seurat::FindNeighbors(
         object = train,
-        dims = 1:ndim,
-        verbose = FALSE
+        dims = seq_len(ncol(train@reductions[[clust_pca]]@cell.embeddings)),
+        verbose = FALSE,
+        reduction = clust_pca
       )
+
       train <- Seurat::FindClusters(
         object = train,
         resolution = res_range,
@@ -187,14 +192,24 @@ clust_opt <- function(input,
         dplyr::select(dplyr::contains("SCT_snn_res"))
 
 
-      df_list <- project_pca(train, test, train_with, verbose = verbose)
+      df_list <- project_pca(train,
+        test,
+        train_with,
+        dtype = dtype,
+        verbose = verbose
+      )
 
       rm(train, test)
     } else {
       train_clusters <- train@meta.data |>
         dplyr::select(dplyr::contains("RNA_snn_res"))
 
-      df_list <- prepare_cytof(train, test)
+      df_list <- project_pca(train,
+        test,
+        train_with,
+        dtype = dtype,
+        verbose = verbose
+      )
       rm(train, test)
     }
 
@@ -368,6 +383,7 @@ prep_test <- function(input,
 #' @param train_seurat A Seurat object representing the training data set.
 #' @param test_seurat A Seurat object representing the test data set.
 #' @param train_with Which set A or B should be used for training
+#' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF"
 #' @param verbose print messages
 #'
 #' @details
@@ -390,7 +406,11 @@ prep_test <- function(input,
 #' @importFrom Seurat VariableFeatures Loadings
 #' @importFrom tibble as_tibble
 #' @importFrom dplyr filter
-project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
+project_pca <- function(train_seurat,
+                        test_seurat,
+                        train_with,
+                        dtype,
+                        verbose) {
   # Validate input
   if (!inherits(train_seurat, "Seurat") || !inherits(test_seurat, "Seurat")) {
     stop("Both train_seurat and test_seurat must be Seurat objects")
@@ -404,14 +424,17 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
     message(sprintf("Training with data projected onto %s", reduction))
   }
 
-
+  assay_id <- switch(dtype,
+    scRNA = "SCT",
+    CyTOF = "RNA"
+  )
   # Features present in both the training variable features and test sample
   common_features <- base::intersect(
-    rownames(test_seurat@assays[["SCT"]]@scale.data),
+    rownames(test_seurat@assays[[assay_id]]@scale.data),
     Seurat::VariableFeatures(train_seurat)
   )
   n_shared_genes <- length(common_features)
-  total_genes <- length(rownames(train_seurat@assays[["SCT"]]@scale.data))
+  total_genes <- length(rownames(train_seurat@assays[[assay_id]]@scale.data))
   message(sprintf(
     "Found %d (%.2f%%) shared genes used for projecting test data",
     n_shared_genes,
@@ -420,9 +443,9 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
 
 
   # Project the cells in the training and test data onto the opposite PCs
-  # (if even is used for clustering, use odd PCs for training and prediction)
+  # (if A is used for clustering, use B PCs for training and prediction)
 
-  project_data <- function(seurat_obj) {
+  project_data <- function(seurat_obj, assay_id) {
     loadings_common_features <- Seurat::Loadings(train_seurat[[reduction]]) |>
       tibble::as_tibble(rownames = "features") |>
       dplyr::filter(features %in% common_features) |>
@@ -431,12 +454,12 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
     rownames(loadings_common_features) <- loadings_common_features[, 1]
     loadings_common_features <- loadings_common_features[, -1]
     class(loadings_common_features) <- "numeric"
-    scale_data <- as.matrix(seurat_obj[["SCT"]]@scale.data)[common_features, ]
+    scale_data <- as.matrix(seurat_obj[[assay_id]]@scale.data)[common_features, ]
 
     t(scale_data) %*% loadings_common_features
   }
 
-  project_all <- function(seurat_obj) {
+  project_all <- function(seurat_obj, assay_id) {
     loadings_common_features <- Seurat::Loadings(train_seurat[["pca"]]) |>
       tibble::as_tibble(rownames = "features") |>
       dplyr::filter(features %in% common_features) |>
@@ -445,16 +468,16 @@ project_pca <- function(train_seurat, test_seurat, train_with, verbose) {
     rownames(loadings_common_features) <- loadings_common_features[, 1]
     loadings_common_features <- loadings_common_features[, -1]
     class(loadings_common_features) <- "numeric"
-    scale_data <- as.matrix(seurat_obj[["SCT"]]@scale.data)[common_features, ]
+    scale_data <- as.matrix(seurat_obj[[assay_id]]@scale.data)[common_features, ]
 
     t(scale_data) %*% loadings_common_features
   }
 
   # Project the cells in the training and test data onto the opposite PCs
-  pca_train_data <- project_data(train_seurat)
-  pca_test_data <- project_data(test_seurat)
-  pca_test_eval_data <- project_all(test_seurat)
-  pca_train_eval_data <- project_all(train_seurat)
+  pca_train_data <- project_data(train_seurat, assay_id)
+  pca_test_data <- project_data(test_seurat, assay_id)
+  pca_test_eval_data <- project_all(test_seurat, assay_id)
+  pca_train_eval_data <- project_all(train_seurat, assay_id)
 
   list(
     train_projected_data = pca_train_data |>
@@ -546,32 +569,4 @@ calculate_silhouette_score <- function(predicted, data_frame) {
       group_median_width = median(sil_summary$clus.avg.widths)
     ))
   }
-}
-
-#' @title prepare_cytof
-#' @description
-#' Prepare CyTOF data for random forest
-#'
-#' @param train_seurat A Seurat object representing the training data set.
-#' @param test_seurat A Seurat object representing the test data set.
-#'
-#' @return A list of the training and test data formatted for RF
-#' @export
-#'
-#' @importFrom Seurat GetAssayData
-#' @importFrom tibble as_tibble
-#' @importFrom dplyr select everything
-prepare_cytof <- function(train_seurat, test_seurat) {
-  list(
-    Seurat::GetAssayData(train_seurat, slot = "counts", assay = "RNA") |>
-      as.data.frame() |>
-      t() |>
-      tibble::as_tibble(rownames = "CellID") |>
-      dplyr::select(CellID, everything()),
-    Seurat::GetAssayData(test_seurat, slot = "counts", assay = "RNA") |>
-      as.data.frame() |>
-      t() |>
-      tibble::as_tibble(rownames = "CellID") |>
-      dplyr::select(CellID, everything())
-  )
 }

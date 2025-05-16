@@ -4,12 +4,30 @@
 \alias{leverage_sketch}
 \title{leverage_sketch}
 \usage{
-leverage_sketch(input, sketch_size, verbose = TRUE)
+leverage_sketch(
+  input,
+  sketch_size,
+  dtype = "scRNA",
+  skip_norm = FALSE,
+  on_disk = FALSE,
+  output_dir = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{input}{Seurat object}
 
 \item{sketch_size}{Number of cells to include in the sketch assay}
+
+\item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
+is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
+and slot).}
+
+\item{skip_norm}{Set to TRUE if data has already been normalized with
+`Seurat::NormalizeData()`}
+
+\item{on_disk}{Use BPCells on-disk count matrices be used to speed up
+the sketching process. Set to TRUE for large datasets (default FALSE).}
 
 \item{verbose}{print messages}
 }

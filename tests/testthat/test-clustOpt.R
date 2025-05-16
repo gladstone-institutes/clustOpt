@@ -22,7 +22,9 @@ test_that("Projection respects chosen PCs and avoids data leakage", {
   )
 
   # Perform the projection
-  result <- project_pca(train_seurat, test_seurat,
+  result <- project_pca(train_seurat,
+    test_seurat,
+    dtype = "scRNA",
     train_with = "B",
     verbose = TRUE
   )

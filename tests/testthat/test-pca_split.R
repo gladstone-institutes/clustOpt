@@ -2,10 +2,6 @@ library(testthat)
 library(Seurat)
 library(clustOpt)
 
-
-library(testthat)
-library(Seurat)
-
 test_that("split_pca_dimensions works with 'odd_even' method", {
   seurat_obj <- readRDS(system.file(
     "extdata", "1000_cell_sketch_10_donors_2_celltypes_AIDA.rds",
@@ -15,8 +11,9 @@ test_that("split_pca_dimensions works with 'odd_even' method", {
   # Ensure PCA is present
   seurat_obj <- NormalizeData(seurat_obj) |>
     ScaleData() |>
-    RunPCA(features = VariableFeatures(seurat_obj),
-           verbose = FALSE
+    RunPCA(
+      features = VariableFeatures(seurat_obj),
+      verbose = FALSE
     )
 
   # Split PCA dimensions by odd/even
@@ -53,9 +50,10 @@ test_that("split_pca_dimensions works with 'var_balanced' method", {
   # Ensure PCA is present
   seurat_obj <- NormalizeData(seurat_obj) |>
     ScaleData() |>
-    RunPCA(features = VariableFeatures(seurat_obj),
-    verbose = FALSE
-  )
+    RunPCA(
+      features = VariableFeatures(seurat_obj),
+      verbose = FALSE
+    )
 
   # Split PCA dimensions by variance balancing
   result_obj <- split_pca_dimensions(seurat_obj,

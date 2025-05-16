@@ -4,7 +4,7 @@
 <!-- badges: end -->
    
 # clustOpt
-*Authors: Natalie Elphick, Min-Gyoung Shin,Ayushi Agrawal, and Reuben Thomas*
+*Authors: Natalie Gill, Min-Gyoung Shin,Ayushi Agrawal, and Reuben Thomas*
 
 This package provides a way to choose a resolution parameter that minimizes subject-specific effects on cluster membership. It uses random forest (RF) models with an approach similar to leave one out cross validation, where each subject is held out and the rest are used to train a RF to predict the cluster labels for the held out subject. This is done across a range of resolution values to generate a distribution of silhouette scores for the held out subject across the iterations. This silhouette score distribution is then used to choose a resolution value whose mean silhouette score results in a local maximum.
 

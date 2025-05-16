@@ -29,6 +29,13 @@ check_size <- function(input) {
 #'
 #' @param input Seurat object
 #' @param sketch_size Number of cells to include in the sketch assay
+#' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
+#' is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
+#' and slot).
+#' @param on_disk Use BPCells on-disk count matrices be used to speed up
+#' the sketching process. Set to TRUE for large datasets (default FALSE).
+#' @param skip_norm Set to TRUE if data has already been normalized with
+#' `Seurat::NormalizeData()`
 #' @param verbose print messages
 #' @return Seurat object with sketch assay
 #'
@@ -36,25 +43,119 @@ check_size <- function(input) {
 #'
 #' @importFrom Seurat NormalizeData FindVariableFeatures
 #' @importFrom Seurat SketchData DefaultAssay DietSeurat
-leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
+leverage_sketch <- function(input,
+                          sketch_size,
+                          dtype = "scRNA",
+                          skip_norm = FALSE,
+                          on_disk = FALSE,
+                          output_dir = NULL,
+                          verbose = TRUE) {
   if (is.null(sketch_size)) {
     if (verbose) {
       message("No sketch_size specified, defaulting to 10% of cells")
     }
     sketch_size <- ncol(input) * 0.1
   }
+  if(!is.null(input@meta.data[["leverage.score"]])) {
+    message("\nRemoving previously calculated leverage scores...")
+    input@meta.data[["leverage.score"]] <- NULL
+  }
+  
+  # Convert to on-disk format if requested
+  if (on_disk) {
+    if (verbose) {
+      message("Converting to on-disk format before sketching...")
+    }
+    # Use the convert_seurat_to_bpcells function to convert to on-disk format
+    input <- convert_seurat_to_bpcells(input, output_dir = output_dir)
+  }
 
-  input <- Seurat::NormalizeData(input)
+  if (dtype == "scRNA" & !skip_norm) {
+    input <- Seurat::NormalizeData(input)
+  }
+
   input <- Seurat::FindVariableFeatures(input)
   input <- Seurat::SketchData(
     object = input,
     ncells = sketch_size,
     method = "LeverageScore",
-    sketched.assay = "sketch"
+    sketched.assay = "sketch",
+    features = VariableFeatures(input)
   )
   Seurat::DefaultAssay(input) <- "sketch"
-  # Return only the sketch assay
+  # Return only the sketch assay, renaming it to "RNA"
+  # to avoid issues with functions that expect "RNA"
   input <- Seurat::DietSeurat(input, assays = "sketch")
+  
+  return(RenameAssays(object = input, sketch = 'RNA'))
+}
+#' @title convert_seurat_to_bpcells
+#' @description
+#' Convert a Seurat object to BPCells on-disk format
+#'
+#' Converts the counts matrix of specified assays in a Seurat object to BPCells
+#' format, saving the matrices on disk and updating the Seurat object to use
+#' these on-disk matrices. Only works for single count layers.
+#'
+#' @param seurat_obj A Seurat object to be converted.
+#' @param output_dir Directory where the BPCells matrices will be saved. Defaults
+#' to a subdirectory in the system's temporary directory named after the Seurat object.
+#' @param assays Character vector of assays to convert. Defaults to "RNA".
+#' @return The updated Seurat object using on-disk matrices.
+#' @export
+#' @examples
+#' \dontrun{
+#' # Example usage
+#' seurat_obj <- readRDS("/path/to/your/seurat_object.rds")
+#' seurat_obj <- convert_seurat_to_bpcells(seurat_obj)
+#' }
+convert_seurat_to_bpcells <- function(seurat_obj, output_dir = NULL,
+                                      assays = "RNA") {
+  # Derive the name of the seurat object
+  obj_name <- deparse(substitute(seurat_obj))
+  
+  # Set default output directory to TMPDIR using the object's name
+  if (is.null(output_dir)) {
+    output_dir <- file.path(tempdir(), obj_name)
+  }
+  
+  # Ensure the output directory exists
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
+  
+  # Iterate over each specified assay in the Seurat object
+  for (assay_name in assays) {
+    if (!assay_name %in% names(seurat_obj@assays)) {
+      warning(paste(
+        "Assay", assay_name,
+        "not found in the Seurat object. Skipping."
+      ))
+      next
+    }
+    
+    # Convert to v5 assay
+    seurat_obj[[assay_name]] <- as(object = seurat_obj[[assay_name]], Class = "Assay5")
+    # Check if the counts matrix is already in BPCells format to avoid reprocessing
+    if (inherits(seurat_obj[[assay_name]]@layers$counts, "BPMatrix")) {
+      message(paste(
+        "Counts matrix for assay",
+        assay_name, "is already in BPCells format. Skipping."
+      ))
+      next
+    }
+    
+    # Write counts matrix to BPCells format
+    counts_dir <- file.path(output_dir, paste0(assay_name, "_counts"))
+    BPCells::write_matrix_dir(mat = seurat_obj[[assay_name]]@layers$counts, dir = counts_dir,
+    overwrite = TRUE)
+    
+    # Update the counts matrix to on-disk BPCells matrix
+    seurat_obj[[assay_name]]@layers$counts<- BPCells::open_matrix_dir(dir = counts_dir)
+  }
+  
+  # Return the updated Seurat object
+  return(seurat_obj)
 }
 
 #' @title get_valid_samples
@@ -77,12 +178,12 @@ leverage_sketch <- function(input, sketch_size, verbose = TRUE) {
 #' }
 #' @export
 #'
-#' @importFrom dplyr group_by summarize filter
+#' @importFrom dplyr group_by summarize filter n
 get_valid_samples <- function(input, subject_ids, min_cells) {
   # Summarize the number of cells per sample
   sample_summary <- input@meta.data |>
     dplyr::group_by(!!sym(subject_ids)) |>
-    dplyr::summarize(cell_count = n(), .groups = "drop") |>
+    dplyr::summarize(cell_count = dplyr::n(), .groups = "drop") |>
     dplyr::ungroup()
 
   sufficient_samples <- sample_summary |>

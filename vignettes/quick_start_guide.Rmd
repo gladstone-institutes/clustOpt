@@ -1,10 +1,6 @@
 ---
 title: "clustOpt: Quickstart Guide"
-output:
-  html_document:
-    theme: united
-    df_print: kable
-  pdf_document: default
+output: rmarkdown::html_vignette
 date: 'Compiled: `r Sys.Date()`'
 vignette: >
   %\VignetteIndexEntry{clustOpt: Quickstart Guide}
@@ -14,12 +10,12 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  dev = "png",
   collapse = TRUE,
   comment = "#>",
   echo = TRUE,
   warning = FALSE,
-  dpi = 300
+  fig.height = 5,
+  fig.width = 8
 )
 ```
 
@@ -39,7 +35,7 @@ set.seed(42)
 
 Read in the tutorial dataset. This data was generated from the [Asian Immune Diversity Atlas](https://doi.org/10.1101/2024.06.30.601119) (data freeze v1). It contains only B cells and NK cells from 20 donors which have been sketched to 1000 cells using the leverage score based method of Seurat's SketchData function.
 
-```{r load_data, cache=TRUE}
+```{r load_data}
 input <- readRDS(
   system.file(
     "extdata",
@@ -132,7 +128,7 @@ plots[[3]]
 plots[[4]]
 ```
 
-The median silhouette scores start going down at 0.06, indicating that this clustering resolution is reproducible across all biological samples. For larger datasets with more celltypes, a local maximum in the mean silhouette is a clear signal of the most reproducible resolution.
+The median silhouette scores start going down at 0.06, indicating that this clustering resolution is reproducible across all biological samples. **For larger datasets with more celltypes, a local maximum in the mean silhouette is a clear signal of the most reproducible resolution.**
 
 ## Comparison to the cell annotations
 
