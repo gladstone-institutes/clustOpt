@@ -63,6 +63,9 @@ leverage_sketch <- function(input,
   
   # Convert to on-disk format if requested
   if (on_disk) {
+       if (!requireNamespace("BPCells", quietly = TRUE)) {
+        stop("The BPCells package must be installed to use on_disk")
+    }
     if (verbose) {
       message("Converting to on-disk format before sketching...")
     }

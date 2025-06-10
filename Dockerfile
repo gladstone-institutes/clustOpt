@@ -7,12 +7,10 @@ WORKDIR /opt/clustOpt
 
 # renv is only used for local development of the package
 RUN R -e 'renv::deactivate()'
-
+RUN R -e "remotes::install_github('bnprks/BPCells/r')"
 # Install pak for faster package installation 
 RUN R -e 'install.packages("pak", repos = "https://cloud.r-project.org")'
 
-# Install BPCells
-RUN R -e 'pak::pkg_install(pkg = "bnprks/BPCells/r")'
 
 # Install using using pak (update the DESCRIPTION for new builds)
 RUN R -e 'pak::pkg_install(pkg = ".", dependencies = TRUE)'
