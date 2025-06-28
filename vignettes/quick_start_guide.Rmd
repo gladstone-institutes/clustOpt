@@ -33,13 +33,13 @@ library(future)
 set.seed(42)
 ```
 
-Read in the tutorial dataset. This data was generated from the [Asian Immune Diversity Atlas](https://doi.org/10.1101/2024.06.30.601119) (data freeze v1). It contains only B cells and NK cells from 20 donors which have been sketched to 1000 cells using the leverage score based method of Seurat's SketchData function.
+Read in the tutorial dataset. This data was generated from the [Asian Immune Diversity Atlas](https://doi.org/10.1101/2024.06.30.601119) (data freeze v1). It contains only B cells, Monocytes, and NK cells from 10 donors which have been sketched to a total of 1000 cells using the leverage score based method of Seurat's SketchData function.
 
 ```{r load_data}
 input <- readRDS(
   system.file(
     "extdata",
-    "1000_cell_sketch_10_donors_2_celltypes_AIDA.rds",
+    "1000_cell_sketch_10_donors_3_celltypes_AIDA.rds",
     package = "clustOpt"
   )
 )
@@ -89,7 +89,7 @@ DimPlot(input,
 
 ```{r}
 DimPlot(input,
-  group.by = "author_cell_type",
+  group.by = "author_cell_type",label = T,
   pt.size = .8
 ) +
   coord_fixed()
@@ -98,18 +98,13 @@ DimPlot(input,
 Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation.
 
 ```{r clustOpt, warning=FALSE}
-plan("multisession", workers = 12)
+plan("multisession", workers = 10)
 
 sil_dist <- clust_opt(input,
-  res_range = c(
-    0.02, 0.04, 0.06, 0.08, 0.1,
-    0.2, 0.4, 0.6, 0.8
-  ),
   subject_ids = "donor_id",
   ndim = 20,
-  verbose = TRUE,
-  split_method = "odd_even",
-  train_with = "B"
+  verbose = FALSE,
+  train_with = "odd"
 ) |>
   progressr::with_progress() # Optional, just adds progress bar
 
@@ -120,7 +115,7 @@ plan("sequential")
 ## Plotting the silhouette score distributions
 
 ```{r plotting}
-plots <- create_sil_plots(sil_dist)
+plots <- create_sil_plots(sil_dist |> drop_na())
 
 plots[[1]]
 plots[[2]]
@@ -128,19 +123,22 @@ plots[[3]]
 plots[[4]]
 ```
 
-The median silhouette scores start going down at 0.06, indicating that this clustering resolution is reproducible across all biological samples. **For larger datasets with more celltypes, a local maximum in the mean silhouette is a clear signal of the most reproducible resolution.**
+The median silhouette scores across all cells have a slight local maximum at 0.08, indicating that this clustering resolution is the most reproducible across all biological replicates. In general the first local maximum that is seen is the optimal resolution.**For larger datasets with more celltypes, the local maximum in the silhouette scores should be more apparent.**
 
 ## Comparison to the cell annotations
 
 ```{r cluster}
 input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.06)
+input <- FindClusters(input, resolution = 0.08)
 
 DimPlot(input,
   group.by = "seurat_clusters",
   pt.size = .8
 )
 ```
+
+
+
 
 ```{r}
 # TO DO: Add a step where we evaluate this chosen resolution against the

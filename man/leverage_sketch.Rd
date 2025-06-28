@@ -21,13 +21,16 @@ leverage_sketch(
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
 is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
-and slot).}
+slot).}
 
 \item{skip_norm}{Set to TRUE if data has already been normalized with
 `Seurat::NormalizeData()`}
 
 \item{on_disk}{Use BPCells on-disk count matrices be used to speed up
 the sketching process. Set to TRUE for large datasets (default FALSE).}
+
+\item{output_dir}{If using on_disk, the file path for storing the on
+disk count matrix (default NULL)}
 
 \item{verbose}{print messages}
 }

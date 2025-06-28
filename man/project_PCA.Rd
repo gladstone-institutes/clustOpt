@@ -4,14 +4,24 @@
 \alias{project_pca}
 \title{project_pca}
 \usage{
-project_pca(train_seurat, test_seurat, train_with, dtype, verbose)
+project_pca(
+  train_seurat,
+  test_seurat,
+  train_with_pcs,
+  clust_pcs,
+  dtype,
+  verbose
+)
 }
 \arguments{
 \item{train_seurat}{A Seurat object representing the training data set.}
 
 \item{test_seurat}{A Seurat object representing the test data set.}
 
-\item{train_with}{Which set A or B should be used for training}
+\item{train_with_pcs}{Which reduction should be used for training 
+"odd_pca" or "even_pca"}
+
+\item{clust_pcs}{Which reduction was used for clustering}
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF"}
 
@@ -31,8 +41,6 @@ principal components derived from the training data.
 \details{
 Identifies features that are common between the training
 and test data sets. Extracts the PCA loadings from the training data
-for common features. If train_with = "A", then projection is performed
-with only the B PCs. Both training and test data are projected onto these
-loadings. Data is also projected onto loadings from all PCs for cluster
-scoring after training is complete.
+for common features. Both training and test data are projected onto these
+loadings. Data is projected onto loadings for 2 PC sets (odd and even)
 }

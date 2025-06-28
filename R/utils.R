@@ -31,9 +31,11 @@ check_size <- function(input) {
 #' @param sketch_size Number of cells to include in the sketch assay
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
-#' and slot).
+#' slot).
 #' @param on_disk Use BPCells on-disk count matrices be used to speed up
 #' the sketching process. Set to TRUE for large datasets (default FALSE).
+#' @param output_dir If using on_disk, the file path for storing the on
+#' disk count matrix (default NULL)
 #' @param skip_norm Set to TRUE if data has already been normalized with
 #' `Seurat::NormalizeData()`
 #' @param verbose print messages
@@ -181,16 +183,33 @@ convert_seurat_to_bpcells <- function(seurat_obj, output_dir = NULL,
 #' }
 #' @export
 #'
-#' @importFrom dplyr group_by summarize filter n
+#' @importFrom dplyr group_by summarize filter n sym
 get_valid_samples <- function(input, subject_ids, min_cells) {
   # Summarize the number of cells per sample
   sample_summary <- input@meta.data |>
-    dplyr::group_by(!!sym(subject_ids)) |>
+    dplyr::group_by(!!dplyr::sym(subject_ids)) |>
     dplyr::summarize(cell_count = dplyr::n(), .groups = "drop") |>
     dplyr::ungroup()
 
+  # Split samples into sufficient and insufficient
   sufficient_samples <- sample_summary |>
     dplyr::filter(cell_count >= min_cells)
+  
+  insufficient_samples <- sample_summary |>
+    dplyr::filter(cell_count < min_cells)
+
+  # Show removed subjects if any
+  if (nrow(insufficient_samples) > 0) {
+    removed_subjects <- insufficient_samples |>
+      dplyr::pull(!!sym(subject_ids))
+    
+    message(
+      "Removing ", nrow(insufficient_samples), " subject(s) with fewer than ", 
+      min_cells, " cells:\n",
+      paste(paste0(removed_subjects, " (", insufficient_samples$cell_count, " cells)"), 
+            collapse = "\n")
+    )
+  }
 
   if (nrow(sufficient_samples) < 3) {
     warning(
@@ -199,14 +218,19 @@ get_valid_samples <- function(input, subject_ids, min_cells) {
     )
     return(NULL)
   }
+  
   # Retrieve subject names that meet the requirements
   valid_samples <- sufficient_samples |>
     dplyr::pull(!!sym(subject_ids))
+  
   # Return the list of valid subject names with confirmation message
   message(
-    "There are sufficient subjects. Returning the subjects names ",
-    "have at least ", min_cells, " cells."
+    "Using ", nrow(sufficient_samples), " subject(s) that have at least ", 
+    min_cells, " cells:\n",
+    paste(paste0(valid_samples, " (", sufficient_samples$cell_count, " cells)"), 
+          collapse = "\n")
   )
+  
   return(valid_samples)
 }
 

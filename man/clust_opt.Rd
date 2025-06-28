@@ -15,8 +15,7 @@ clust_opt(
   within_batch = NA,
   verbose = FALSE,
   num_trees = 1000,
-  split_method = "odd_even",
-  train_with = "A",
+  train_with = "odd",
   min_cells = 50
 )
 }
@@ -45,11 +44,8 @@ same value for the batch variable will be used for training.}
 
 \item{num_trees}{Number of trees to use in the random forest.}
 
-\item{split_method}{Which method of PCA splitting (for train and test) should
-be used "odd_even" or "var_balanced", default is "odd_even".}
-
-\item{train_with}{Either A or B, for split_method = "odd_even" A is odd and
-B is even. Default is A}
+\item{train_with}{Either odd or even PCs for clustering and training.
+Default is odd.}
 
 \item{min_cells}{Minimum cells per subject, default is 50}
 }
