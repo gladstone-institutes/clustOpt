@@ -1,6 +1,6 @@
 Package: clustOpt
-Version: 0.9
-Date: 2023-10-11
+Version: 1.0
+Date: 2024-07-22
 Title: Choosing a resolution parameter for single cell omics clustering
 Description: Optimal clustering resolution parameters determined through Random Forests, a silhouette score-based assessment of clustering validity, and subject-wise cross-validation.
 Authors@R: c(person("Natalie", "Gill", role = c("aut", "cre"), email = "natalie.gill@gladstone.ucsf.edu"),
