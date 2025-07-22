@@ -9,20 +9,20 @@ adjusted_rand_index(seurat_obj, meta1, meta2)
 \arguments{
 \item{seurat_obj}{A Seurat object containing the metadata with clustering assignments}
 
-\item{meta1}{Character string specifying the first metadata column name containing 
+\item{meta1}{Character string specifying the first metadata column name containing
 cluster assignments}
 
-\item{meta2}{Character string specifying the second metadata column name containing 
+\item{meta2}{Character string specifying the second metadata column name containing
 cluster assignments to compare against meta1}
 }
 \value{
-Numeric value representing the Adjusted Rand Index between the two 
+Numeric value representing the Adjusted Rand Index between the two
   clustering assignments
 }
 \description{
-Computes the Adjusted Rand Index (ARI) to measure the similarity between 
-two clustering assignments. The ARI is a measure of agreement between two 
-partitions, adjusted for chance. Values range from 0 (random partitioning) 
+Computes the Adjusted Rand Index (ARI) to measure the similarity between
+two clustering assignments. The ARI is a measure of agreement between two
+partitions, adjusted for chance. Values range from 0 (random partitioning)
 to 1 (perfect agreement), with negative values indicating worse than random.
 }
 \details{

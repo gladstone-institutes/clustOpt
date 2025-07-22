@@ -9,8 +9,9 @@ convert_seurat_to_bpcells(seurat_obj, output_dir = NULL, assays = "RNA")
 \arguments{
 \item{seurat_obj}{A Seurat object to be converted.}
 
-\item{output_dir}{Directory where the BPCells matrices will be saved. Defaults
-to a subdirectory in the system's temporary directory named after the Seurat object.}
+\item{output_dir}{Directory where the BPCells matrices will be saved. 
+Defaults to a subdirectory in the system's temporary directory named after 
+the Seurat object.}
 
 \item{assays}{Character vector of assays to convert. Defaults to "RNA".}
 }

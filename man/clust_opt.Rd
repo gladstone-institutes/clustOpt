@@ -25,8 +25,8 @@ clust_opt(
 \item{ndim}{Number of principal components to use.}
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
-is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
-slot) and sketching is not implemented for CyTOF.}
+is "scRNA". CyTOF data is expected to be arcsinh normalized (in the counts
+slot). Sketching is supported for both data types.}
 
 \item{sketch_size}{Number of cells to use for sketching.}
 
@@ -45,7 +45,7 @@ same value for the batch variable will be used for training.}
 \item{num_trees}{Number of trees to use in the random forest.}
 
 \item{train_with}{Either "odd" or "even" PCs for clustering and training.
-Default is "even". It is recommended to keep train_with set to "even" so 
+Default is "even". It is recommended to keep train_with set to "even" so
 that the 1st PC is in the set used to calculate silhouette scores.}
 
 \item{min_cells}{Minimum cells per subject, default is 50}
@@ -56,4 +56,33 @@ resolution.
 }
 \description{
 Runs the main resolution optimization algorithm
+}
+\details{
+The clustOpt algorithm works by:
+\enumerate{
+  \item Sketching large datasets using leverage score-based sampling (if needed)
+  \item Splitting principal components into independent odd/even spaces
+  \item Performing subject-wise cross-validation
+  \item Training random forests on cluster assignments
+  \item Evaluating clustering quality using silhouette scores
+}
+
+Both scRNA-seq and CyTOF data types support sketching for improved performance 
+on large datasets. For CyTOF data, normalization is skipped as data should 
+already be arcsinh transformed.
+}
+\examples{
+\dontrun{
+# Basic usage with scRNA-seq data
+results <- clust_opt(seurat_obj, ndim = 50, subject_ids = "donor_id")
+
+# CyTOF data analysis
+cytof_results <- clust_opt(cytof_obj, ndim = 30, dtype = "CyTOF", 
+                          subject_ids = "sample_id")
+
+# Large dataset with custom sketch size
+large_results <- clust_opt(large_obj, ndim = 50, sketch_size = 10000,
+                          subject_ids = "donor_id")
+}
+
 }

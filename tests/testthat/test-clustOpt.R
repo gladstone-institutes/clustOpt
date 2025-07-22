@@ -10,11 +10,13 @@ test_that("clust_opt runs", {
     package = "clustOpt"
   ))
 
-  df <- clust_opt(input = seurat_obj,
-                           subject_ids = "donor_id",
-                           ndim = 10,
-                           res_range = c(0.01,0.02),
-                           num_trees = 10)
-  
+  df <- clust_opt(
+    input = seurat_obj,
+    subject_ids = "donor_id",
+    ndim = 10,
+    res_range = c(0.01, 0.02),
+    num_trees = 10
+  )
+
   expect_true(exists("df"))
 })

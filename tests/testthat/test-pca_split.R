@@ -39,4 +39,3 @@ test_that("split_pca_dimensions works", {
   expect_equal(ncol(result_obj@reductions$odd_pca), odd_count)
   expect_equal(ncol(result_obj@reductions$even_pca), even_count)
 })
-

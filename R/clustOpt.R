@@ -12,8 +12,8 @@ NULL
 #' @param input Seurat object
 #' @param ndim Number of principal components to use.
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
-#' is "scRNA". CyTOF data is expected to be arcsinh normalized  (in the counts
-#' slot) and sketching is not implemented for CyTOF.
+#' is "scRNA". CyTOF data is expected to be arcsinh normalized (in the counts
+#' slot). Sketching is supported for both data types.
 #' @param sketch_size Number of cells to use for sketching.
 #' @param skip_sketch Skip sketching, by default any input with more than
 #' 200,000 cells is sketched to 10\% of the cells.
@@ -24,11 +24,39 @@ NULL
 #' same value for the batch variable will be used for training.
 #' @param num_trees Number of trees to use in the random forest.
 #' @param train_with Either "odd" or "even" PCs for clustering and training.
-#' Default is "even". It is recommended to keep train_with set to "even" so 
+#' Default is "even". It is recommended to keep train_with set to "even" so
 #' that the 1st PC is in the set used to calculate silhouette scores.
 #' @param min_cells Minimum cells per subject, default is 50
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
+#' 
+#' @details
+#' The clustOpt algorithm works by:
+#' \enumerate{
+#'   \item Sketching large datasets using leverage score-based sampling (if needed)
+#'   \item Splitting principal components into independent odd/even spaces
+#'   \item Performing subject-wise cross-validation
+#'   \item Training random forests on cluster assignments
+#'   \item Evaluating clustering quality using silhouette scores
+#' }
+#' 
+#' Both scRNA-seq and CyTOF data types support sketching for improved performance 
+#' on large datasets. For CyTOF data, normalization is skipped as data should 
+#' already be arcsinh transformed.
+#' 
+#' @examples
+#' \dontrun{
+#' # Basic usage with scRNA-seq data
+#' results <- clust_opt(seurat_obj, ndim = 50, subject_ids = "donor_id")
+#' 
+#' # CyTOF data analysis
+#' cytof_results <- clust_opt(cytof_obj, ndim = 30, dtype = "CyTOF", 
+#'                           subject_ids = "sample_id")
+#' 
+#' # Large dataset with custom sketch size
+#' large_results <- clust_opt(large_obj, ndim = 50, sketch_size = 10000,
+#'                           subject_ids = "donor_id")
+#' }
 #'
 #' @export
 #' @importFrom Seurat DefaultAssay DietSeurat RunPCA FindNeighbors FindClusters
@@ -134,8 +162,8 @@ clust_opt <- function(input,
         even = "odd_pca"
       )
       train_with_pcs <- switch(train_with,
-                               odd = "odd_pca",
-                               even = "even_pca"
+        odd = "odd_pca",
+        even = "even_pca"
       )
 
       # Create 2 separate PCA reductions
@@ -169,12 +197,12 @@ clust_opt <- function(input,
       )
 
       clust_pcs <- switch(train_with,
-                          odd = "even_pca",
-                          even = "odd_pca"
+        odd = "even_pca",
+        even = "odd_pca"
       )
       train_with_pcs <- switch(train_with,
-                               odd = "odd_pca",
-                               even = "even_pca"
+        odd = "odd_pca",
+        even = "even_pca"
       )
       # Create 2 separate PCA reductions
       train <- split_pca_dimensions(train, verbose)
@@ -200,12 +228,13 @@ clust_opt <- function(input,
         dplyr::select(dplyr::contains("SCT_snn_res"))
 
 
-      df_list <- project_pca(train_seurat = train,
-                             test_seurat = test,
-                             train_with_pcs = train_with_pcs,
-                             clust_pcs = clust_pcs,
-                             dtype = dtype,
-                             verbose = verbose
+      df_list <- project_pca(
+        train_seurat = train,
+        test_seurat = test,
+        train_with_pcs = train_with_pcs,
+        clust_pcs = clust_pcs,
+        dtype = dtype,
+        verbose = verbose
       )
 
       rm(train, test)
@@ -213,8 +242,9 @@ clust_opt <- function(input,
       train_clusters <- train@meta.data |>
         dplyr::select(dplyr::contains("RNA_snn_res"))
 
-      df_list <- project_pca(train_seurat = train,
-                             test_seurat = test,
+      df_list <- project_pca(
+        train_seurat = train,
+        test_seurat = test,
         train_with_pcs = train_with_pcs,
         clust_pcs = clust_pcs,
         dtype = dtype,
@@ -394,9 +424,9 @@ prep_test <- function(input,
 #'
 #' @param train_seurat A Seurat object representing the training data set.
 #' @param test_seurat A Seurat object representing the test data set.
-#' @param train_with_pcs Which reduction should be used for training 
+#' @param train_with_pcs Which reduction should be used for training
 #' "odd_pca" or "even_pca"
-#' @param clust_pcs Which reduction was used for clustering 
+#' @param clust_pcs Which reduction was used for clustering
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF"
 #' @param verbose print messages
 #'
@@ -424,11 +454,10 @@ project_pca <- function(train_seurat,
                         clust_pcs,
                         dtype,
                         verbose) {
-  
-  if(clust_pcs == train_with_pcs) {
+  if (clust_pcs == train_with_pcs) {
     stop("clust_pcs and train_with_pcs must be independent")
   }
-  
+
   # Validate input
   if (!inherits(train_seurat, "Seurat") || !inherits(test_seurat, "Seurat")) {
     stop("Both train_seurat and test_seurat must be Seurat objects")
@@ -455,7 +484,7 @@ project_pca <- function(train_seurat,
     (n_shared_genes / total_genes) * 100
   ))
 
-  if((n_shared_genes / total_genes) * 100 < 80) {
+  if ((n_shared_genes / total_genes) * 100 < 80) {
     warning("Less than 80% of genes available for projection.")
   }
 
@@ -472,8 +501,7 @@ project_pca <- function(train_seurat,
     rownames(loadings_common_features) <- loadings_common_features[, 1]
     loadings_common_features <- loadings_common_features[, -1]
     class(loadings_common_features) <- "numeric"
-    scale_data <- as.matrix(seurat_obj[[assay_id]]@scale.data
-                            )[common_features, ]
+    scale_data <- as.matrix(seurat_obj[[assay_id]]@scale.data)[common_features, ]
 
     t(scale_data) %*% loadings_common_features
   }
@@ -482,7 +510,8 @@ project_pca <- function(train_seurat,
   }
   project_data_for_eval <- function(seurat_obj, assay_id) {
     loadings_common_features <- Seurat::Loadings(
-      train_seurat[[clust_pcs]]) |>
+      train_seurat[[clust_pcs]]
+    ) |>
       tibble::as_tibble(rownames = "features") |>
       dplyr::filter(features %in% common_features) |>
       as.matrix()
@@ -508,7 +537,7 @@ project_pca <- function(train_seurat,
       as.data.frame(),
     test_proj_clust_pcs = pca_test_eval_data |>
       as.data.frame(),
-    train_proj_clust_pcs  = pca_train_eval_data |>
+    train_proj_clust_pcs = pca_train_eval_data |>
       as.data.frame()
   )
 }
@@ -583,13 +612,13 @@ calculate_silhouette_score <- function(predicted, data_frame) {
   if (unique_clusters <= 1) {
     return(list(avg_width = NA, group_median_width = NA))
   }
-  
+
   # Calculate silhouette scores
   sil <- cluster::silhouette(
     as.numeric(as.character(predicted)),
     dist(data_frame)
   )
-  
+
   sil_summary <- summary(sil)
   return(list(
     avg_width = sil_summary$avg.width,

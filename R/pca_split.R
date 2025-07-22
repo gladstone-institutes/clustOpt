@@ -49,5 +49,4 @@ split_pca_dimensions <- function(input,
   input@reductions$even_pca <- even_pca
   input@reductions$odd_pca <- odd_pca
   return(input)
-  
 }

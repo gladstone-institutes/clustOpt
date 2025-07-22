@@ -143,11 +143,13 @@ For convenience we provide a function to calculate the adjusted rand index for a
 
 ```{r}
 adjusted_rand_index(input,
-                    meta1 = "seurat_clusters",
-                    meta2 = "broad_cell_type")
+  meta1 = "seurat_clusters",
+  meta2 = "broad_cell_type"
+)
 adjusted_rand_index(input,
-                    meta1 = "seurat_clusters",
-                    meta2 = "author_cell_type")
+  meta1 = "seurat_clusters",
+  meta2 = "author_cell_type"
+)
 ```
 
 ## Larger Datasets

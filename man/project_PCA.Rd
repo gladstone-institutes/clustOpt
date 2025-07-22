@@ -18,7 +18,7 @@ project_pca(
 
 \item{test_seurat}{A Seurat object representing the test data set.}
 
-\item{train_with_pcs}{Which reduction should be used for training 
+\item{train_with_pcs}{Which reduction should be used for training
 "odd_pca" or "even_pca"}
 
 \item{clust_pcs}{Which reduction was used for clustering}
