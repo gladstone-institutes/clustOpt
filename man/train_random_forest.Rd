@@ -4,7 +4,7 @@
 \alias{train_random_forest}
 \title{train_random_forest}
 \usage{
-train_random_forest(res, df_list, train_clusters, sam, num.trees)
+train_random_forest(res, df_list, train_clusters, sam, num_trees)
 }
 \arguments{
 \item{res}{Resolution to train on}
@@ -14,6 +14,8 @@ train_random_forest(res, df_list, train_clusters, sam, num.trees)
 \item{train_clusters}{Cluster assignments for the training data}
 
 \item{sam}{Test sample}
+
+\item{num_trees}{Number of trees for the random forest}
 }
 \value{
 A list containing the resolution, silhouette score, and number of

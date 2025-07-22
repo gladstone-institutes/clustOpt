@@ -1,10 +1,6 @@
 ---
 title: "clustOpt: Quickstart Guide"
-output:
-  html_document:
-    theme: united
-    df_print: kable
-  pdf_document: default
+output: rmarkdown::html_vignette
 date: 'Compiled: `r Sys.Date()`'
 vignette: >
   %\VignetteIndexEntry{clustOpt: Quickstart Guide}
@@ -13,71 +9,104 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(dev = "png",
+knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  echo = TRUE,
+  warning = FALSE,
+  fig.height = 5,
+  fig.width = 8
 )
 ```
 
-```{r setup, warning=FALSE, echo=FALSE, dpi=400}
+```{r setup, message=FALSE}
 library(Seurat)
 # Only v5 Seurat Assays are supported
 options(Seurat.object.assay.version = "v5")
 # Only needs to be set for analyzing large datasets
-options(future.globals.maxSize = 1e9)
+options(future.globals.maxSize = 1e20)
 library(dplyr)
+library(tidyr)
+library(ggplot2)
 library(clustOpt)
 library(future)
-set.seed(1)
+set.seed(42)
 ```
 
-Read in a leverage score based sketch of 5000 cells from 10 donors in the ROSMAP dataset
+Read in the tutorial dataset. This data was generated from the [Asian Immune Diversity Atlas](https://doi.org/10.1101/2024.06.30.601119) (data freeze v1). It contains only B cells, Monocytes, and NK cells from 10 donors which have been sketched to a total of 1000 cells using the leverage score based method of Seurat's SketchData function.
 
 ```{r load_data}
-input <- readRDS("../inst/extdata/5000_sketch_ROSMAP.Rds")
+input <- readRDS(
+  system.file(
+    "extdata",
+    "1000_cell_sketch_10_donors_3_celltypes_AIDA.rds",
+    package = "clustOpt"
+  )
+)
+```
 
+
+```{r summarize}
+input@meta.data |>
+  summarize(
+    Donors = n_distinct(donor_id),
+    Celltypes = n_distinct(broad_cell_type),
+    `Cell Subtypes` = n_distinct(author_cell_type),
+    Ethnicities = n_distinct(Ethnicity_Selfreported),
+    Countries = n_distinct(Country)
+  ) |>
+  pivot_longer(cols = everything(), names_to = "Metric", values_to = "Count")
+```
+
+
+```{r process}
 input <- input |>
   SCTransform(verbose = FALSE) |>
   RunPCA(verbose = FALSE)
 ```
 
-```{r elbowplot, cache=TRUE}
+```{r elbowplot}
 ElbowPlot(input, ndims = 50)
 ```
 
-```{r UMAP, warning=FALSE}
-input <- RunUMAP(input, dims = 1:20)
+```{r UMAP}
+input <- RunUMAP(input, dims = 1:20, verbose = FALSE)
 
 DimPlot(input,
-  group.by = "projid",
+  group.by = "donor_id",
   pt.size = .8
-)
+) +
+  coord_fixed()
 ```
 
 ```{r}
 DimPlot(input,
-  group.by = "broad.cell.type",
-  label = TRUE,
-  label.box = TRUE,
-  repel = TRUE,
+  group.by = "broad_cell_type",
   pt.size = .8
-)
+) +
+  coord_fixed()
 ```
 
-Model training is parallelized with `future` and `future.batchtools` can be used to parallelize training using HPC job schedulers.
+```{r}
+DimPlot(input,
+  group.by = "author_cell_type",
+  pt.size = .8
+) +
+  coord_fixed()
+```
 
-```{r clustOpt}
+Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. Please see page on handling large datasets for information on how to scale clustOpt to a larger number of cells and subjects.
+
+```{r clustOpt, warning=FALSE}
 plan("multisession", workers = 10)
 
 sil_dist <- clust_opt(input,
-  res_range = c(
-    0.02, 0.04, 0.06, 0.08, 0.1,
-    0.2, 0.4, 0.6, 0.8
-  ),
-  subject_ids = "projid",
+  subject_ids = "donor_id",
   ndim = 20,
-  verbose = F
-) |> progressr::with_progress()
+  verbose = FALSE,
+  train_with = "even"
+) |>
+  progressr::with_progress() # Optional, just adds progress bar
 
 # Shut down stray workers
 plan("sequential")
@@ -86,19 +115,49 @@ plan("sequential")
 ## Plotting the silhouette score distributions
 
 ```{r plotting}
-create_sil_plots(sil_dist)
+plots <- create_sil_plots(sil_dist |> drop_na())
+
+plots[[1]]
+plots[[2]]
+plots[[3]]
+plots[[4]]
 ```
 
-The local maximum in the mean silhouette scores at 0.1 indicates that this clustering resolution is the most reproducible across all biological samples.
+The median silhouette scores across all cells start to fall off at 0.2, indicating that this clustering resolution is the most reproducible across all biological replicates. It is also possible to see a local maximum which would indicate a reproducible resolution.
 
 ## Comparison to the cell annotations
 
 ```{r cluster}
-input <- FindNeighbors(input, dims = 1:20, verbose = F)
-input <- FindClusters(input, resolution = 0.1)
+input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
+input <- FindClusters(input, resolution = 0.2)
 
 DimPlot(input,
   group.by = "seurat_clusters",
   pt.size = .8
 )
 ```
+
+We can see that at the reproducible resolution there are 4 clusters, with the naive B cells being distinct enough to be separated into their own cluster based on the ability to detect them across the CV folds. In other words the naive B cells are present in high enough amounts across the subjects and transcriptomically distinct enough to be consistently detected.
+
+For convenience we provide a function to calculate the adjusted rand index for any 2 metadata columns in a seurat object so that the clustOpt resolution parameter can be compared to clusters derived from other methods.
+
+```{r}
+adjusted_rand_index(input,
+  meta1 = "seurat_clusters",
+  meta2 = "broad_cell_type"
+)
+adjusted_rand_index(input,
+  meta1 = "seurat_clusters",
+  meta2 = "author_cell_type"
+)
+```
+
+## Larger Datasets
+
+Due to the resource requirements of clustOpt, we recommend running it in Rscripts with the `future` plan set to "multicore" instead of "multisession" and if possible using `future.batchtools`. Additionally we provide a wrapper around `Seurat`'s SketchData using the leverage score method to reduce the size of the input data to clustOpt.
+
+```{r}
+input <- leverage_sketch(input, sketch_size = 100)
+input
+```
+

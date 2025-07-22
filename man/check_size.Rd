@@ -4,12 +4,10 @@
 \alias{check_size}
 \title{check_size}
 \usage{
-check_size(input, verbose = TRUE)
+check_size(input)
 }
 \arguments{
 \item{input}{object to check}
-
-\item{verbose}{print warning about size}
 }
 \description{
 Checks if input Seurat object is small enough to run clustOpt

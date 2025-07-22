@@ -1,34 +1,163 @@
+# clustOpt <img src="man/figures/clustOpt_logo.png" align="right" height="138" alt="clustOpt logo" /></a>
+
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/gladstone-institutes/clustOpt/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gladstone-institutes/clustOpt/actions/workflows/R-CMD-check.yaml)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
    
-# clustOpt
-*Authors: Min-Gyoung Shin, Reuben Thomas, Natalie Elphick and Ayushi Agrawal*
 
-## Background
-Seurat uses a modularity optimization based clustering algorithm to cluster cells in a shared nearest neighbor graph. By default it uses a C++ implementation of the Louvian algorithm ([Blondel et al. 2008](https://doi.org/10.1088/1742-5468/2008/10/P10008)) described in [A smart local moving algorithm for large-scale modularity-based community detection](http://www.ludowaltman.nl/slm/) by Waltman and van Eck (2013). It first calculates the k-nearest neighbors, construct the SNN graph, and then optimizes the modularity function to determine clusters.
-
-The resolution parameter controls the granularity of the communities (clusters) that are detected, larger resolution values result in more clusters. Choosing the correct resolution parameter for a given scRNA-seq dataset should result in clusters defined by distinct transcriptomic states such as cell types. Researchers typically use marker genes and the stability of the clusters that express them to choose the resolution parameter that best separates known cell types into their own clusters.
-
-There are many potential sources of noise in scRNA-seq data that can result in clusters that are technical artifacts. The stability of a given cluster can also be impacted by a sample-specific variation. Since downstream analysis relies heavily on the assumption that clusters are defined by the biological variation of interest, it is important to choose a resolution that minimizes the effect of technical variation on cluster membership.
-
-This package provides a way to choose a resolution paramter that minimizes sample-specific effects on cluster membership. It uses random forest (RF) models with an approach similar to leave one out cross validation, where each sample is held out and the rest are used to train a RF to predict the cluster labels for the held out sample. This is done across a range of resolution values to generate a distribution of silhouette scores for the held out sample across the iterations. This silhouette score distribution is then used to choose a resultion value whose mean silhouette score results in a local maximum.   
+*Authors: Natalie Gill, Min-Gyoung Shin,Ayushi Agrawal, and Reuben Thomas*
 
 
-## Installation   
-Currently the only way to install is by using the package`devtools`:    
-```
+Selecting the clustering resolution parameter for Louvain clustering in scRNA-seq is often based on the concentration of expression of cell type marker genes within clusters, increasing the parameter as needed to resolve clusters with mixed cell type gene signatures. This approach is however subjective in situations where one does not have complete knowledge of condition/disease associated cell-types in the context of novel biology, it is time-consuming and has the potential to bias the final clustering results due to individual transcriptomic heterogeneity, and subject-specific differences in cell composition.
+
+clustOpt improves the reproducibility of modularity-based clustering in multi-subject experiments by using a combination of subject-wise cross-validation, feature splitting, random forests, and measures of cluster quality using the silhouette metric to guide the selection of the resolution parameter. The package supports both single-cell RNA-seq and CyTOF data with optimized preprocessing pipelines for each data type. 
+
+## clustOpt Algorithm
+
+ <img src="man/figures/clustOpt_diagram.png" align="center" alt="clustOpt algorithm" /></a>
+
+
+To avoid the issue of data leakage we cluster and evaluate in the odd PC space while training and predicting in the even PC space.
+
+<p align="center">
+<img src="man/figures/pc_split.png" width="60%" alt="clustOpt logo" />
+</p>
+
+## Installation
+
+### Standard Installation
+
+Install the development version from GitHub using `devtools`:
+
+```r
+# Install devtools if needed
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+
+# Install clustOpt
 devtools::install_github("gladstone-institutes/clustOpt")
 ```
-If you get an error message and everything is spelled correctly, follow these steps before trying again:
+
+### Full Installation with Optional Dependencies
+
+For complete functionality including large dataset support:
+
+```r
+# Install core package
+devtools::install_github("gladstone-institutes/clustOpt")
+
+# Install optional dependencies for large datasets
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+BiocManager::install("BPCells")  # For on-disk matrix operations
+
+# Verify installation
+library(clustOpt)
+packageVersion("clustOpt")
 ```
-#set config
-usethis::use_git_config(user.name = "YourName", user.email = "your@mail.com")
 
-#Go to github page to generate token
-usethis::create_github_token() 
+### Troubleshooting Installation
 
-#paste your PAT into pop-up that follows...
+If you encounter GitHub authentication issues:
+
+```r
+# Set up Git configuration
+install.packages("usethis")
+usethis::use_git_config(user.name = "YourName", user.email = "your@email.com")
+
+# Generate GitHub token (opens browser)
+usethis::create_github_token()
+
+# Set the token (paste when prompted)
 credentials::set_github_pat()
+
+# Try installation again
+devtools::install_github("gladstone-institutes/clustOpt")
 ```
+
+For permission or dependency issues:
+```r
+# Install with dependencies
+devtools::install_github("gladstone-institutes/clustOpt", dependencies = TRUE)
+
+# Or install system dependencies first on Linux
+# sudo apt-get update
+# sudo apt-get install libcurl4-openssl-dev libssl-dev libxml2-dev
+```
+
+## Features
+
+- **Objective resolution selection** using cross-validation and silhouette scores
+- **Prevents data leakage** by splitting principal components  
+- **Supports scRNA-seq and CyTOF** with optimized preprocessing
+- **Scales to large datasets** Automatically reduces the size of large datasets (>200k cells) with Seurat's leverage score based sketching 
+
+## Quick Start
+
+```r
+library(clustOpt)
+
+# Basic usage for scRNA-seq
+results <- clust_opt(
+  input = seurat_obj,
+  ndim = 50,
+  subject_ids = "donor_id",
+  res_range = c(0.1, 0.2, 0.4, 0.6, 0.8, 1.0)
+)
+
+# CyTOF data (ndim should equal the number of markers in the panel)
+cytof_results <- clust_opt(
+  input = cytof_seurat,
+  ndim = 30,
+  dtype = "CyTOF",
+  subject_ids = "donor_id"
+)
+
+# Large datasets (>200k cells)
+large_results <- clust_opt(
+  input = large_seurat,
+  sketch_size = 20000,
+  on_disk = TRUE
+)
+
+# View results
+summary_results <- sil_summary(results)
+plots <- create_sil_plots(results)
+```
+
+## Key Parameters
+
+- `subject_ids`: Metadata column with subject identifiers (≥3 subjects, ≥50 cells each)
+- `ndim`: Principal components to use (30-50 for scRNA-seq, 20-30 for CyTOF)
+- `dtype`: Data type - `"scRNA"`  or `"CyTOF"` (assumes arcsinh normalized values in the counts layer)
+- `sketch_size`: Cells for sketching large datasets (auto: 10% if >200k cells)
+- `within_batch`: Batch column for within-batch cross-validation
+- `on_disk`: Use BPCells for memory efficiency
+
+## Troubleshooting
+
+**"fewer than 3 samples" error**: Check `table(seurat_obj@meta.data$your_subject_column)` - ensure ≥3 subjects with ≥50 cells each
+
+**Memory issues**: Use `sketch_size = 10000` and `on_disk = TRUE` 
+
+**Slow performance**: Reduce `num_trees`,`res_range`, or sketch to a smaller size - too few cells will lead to a flat silhouette score curve
+
+**Requirements**: R ≥ 4.4.0, Seurat (>= 5.3.0), install BPCells for large datasets
+
+## Citation
+
+```
+Gill N, Shin MG, Agrawal A, Thomas R (2024). clustOpt: Objective optimization 
+of clustering resolution parameters in single-cell and mass cytometry data. 
+R package version 0.9. https://github.com/gladstone-institutes/clustOpt
+```
+
+## Support
+
+- Documentation: `?clust_opt`  
+- Issues: [GitHub Issues](https://github.com/gladstone-institutes/clustOpt/issues)
+- License: MIT
+

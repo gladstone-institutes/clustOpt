@@ -1,1 +1,0 @@
-This is the original Rscript implementation of the method that can handle scRNA or CyTOF data. It uses a slightly different method for each data type.

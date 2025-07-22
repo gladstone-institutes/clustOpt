@@ -4,3 +4,6 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^\.github$
+^doc$
+^Meta$
+vignettes/quick_start_guide.Rmd

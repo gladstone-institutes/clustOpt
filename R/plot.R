@@ -14,31 +14,40 @@ NULL
 #' @return A list of ggplot objects
 #' @export
 #'
+#' @importFrom ggplot2 ggplot aes geom_boxplot theme_bw
+#' @importFrom ggplot2 labs geom_errorbar geom_point geom_line
 create_sil_plots <- function(sil_dist) {
   sil_summary <- sil_summary(sil_dist)
 
-  plot1 <- sil_dist %>%
+  plot1 <- sil_dist |>
     ggplot2::ggplot(ggplot2::aes(x = as.factor(resolution), y = avg_width)) +
     ggplot2::geom_boxplot() +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Resolution",
-                  y = "Avg. Silhouette Score Across All Cells")
+    ggplot2::labs(
+      x = "Resolution",
+      y = "Avg. Silhouette Score Across All Cells"
+    )
 
-  plot2 <- sil_dist %>%
-    ggplot2::ggplot(ggplot2::aes(x = as.factor(resolution),
-                                 y = cluster_avg_widths)) +
+  plot2 <- sil_dist |>
+    ggplot2::ggplot(ggplot2::aes(
+      x = as.factor(resolution),
+      y = cluster_median_widths
+    )) +
     ggplot2::geom_boxplot() +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Resolution", y = "Avg. Silhouette Score Across Clusters")
+    ggplot2::labs(
+      x = "Resolution",
+      y = "Median Silhouette Score Across Clusters"
+    )
 
   plot3 <- ggplot2::ggplot(
     sil_summary,
-    ggplot2::aes(x = as.factor(resolution), y = mean_score, group = 1)
+    ggplot2::aes(x = as.factor(resolution), y = median_score, group = 1)
   ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = mean_score - (1.96 * standard_error_score),
-        ymax = mean_score + (1.96 * standard_error_score),
+        ymin = median_score - (1.96 * standard_error_score),
+        ymax = median_score + (1.96 * standard_error_score),
         width = .3
       ),
       color = "red"
@@ -46,16 +55,23 @@ create_sil_plots <- function(sil_dist) {
     ggplot2::geom_point(colour = "#619CFF") +
     ggplot2::geom_line(colour = "#619CFF") +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Resolution", y = "Avg. Silhouette Score Across All Cells")
+    ggplot2::labs(
+      x = "Resolution",
+      y = "Median Silhouette Score Across All Cells"
+    )
 
   plot4 <- ggplot2::ggplot(
     sil_summary,
-    ggplot2::aes(x = as.factor(resolution), y = cluster_mean_score, group = 1) # scale should be the res range
+    ggplot2::aes(
+      x = as.factor(resolution),
+      y = cluster_median_score,
+      group = 1
+    )
   ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = cluster_mean_score - (1.96 * standard_error_score),
-        ymax = cluster_mean_score + (1.96 * standard_error_score),
+        ymin = cluster_median_score - (1.96 * standard_error_score),
+        ymax = cluster_median_score + (1.96 * standard_error_score),
         width = .3
       ),
       color = "red"
@@ -63,7 +79,10 @@ create_sil_plots <- function(sil_dist) {
     ggplot2::geom_point(colour = "#619CFF") +
     ggplot2::geom_line(colour = "#619CFF") +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Resolution", y = "Avg. Silhouette Score Across Clusters")
+    ggplot2::labs(
+      x = "Resolution",
+      y = "Median Silhouette Score Across Clusters"
+    )
 
   list(plot1, plot2, plot3, plot4)
 }
