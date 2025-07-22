@@ -1,4 +1,4 @@
-# clustOpt <img src="man/figures/clustOpt_logo.png" align="right" height="100" alt="clustOpt logo" /></a>
+# clustOpt <img src="man/figures/clustOpt_logo.png" align="right" height="138" alt="clustOpt logo" /></a>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/gladstone-institutes/clustOpt/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gladstone-institutes/clustOpt/actions/workflows/R-CMD-check.yaml)

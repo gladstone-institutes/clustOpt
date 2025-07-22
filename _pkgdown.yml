@@ -14,8 +14,6 @@ home:
     in single-cell and mass cytometry data
 
 navbar:
-  type: light
-  bg: primary
   structure:
     left:  [home, reference, articles, news]
     right: [search, github]
