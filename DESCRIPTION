@@ -23,6 +23,8 @@ Imports:
     tibble (>= 3.2.1),
     profvis (>= 0.3.8)
 License: MIT + file LICENSE
+URL: https://gladstone-institutes.github.io/clustOpt, https://github.com/gladstone-institutes/clustOpt
+BugReports: https://github.com/gladstone-institutes/clustOpt/issues
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 Collate: 
@@ -35,6 +37,7 @@ Suggests:
     rmarkdown,
     tidyr,
     testthat (>= 3.0.0),
-    BPCells
+    BPCells,
+    pkgdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
