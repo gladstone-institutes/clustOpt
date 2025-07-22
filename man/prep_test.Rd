@@ -9,7 +9,7 @@ prep_test(input, subject_ids, dtype = "scRNA", test_id)
 \arguments{
 \item{input}{Seurat object}
 
-\item{subject_ids}{Metadata field that identifies unique samples.}
+\item{subject_ids}{Metadata field that identifies unique subjects.}
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF", default
 is "scRNA". CyTOF data is expected to be arcsinh normalized.}

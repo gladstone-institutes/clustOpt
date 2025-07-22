@@ -89,13 +89,13 @@ DimPlot(input,
 
 ```{r}
 DimPlot(input,
-  group.by = "author_cell_type",label = T,
+  group.by = "author_cell_type",
   pt.size = .8
 ) +
   coord_fixed()
 ```
 
-Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation.
+Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. Please see page on handling large datasets for information on how to scale clustOpt to a larger number of cells and subjects.
 
 ```{r clustOpt, warning=FALSE}
 plan("multisession", workers = 10)
@@ -104,7 +104,7 @@ sil_dist <- clust_opt(input,
   subject_ids = "donor_id",
   ndim = 20,
   verbose = FALSE,
-  train_with = "odd"
+  train_with = "even"
 ) |>
   progressr::with_progress() # Optional, just adds progress bar
 
@@ -123,13 +123,13 @@ plots[[3]]
 plots[[4]]
 ```
 
-The median silhouette scores across all cells have a slight local maximum at 0.08, indicating that this clustering resolution is the most reproducible across all biological replicates. In general the first local maximum that is seen is the optimal resolution.**For larger datasets with more celltypes, the local maximum in the silhouette scores should be more apparent.**
+The median silhouette scores across all cells start to fall off at 0.2, indicating that this clustering resolution is the most reproducible across all biological replicates. It is also possible to see a local maximum which would indicate a reproducible resolution.
 
 ## Comparison to the cell annotations
 
 ```{r cluster}
 input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.08)
+input <- FindClusters(input, resolution = 0.2)
 
 DimPlot(input,
   group.by = "seurat_clusters",
@@ -137,11 +137,25 @@ DimPlot(input,
 )
 ```
 
+We can see that at the reproducible resolution there are 4 clusters, with the naive B cells being distinct enough to be separated into their own cluster based on the ability to detect them across the CV folds. In other words the naive B cells are present in high enough amounts across the subjects and transcriptomically distinct enough to be consistently detected.
 
-
+For convenience we provide a function to calculate the adjusted rand index for any 2 metadata columns in a seurat object so that the clustOpt resolution parameter can be compared to clusters derived from other methods.
 
 ```{r}
-# TO DO: Add a step where we evaluate this chosen resolution against the
-# reference annotations using wRI and silhouette score
+adjusted_rand_index(input,
+                    meta1 = "seurat_clusters",
+                    meta2 = "broad_cell_type")
+adjusted_rand_index(input,
+                    meta1 = "seurat_clusters",
+                    meta2 = "author_cell_type")
+```
+
+## Larger Datasets
+
+Due to the resource requirements of clustOpt, we recommend running it in Rscripts with the `future` plan set to "multicore" instead of "multisession" and if possible using `future.batchtools`. Additionally we provide a wrapper around `Seurat`'s SketchData using the leverage score method to reduce the size of the input data to clustOpt.
+
+```{r}
+input <- leverage_sketch(input, sketch_size = 100)
+input
 ```
 

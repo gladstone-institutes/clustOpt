@@ -259,3 +259,106 @@ sil_summary <- function(input) {
         sqrt(length(cluster_median_widths))
     )
 }
+
+#' Calculate Adjusted Rand Index
+#'
+#' Computes the Adjusted Rand Index (ARI) to measure the similarity between 
+#' two clustering assignments. The ARI is a measure of agreement between two 
+#' partitions, adjusted for chance. Values range from 0 (random partitioning) 
+#' to 1 (perfect agreement), with negative values indicating worse than random.
+#'
+#' @param seurat_obj A Seurat object containing the metadata with clustering assignments
+#' @param meta1 Character string specifying the first metadata column name containing 
+#'   cluster assignments
+#' @param meta2 Character string specifying the second metadata column name containing 
+#'   cluster assignments to compare against meta1
+#'
+#' @return Numeric value representing the Adjusted Rand Index between the two 
+#'   clustering assignments
+#'
+#' @details
+#' The Adjusted Rand Index is calculated using the formula:
+#' ARI = (RI - Expected_RI) / (max(RI) - Expected_RI)
+#' 
+#' Where:
+#' - RI is the Rand Index
+#' - Expected_RI is the expected value of RI under random partitioning
+#' - max(RI) is the maximum possible value of RI
+#'
+#' @examples
+#' \dontrun{
+#' # Compare two clustering results in a Seurat object
+#' ari_score <- adjusted_rand_index(seurat_obj, "seurat_clusters", "leiden_clusters")
+#' }
+#'
+#' @export
+adjusted_rand_index <- function(seurat_obj, meta1, meta2) {
+  
+  # Input validation
+  if (!inherits(seurat_obj, "Seurat")) {
+    stop("seurat_obj must be a Seurat object")
+  }
+  
+  if (!is.character(meta1) || !is.character(meta2)) {
+    stop("meta1 and meta2 must be character strings")
+  }
+  
+  if (length(meta1) != 1 || length(meta2) != 1) {
+    stop("meta1 and meta2 must be single character strings")
+  }
+  
+  # Check if metadata columns exist
+  meta <- seurat_obj@meta.data
+  if (!meta1 %in% colnames(meta)) {
+    stop(paste("Column", meta1, "not found in metadata"))
+  }
+  
+  if (!meta2 %in% colnames(meta)) {
+    stop(paste("Column", meta2, "not found in metadata"))
+  }
+  
+  # Extract groupings
+  group1 <- meta[[meta1]]
+  group2 <- meta[[meta2]]
+  
+  # Check for missing values
+  if (any(is.na(group1)) || any(is.na(group2))) {
+    warning("Missing values detected in clustering assignments")
+    # Remove cells with missing values in either grouping
+    valid_cells <- !is.na(group1) & !is.na(group2)
+    group1 <- group1[valid_cells]
+    group2 <- group2[valid_cells]
+  }
+  
+  # Check if we have enough data
+  if (length(group1) < 2) {
+    stop("Need at least 2 observations to calculate ARI")
+  }
+  
+  if (length(group1) != length(group2)) {
+    stop("group1 and group2 must have the same length")
+  }
+  
+  # Contents of columns are put into a matrix
+  tab <- table(group1, group2)
+  # n represents total number of observations being compared 
+  n <- length(group1)
+  
+  sum_comb_ij <- sum(choose(tab, 2))                    # Σij (nij 2)
+  sum_comb_rows <- sum(choose(rowSums(tab), 2))         # Σi (ai 2)
+  sum_comb_columns <- sum(choose(colSums(tab), 2))      # Σj (bj 2)
+  total_pairs <- choose(n, 2)                           # (n/2)
+  
+  # Several of the sums are operated on and assigned to new variable 
+  expected_index <- (sum_comb_rows * sum_comb_columns)/total_pairs
+  max_index <- 0.5 * (sum_comb_rows + sum_comb_columns)
+  
+  # Handle edge case where denominator is zero
+  if (max_index == expected_index) {
+    return(0)  # Perfect agreement when both clusterings are identical singletons
+  }
+  
+  # This is the ARI equation and will output our value
+  ari_result <- (sum_comb_ij - expected_index)/(max_index - expected_index)
+  return(ari_result)
+}

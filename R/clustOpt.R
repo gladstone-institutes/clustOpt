@@ -17,14 +17,15 @@ NULL
 #' @param sketch_size Number of cells to use for sketching.
 #' @param skip_sketch Skip sketching, by default any input with more than
 #' 200,000 cells is sketched to 10\% of the cells.
-#' @param subject_ids Metadata field that identifies unique samples.
+#' @param subject_ids Metadata field that identifies unique subjects.
 #' @param res_range Range of resolutions to test.
 #' @param verbose Output messages.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
 #' @param num_trees Number of trees to use in the random forest.
-#' @param train_with Either odd or even PCs for clustering and training.
-#' Default is odd.
+#' @param train_with Either "odd" or "even" PCs for clustering and training.
+#' Default is "even". It is recommended to keep train_with set to "even" so 
+#' that the 1st PC is in the set used to calculate silhouette scores.
 #' @param min_cells Minimum cells per subject, default is 50
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
@@ -49,7 +50,7 @@ clust_opt <- function(input,
                       within_batch = NA,
                       verbose = FALSE,
                       num_trees = 1000,
-                      train_with = "odd",
+                      train_with = "even",
                       min_cells = 50) {
   # Make sure a seed is set, only setting if the user has not set one
   if (!exists(".Random.seed", envir = .GlobalEnv)) {
@@ -278,7 +279,7 @@ prep_train <- function(input,
         unique()
 
       if (length(this_batch) > 1) {
-        stop(paste0("More than one batch found for this sample: ", test_id))
+        stop(paste0("More than one batch found for this subject: ", test_id))
       }
 
       train_cells <- input@meta.data |>
@@ -287,7 +288,7 @@ prep_train <- function(input,
         rownames()
       train_seurat <- subset(input, cells = train_cells)
 
-      # Normalize the training samples
+      # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = "RNA",
         verbose = FALSE
@@ -295,7 +296,7 @@ prep_train <- function(input,
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
       return(train_seurat)
     } else {
-      # Return all other samples
+      # Return all other subjects
       Seurat::Idents(input) <- subject_ids
       train_cells <- Seurat::WhichCells(
         object = input,
@@ -303,7 +304,7 @@ prep_train <- function(input,
         invert = TRUE
       )
       train_seurat <- subset(input, cells = train_cells)
-      # Normalize the training samples
+      # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = Seurat::DefaultAssay(train_seurat),
         verbose = FALSE
@@ -330,7 +331,7 @@ prep_train <- function(input,
       train_seurat <- subset(input, cells = train_cells)
       return(train_seurat)
     } else {
-      # Return all other samples
+      # Return all other subjects
       Seurat::Idents(input) <- subject_ids
       train_cells <- Seurat::WhichCells(
         object = input,
@@ -348,7 +349,7 @@ prep_train <- function(input,
 #' Prepare test data for random forest
 #'
 #' @param input Seurat object
-#' @param subject_ids Metadata field that identifies unique samples.
+#' @param subject_ids Metadata field that identifies unique subjects.
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized.
 #' @param test_id subject_id for the test sample
@@ -453,6 +454,10 @@ project_pca <- function(train_seurat,
     n_shared_genes,
     (n_shared_genes / total_genes) * 100
   ))
+
+  if((n_shared_genes / total_genes) * 100 < 80) {
+    warning("Less than 80% of genes available for projection.")
+  }
 
 
 

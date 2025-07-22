@@ -15,7 +15,7 @@ clust_opt(
   within_batch = NA,
   verbose = FALSE,
   num_trees = 1000,
-  train_with = "odd",
+  train_with = "even",
   min_cells = 50
 )
 }
@@ -33,7 +33,7 @@ slot) and sketching is not implemented for CyTOF.}
 \item{skip_sketch}{Skip sketching, by default any input with more than
 200,000 cells is sketched to 10\% of the cells.}
 
-\item{subject_ids}{Metadata field that identifies unique samples.}
+\item{subject_ids}{Metadata field that identifies unique subjects.}
 
 \item{res_range}{Range of resolutions to test.}
 
@@ -44,8 +44,9 @@ same value for the batch variable will be used for training.}
 
 \item{num_trees}{Number of trees to use in the random forest.}
 
-\item{train_with}{Either odd or even PCs for clustering and training.
-Default is odd.}
+\item{train_with}{Either "odd" or "even" PCs for clustering and training.
+Default is "even". It is recommended to keep train_with set to "even" so 
+that the 1st PC is in the set used to calculate silhouette scores.}
 
 \item{min_cells}{Minimum cells per subject, default is 50}
 }
