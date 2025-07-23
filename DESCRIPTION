@@ -8,8 +8,8 @@ Maintainer: Natalie Gill <natalie.gill@gladstone.ucsf.edu>
 Authors@R: c(person("Natalie", "Gill", role = c("aut", "cre"), email = "natalie.gill@gladstone.ucsf.edu"),
 	person("Min-Gyoung", "Shin", role = c("aut"), email = "mingyoung.shin@gladstone.ucsf.edu"),
 	person("Ayushi", "Agrawal", role = c("aut"), email = "ayushi.agrawal@gladstone.ucsf.edu"),
-    person("Erwin", "Perez", role = c("aut"), email = "perezerw@usc.edu"),
-    person("Reuben", "Thomas", role = c("aut"), email = "reuben.thomas@gladstone.ucsf.edu"))
+	person("Erwin", "Perez", role = c("aut"), email = "perezerw@usc.edu"),
+	person("Reuben", "Thomas", role = c("aut"), email = "reuben.thomas@gladstone.ucsf.edu"))
 Depends:
     R (>= 4.4)
 Imports:
