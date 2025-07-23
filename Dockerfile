@@ -5,19 +5,18 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY . /opt/clustOpt
 WORKDIR /opt/clustOpt
 
-# renv is only used for local development of the package
-RUN R -e 'renv::deactivate()'
+# Remove renv files that cause build issues
+RUN rm -rf renv/ renv.lock .Rprofile
+
+
+# Install GitHub dependencies first
 RUN R -e "remotes::install_github('bnprks/BPCells/r')"
-# Install pak for faster package installation 
-RUN R -e 'install.packages("pak", repos = "https://cloud.r-project.org")'
 
+# Install the local package with all dependencies
+RUN R -e "devtools::install('.', dependencies = TRUE, upgrade = 'never')"
 
-# Install using using pak (update the DESCRIPTION for new builds)
-RUN R -e 'pak::pkg_install(pkg = ".", dependencies = TRUE)'
-
-# Install some extra packages to make running clustOpt in Rscripts easier
-RUN R -e 'pak::pkg_install(pkg = "optparse")'
-RUN R -e 'pak::pkg_install(pkg = "readr")'
+# Install extra packages for Rscripts
+RUN R -e 'install.packages(c("optparse", "readr"), repos = "https://cloud.r-project.org")'
 
 # Default command
 CMD ["/bin/bash"]
