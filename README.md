@@ -7,7 +7,7 @@
 <!-- badges: end -->
    
 
-*Authors: Natalie Gill, Min-Gyoung Shin, Ayushi Agrawal, and Reuben Thomas*
+*Authors: Natalie Gill, Min-Gyoung Shin, Ayushi Agrawal, Erwin Perez, and Reuben Thomas*
 
 
 Selecting the clustering resolution parameter for Louvain clustering in scRNA-seq is often based on the concentration of expression of cell type marker genes within clusters, increasing the parameter as needed to resolve clusters with mixed cell type gene signatures. This approach is however subjective in situations where one does not have complete knowledge of condition/disease associated cell-types in the context of novel biology, it is time-consuming and has the potential to bias the final clustering results due to individual transcriptomic heterogeneity, and subject-specific differences in cell composition.
