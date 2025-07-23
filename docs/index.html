@@ -131,11 +131,7 @@
 <p>For permission or dependency issues:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install with dependencies</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"gladstone-institutes/clustOpt"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or install system dependencies first on Linux</span></span>
-<span><span class="co"># sudo apt-get update</span></span>
-<span><span class="co"># sudo apt-get install libcurl4-openssl-dev libssl-dev libxml2-dev</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"gladstone-institutes/clustOpt"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -145,7 +141,7 @@
 <li>
 <strong>Objective resolution selection</strong> using cross-validation and silhouette scores</li>
 <li>
-<strong>Prevents data leakage</strong> by splitting principal components<br>
+<strong>Prevents double dipping</strong> by splitting principal components<br>
 </li>
 <li>
 <strong>Supports scRNA-seq and CyTOF</strong> with optimized preprocessing</li>

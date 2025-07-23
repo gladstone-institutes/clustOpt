@@ -93,15 +93,12 @@ For permission or dependency issues:
 # Install with dependencies
 devtools::install_github("gladstone-institutes/clustOpt", dependencies = TRUE)
 
-# Or install system dependencies first on Linux
-# sudo apt-get update
-# sudo apt-get install libcurl4-openssl-dev libssl-dev libxml2-dev
 ```
 
 ## Features
 
 - **Objective resolution selection** using cross-validation and silhouette scores
-- **Prevents data leakage** by splitting principal components  
+- **Prevents double dipping** by splitting principal components  
 - **Supports scRNA-seq and CyTOF** with optimized preprocessing
 - **Scales to large datasets** Automatically reduces the size of large datasets (>200k cells) with Seurat's leverage score based sketching 
 
