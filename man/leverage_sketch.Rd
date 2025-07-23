@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{leverage_sketch}
 \alias{leverage_sketch}
-\title{Leverage Score-based Sketching for Large Datasets}
+\title{leverage_sketch}
 \usage{
 leverage_sketch(
   input,
@@ -18,55 +18,57 @@ leverage_sketch(
 \item{input}{A Seurat object to be sketched}
 
 \item{sketch_size}{Integer. Number of cells to include in the sketch assay.
-If NULL, defaults to 10% of total cells}
+If NULL, defaults to 10\% of total cells}
 
-\item{dtype}{Character. Type of data: "scRNA" (default) for single-cell 
-RNA-seq or "CyTOF" for mass cytometry. CyTOF data should be arcsinh 
+\item{dtype}{Character. Type of data: "scRNA" (default) for single-cell
+RNA-seq or "CyTOF" for mass cytometry. CyTOF data should be arcsinh
 normalized and stored in the counts slot}
 
-\item{skip_norm}{Logical. Set to TRUE if scRNA-seq data has already been 
-normalized with `Seurat::NormalizeData()` (default FALSE). CyTOF data 
+\item{skip_norm}{Logical. Set to TRUE if scRNA-seq data has already been
+normalized with `Seurat::NormalizeData()` (default FALSE). CyTOF data
 normalization is always skipped}
 
-\item{on_disk}{Logical. Whether to use BPCells on-disk count matrices to 
+\item{on_disk}{Logical. Whether to use BPCells on-disk count matrices to
 speed up sketching for very large datasets (default FALSE)}
 
-\item{output_dir}{Character. Directory path for storing on-disk count 
+\item{output_dir}{Character. Directory path for storing on-disk count
 matrices when `on_disk = TRUE`. If NULL, uses temporary directory}
 
 \item{verbose}{Logical. Whether to print progress messages (default TRUE)}
 }
 \value{
-A Seurat object containing only the sketch assay, renamed to "RNA" 
+A Seurat object containing only the sketch assay, renamed to "RNA"
   for compatibility with downstream functions
 }
 \description{
 Uses leverage score-based sampling to reduce the size of large Seurat objects
-by creating a representative sketch assay. This method preserves the most 
+by creating a representative sketch assay. This method preserves the most
 informative cells while dramatically reducing computational requirements.
 Supports both single-cell RNA-seq and CyTOF data.
 }
 \details{
-The function automatically handles data type-specific preprocessing:
-\itemize{
-  \item For scRNA-seq: Normalizes data (unless `skip_norm = TRUE`) and uses variable features for sketching
-  \item For CyTOF: Skips normalization (data should be arcsinh normalized) and uses ALL features for sketching since they represent a curated marker panel
-}
-
-Large datasets (>200,000 cells) benefit from `on_disk = TRUE` to reduce 
+Large datasets (>200,000 cells) benefit from `on_disk = TRUE` to reduce
 memory usage during sketching.
 }
 \examples{
 \dontrun{
 # Basic sketching for scRNA-seq data (uses variable features)
-sketched_obj <- leverage_sketch(seurat_obj, sketch_size = 5000, dtype = "scRNA")
+sketched_obj <- leverage_sketch(seurat_obj,
+  sketch_size = 5000,
+  dtype = "scRNA"
+)
 
 # Sketching CyTOF data (uses ALL features from marker panel)
-cytof_sketch <- leverage_sketch(cytof_obj, sketch_size = 2000, dtype = "CyTOF")
+cytof_sketch <- leverage_sketch(cytof_obj,
+  sketch_size = 2000,
+  dtype = "CyTOF"
+)
 
 # Large dataset with on-disk matrices
-large_sketch <- leverage_sketch(large_obj, sketch_size = 10000, 
-                               on_disk = TRUE, verbose = TRUE)
+large_sketch <- leverage_sketch(large_obj,
+  sketch_size = 10000,
+  on_disk = TRUE, verbose = TRUE
+)
 }
 
 }

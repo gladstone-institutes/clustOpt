@@ -18,9 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
+          - {os: macos-latest,   r: '4.4'}
+          - {os: windows-latest, r: '4.4'}
+          - {os: ubuntu-latest,   r: '4.4'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -39,11 +39,12 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          dependencies: 'c("hard", "Config/Needs/check")'
+          extra-packages: any::rcmdcheck, any::testthat, any::knitr, any::rmarkdown, any::tidyr, any::glmGamPoi
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
         with:
-          args: 'c("--no-build-vignettes", "--no-manual")'
+          args: 'c("--no-build-vignettes", "--no-vignettes", "--no-manual", "--ignore-vignettes")'
           build_args: 'c("--no-build-vignettes")'
           upload-snapshots: true

@@ -1,0 +1,94 @@
+url: https://gladstone-institutes.github.io/clustOpt/
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+development:
+  mode: auto
+
+home:
+  title: "clustOpt"
+  description: >
+    Objective optimization of clustering resolution parameters 
+    in single-cell and mass cytometry data
+  logo:
+    alt: "clustOpt R package logo"
+
+navbar:
+  structure:
+    left:  [home, reference, articles, news]
+    right: [search, github]
+  components:
+    home:
+      icon: fas fa-home fa-lg
+      href: index.html
+      aria-label: Home
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+      - text: Quick Start Guide
+        href: articles/quick_start_guide.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/gladstone-institutes/clustOpt
+      aria-label: GitHub
+
+reference:
+- title: Core Functions
+  desc: Main clustering optimization functions
+  contents:
+  - clust_opt
+  - leverage_sketch
+
+- title: Utility Functions
+  desc: Helper functions for data processing and validation
+  contents:
+  - check_size
+  - get_valid_samples
+  - convert_seurat_to_bpcells
+  - adjusted_rand_index
+
+- title: Analysis Functions
+  desc: Functions for preparing and analyzing data
+  contents:
+  - prep_train
+  - prep_test
+  - train_random_forest
+  - calculate_silhouette_score
+  - project_pca
+
+- title: Visualization
+  desc: Functions for plotting and summarizing results
+  contents:
+  - create_sil_plots
+  - sil_summary
+
+- title: Internal Functions
+  desc: Internal helper functions
+  contents:
+  - split_pca_dimensions
+
+articles:
+- title: Getting Started
+  navbar: Getting Started
+  contents:
+  - quick_start_guide
+
+build:
+  preview: false
+  
+vignettes:
+  build: cache
+  cache_dir: "vignettes/cache"
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with

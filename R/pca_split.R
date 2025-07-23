@@ -35,8 +35,14 @@ split_pca_dimensions <- function(input,
   odd_dims <- seq(1, dims, by = 2)
 
   even_pca <- pca
-  even_pca@cell.embeddings <- even_pca@cell.embeddings[, even_dims, drop = FALSE]
-  even_pca@feature.loadings <- even_pca@feature.loadings[, even_dims, drop = FALSE]
+  even_pca@cell.embeddings <- even_pca@cell.embeddings[,
+    even_dims,
+    drop = FALSE
+  ]
+  even_pca@feature.loadings <- even_pca@feature.loadings[,
+    even_dims,
+    drop = FALSE
+  ]
   even_pca@stdev <- even_pca@stdev[even_dims]
   even_pca@key <- "even_pca_"
 
