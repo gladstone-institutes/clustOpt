@@ -37,20 +37,9 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - name: Install system dependencies for BPCells
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev
-          
-      - name: Install BPCells from GitHub
-        run: |
-          install.packages("remotes")
-          remotes::install_github("bnprks/BPCells", subdir = "r")
-        shell: Rscript {0}
-        
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: '"hard"'
           extra-packages: any::rcmdcheck
           needs: check
 
