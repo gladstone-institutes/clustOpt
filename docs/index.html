@@ -106,10 +106,16 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"clustOpt"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="docker-image">Docker Image<a class="anchor" aria-label="anchor" href="#docker-image"></a>
+</h3>
+<p>For convienience we maintain a clustOpt docker image:</p>
+<pre><code>docker pull natalie23gill/clustopt:1.0</code></pre>
+</div>
+<div class="section level3">
 <h3 id="troubleshooting-installation">Troubleshooting Installation<a class="anchor" aria-label="anchor" href="#troubleshooting-installation"></a>
 </h3>
 <p>If you encounter GitHub authentication issues:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Set up Git configuration</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"usethis"</span><span class="op">)</span></span>
 <span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_git_config.html" class="external-link">use_git_config</a></span><span class="op">(</span>user.name <span class="op">=</span> <span class="st">"YourName"</span>, user.email <span class="op">=</span> <span class="st">"your@email.com"</span><span class="op">)</span></span>
@@ -123,7 +129,7 @@
 <span><span class="co"># Try installation again</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"gladstone-institutes/clustOpt"</span><span class="op">)</span></span></code></pre></div>
 <p>For permission or dependency issues:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install with dependencies</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"gladstone-institutes/clustOpt"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
@@ -150,7 +156,7 @@
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gladstone-institutes.github.io/clustOpt">clustOpt</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Basic usage for scRNA-seq</span></span>

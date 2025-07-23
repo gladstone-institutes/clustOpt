@@ -60,6 +60,15 @@ library(clustOpt)
 packageVersion("clustOpt")
 ```
 
+### Docker Image
+
+For convienience we maintain a clustOpt docker image:
+
+```
+docker pull natalie23gill/clustopt:1.0
+```
+
+
 ### Troubleshooting Installation
 
 If you encounter GitHub authentication issues:
