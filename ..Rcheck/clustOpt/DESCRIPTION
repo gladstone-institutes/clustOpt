@@ -1,0 +1,27 @@
+Package: clustOpt
+Version: 1.0
+Date: 2024-07-22
+Title: Choosing a resolution parameter for single cell omics clustering
+Description: Optimal clustering resolution parameters determined through Random Forests, a silhouette score-based assessment of clustering validity, and subject-wise cross-validation.
+Author: Natalie Gill [aut, cre], Reuben Thomas [aut], Min-Gyoung Shin [aut], Ayushi Agrawal [aut]
+Maintainer: Natalie Gill <natalie.gill@gladstone.ucsf.edu>
+Authors@R: c(person("Natalie", "Gill", role = c("aut", "cre"), email = "natalie.gill@gladstone.ucsf.edu"),
+	person("Reuben", "Thomas", role = c("aut"), email = "reuben.thomas@gladstone.ucsf.edu"),
+	person("Min-Gyoung", "Shin", role = c("aut"), email = "mingyoung.shin@gladstone.ucsf.edu"),
+	person("Ayushi", "Agrawal", role = c("aut"), email = "ayushi.agrawal@gladstone.ucsf.edu"))
+Depends: R (>= 4.4)
+Imports: progressr, glmGamPoi, future.apply, ranger, cluster, Seurat
+        (>= 5.3.0), SeuratObject, dplyr (>= 1.1.3), ggplot2 (>= 3.3.5),
+        purrr (>= 0.3.4), tibble (>= 3.2.1), profvis (>= 0.3.8)
+License: MIT + file LICENSE
+URL: https://gladstone-institutes.github.io/clustOpt,
+        https://github.com/gladstone-institutes/clustOpt
+BugReports: https://github.com/gladstone-institutes/clustOpt/issues
+RoxygenNote: 7.3.2
+Encoding: UTF-8
+Collate: 'pca_split.R' 'utils.R' 'clustOpt.R' 'plot.R'
+Suggests: knitr, rmarkdown, tidyr, testthat (>= 3.0.0), BPCells,
+        pkgdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Built: R 4.4.1; ; 2025-07-22 22:29:00 UTC; unix

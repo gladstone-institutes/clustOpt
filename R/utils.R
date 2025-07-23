@@ -1,4 +1,7 @@
-#'
+#' @importFrom methods as
+#' @importFrom stats median var sd
+#' @importFrom dplyr group_by summarize filter n sym pull ungroup
+#' @importFrom rlang .data
 NULL
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -22,53 +25,54 @@ check_size <- function(input) {
   }
 }
 
-#' Leverage Score-based Sketching for Large Datasets
-#' 
+#' @title leverage_sketch
 #' @description
 #' Uses leverage score-based sampling to reduce the size of large Seurat objects
-#' by creating a representative sketch assay. This method preserves the most 
+#' by creating a representative sketch assay. This method preserves the most
 #' informative cells while dramatically reducing computational requirements.
 #' Supports both single-cell RNA-seq and CyTOF data.
 #'
 #' @param input A Seurat object to be sketched
 #' @param sketch_size Integer. Number of cells to include in the sketch assay.
-#'   If NULL, defaults to 10% of total cells
-#' @param dtype Character. Type of data: "scRNA" (default) for single-cell 
-#'   RNA-seq or "CyTOF" for mass cytometry. CyTOF data should be arcsinh 
+#'   If NULL, defaults to 10\% of total cells
+#' @param dtype Character. Type of data: "scRNA" (default) for single-cell
+#'   RNA-seq or "CyTOF" for mass cytometry. CyTOF data should be arcsinh
 #'   normalized and stored in the counts slot
-#' @param skip_norm Logical. Set to TRUE if scRNA-seq data has already been 
-#'   normalized with `Seurat::NormalizeData()` (default FALSE). CyTOF data 
+#' @param skip_norm Logical. Set to TRUE if scRNA-seq data has already been
+#'   normalized with `Seurat::NormalizeData()` (default FALSE). CyTOF data
 #'   normalization is always skipped
-#' @param on_disk Logical. Whether to use BPCells on-disk count matrices to 
+#' @param on_disk Logical. Whether to use BPCells on-disk count matrices to
 #'   speed up sketching for very large datasets (default FALSE)
-#' @param output_dir Character. Directory path for storing on-disk count 
+#' @param output_dir Character. Directory path for storing on-disk count
 #'   matrices when `on_disk = TRUE`. If NULL, uses temporary directory
 #' @param verbose Logical. Whether to print progress messages (default TRUE)
-#'   
-#' @return A Seurat object containing only the sketch assay, renamed to "RNA" 
+#'
+#' @return A Seurat object containing only the sketch assay, renamed to "RNA"
 #'   for compatibility with downstream functions
-#'   
-#' @details 
-#' The function automatically handles data type-specific preprocessing:
-#' \itemize{
-#'   \item For scRNA-seq: Normalizes data (unless `skip_norm = TRUE`) and uses variable features for sketching
-#'   \item For CyTOF: Skips normalization (data should be arcsinh normalized) and uses ALL features for sketching since they represent a curated marker panel
-#' }
-#' 
-#' Large datasets (>200,000 cells) benefit from `on_disk = TRUE` to reduce 
+#'
+#' @details
+#' Large datasets (>200,000 cells) benefit from `on_disk = TRUE` to reduce
 #' memory usage during sketching.
 #'
 #' @examples
 #' \dontrun{
 #' # Basic sketching for scRNA-seq data (uses variable features)
-#' sketched_obj <- leverage_sketch(seurat_obj, sketch_size = 5000, dtype = "scRNA")
-#' 
+#' sketched_obj <- leverage_sketch(seurat_obj,
+#'   sketch_size = 5000,
+#'   dtype = "scRNA"
+#' )
+#'
 #' # Sketching CyTOF data (uses ALL features from marker panel)
-#' cytof_sketch <- leverage_sketch(cytof_obj, sketch_size = 2000, dtype = "CyTOF")
-#' 
+#' cytof_sketch <- leverage_sketch(cytof_obj,
+#'   sketch_size = 2000,
+#'   dtype = "CyTOF"
+#' )
+#'
 #' # Large dataset with on-disk matrices
-#' large_sketch <- leverage_sketch(large_obj, sketch_size = 10000, 
-#'                                on_disk = TRUE, verbose = TRUE)
+#' large_sketch <- leverage_sketch(large_obj,
+#'   sketch_size = 10000,
+#'   on_disk = TRUE, verbose = TRUE
+#' )
 #' }
 #'
 #' @export
@@ -86,17 +90,19 @@ leverage_sketch <- function(input,
   if (!(dtype %in% c("scRNA", "CyTOF"))) {
     stop("dtype must be either 'scRNA' or 'CyTOF'")
   }
-  
+
   if (is.null(sketch_size)) {
     if (verbose) {
       message("No sketch_size specified, defaulting to 10% of cells")
     }
     sketch_size <- ncol(input) * 0.1
   }
-  
+
   if (verbose) {
-    message(sprintf("Sketching %s data: %d -> %d cells", 
-                   dtype, ncol(input), as.integer(sketch_size)))
+    message(sprintf(
+      "Sketching %s data: %d -> %d cells",
+      dtype, ncol(input), as.integer(sketch_size)
+    ))
   }
   if (!is.null(input@meta.data[["leverage.score"]])) {
     message("\nRemoving previously calculated leverage scores...")
@@ -114,7 +120,7 @@ leverage_sketch <- function(input,
     # Use the convert_seurat_to_bpcells function to convert to on-disk format
     input <- convert_seurat_to_bpcells(input, output_dir = output_dir)
   }
-  
+
 
   # Handle data type-specific normalization
   if (dtype == "scRNA" && !skip_norm) {
@@ -124,14 +130,14 @@ leverage_sketch <- function(input,
     input <- Seurat::NormalizeData(input)
   } else if (dtype == "CyTOF") {
     if (verbose) {
-      message("CyTOF data detected - skipping normalization 
+      message("CyTOF data detected - skipping normalization
               (expected to be arcsinh normalized)")
     }
   } else if (dtype == "scRNA" && skip_norm) {
     if (verbose) {
       message("Skipping normalization for scRNA-seq data as requested")
     }
-  } 
+  }
 
   # Handle feature selection based on data type
   if (dtype == "scRNA") {
@@ -141,18 +147,22 @@ leverage_sketch <- function(input,
     input <- Seurat::FindVariableFeatures(input)
     features_to_use <- Seurat::VariableFeatures(input)
     if (verbose) {
-      message(sprintf("Using %d variable features for sketching",
-                      length(features_to_use)))
+      message(sprintf(
+        "Using %d variable features for sketching",
+        length(features_to_use)
+      ))
     }
   } else if (dtype == "CyTOF") {
     # For CyTOF, use all features since they represent a curated panel of markers
     features_to_use <- rownames(input)
     if (verbose) {
-      message(sprintf("Using all %d features for CyTOF sketching", 
-                     length(features_to_use)))
+      message(sprintf(
+        "Using all %d features for CyTOF sketching",
+        length(features_to_use)
+      ))
     }
   }
-  
+
   input <- Seurat::SketchData(
     object = input,
     ncells = sketch_size,
@@ -167,6 +177,7 @@ leverage_sketch <- function(input,
 
   return(RenameAssays(object = input, sketch = "RNA"))
 }
+
 #' @title convert_seurat_to_bpcells
 #' @description
 #' Convert a Seurat object to BPCells on-disk format
@@ -176,8 +187,8 @@ leverage_sketch <- function(input,
 #' these on-disk matrices. Only works for single count layers.
 #'
 #' @param seurat_obj A Seurat object to be converted.
-#' @param output_dir Directory where the BPCells matrices will be saved. 
-#' Defaults to a subdirectory in the system's temporary directory named after 
+#' @param output_dir Directory where the BPCells matrices will be saved.
+#' Defaults to a subdirectory in the system's temporary directory named after
 #' the Seurat object.
 #' @param assays Character vector of assays to convert. Defaults to "RNA".
 #' @return The updated Seurat object using on-disk matrices.
@@ -214,8 +225,10 @@ convert_seurat_to_bpcells <- function(seurat_obj, output_dir = NULL,
     }
 
     # Convert to v5 assay
-    seurat_obj[[assay_name]] <- as(object = seurat_obj[[assay_name]],
-                                   Class = "Assay5")
+    seurat_obj[[assay_name]] <- as(
+      object = seurat_obj[[assay_name]],
+      Class = "Assay5"
+    )
     # Check if the counts matrix is already in BPCells format
     if (inherits(seurat_obj[[assay_name]]@layers$counts, "BPMatrix")) {
       message(paste(
@@ -270,10 +283,10 @@ get_valid_samples <- function(input, subject_ids, min_cells) {
 
   # Split samples into sufficient and insufficient
   sufficient_samples <- sample_summary |>
-    dplyr::filter(cell_count >= min_cells)
+    dplyr::filter(.data$cell_count >= min_cells)
 
   insufficient_samples <- sample_summary |>
-    dplyr::filter(cell_count < min_cells)
+    dplyr::filter(.data$cell_count < min_cells)
 
   # Show removed subjects if any
   if (nrow(insufficient_samples) > 0) {
@@ -324,19 +337,19 @@ get_valid_samples <- function(input, subject_ids, min_cells) {
 #' @importFrom dplyr group_by summarize
 sil_summary <- function(input) {
   input |>
-    dplyr::group_by(resolution) |>
+    dplyr::group_by(.data$resolution) |>
     dplyr::summarize(
-      median_score = stats::median(avg_width, na.rm = TRUE),
-      variance_score = stats::var(avg_width, na.rm = TRUE),
-      standard_error_score = stats::sd(avg_width,
+      median_score = stats::median(.data$avg_width, na.rm = TRUE),
+      variance_score = stats::var(.data$avg_width, na.rm = TRUE),
+      standard_error_score = stats::sd(.data$avg_width,
         na.rm = TRUE
-      ) / sqrt(length(avg_width)),
-      cluster_median_score = stats::median(cluster_median_widths, na.rm = TRUE),
-      cluster_variance_score = stats::var(cluster_median_widths, na.rm = TRUE),
-      cluster_standard_error_score = stats::sd(cluster_median_widths,
+      ) / sqrt(length(.data$avg_width)),
+      cluster_median_score = stats::median(.data$cluster_median_widths, na.rm = TRUE),
+      cluster_variance_score = stats::var(.data$cluster_median_widths, na.rm = TRUE),
+      cluster_standard_error_score = stats::sd(.data$cluster_median_widths,
         na.rm = TRUE
       ) /
-        sqrt(length(cluster_median_widths))
+        sqrt(length(.data$cluster_median_widths))
     )
 }
 

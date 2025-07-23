@@ -1,5 +1,5 @@
 #' @include utils.R
-#'
+#' @importFrom rlang .data
 NULL
 
 
@@ -20,7 +20,7 @@ create_sil_plots <- function(sil_dist) {
   sil_summary <- sil_summary(sil_dist)
 
   plot1 <- sil_dist |>
-    ggplot2::ggplot(ggplot2::aes(x = as.factor(resolution), y = avg_width)) +
+    ggplot2::ggplot(ggplot2::aes(x = as.factor(.data$resolution), y = .data$avg_width)) +
     ggplot2::geom_boxplot() +
     ggplot2::theme_bw() +
     ggplot2::labs(
@@ -30,8 +30,8 @@ create_sil_plots <- function(sil_dist) {
 
   plot2 <- sil_dist |>
     ggplot2::ggplot(ggplot2::aes(
-      x = as.factor(resolution),
-      y = cluster_median_widths
+      x = as.factor(.data$resolution),
+      y = .data$cluster_median_widths
     )) +
     ggplot2::geom_boxplot() +
     ggplot2::theme_bw() +
@@ -42,12 +42,12 @@ create_sil_plots <- function(sil_dist) {
 
   plot3 <- ggplot2::ggplot(
     sil_summary,
-    ggplot2::aes(x = as.factor(resolution), y = median_score, group = 1)
+    ggplot2::aes(x = as.factor(.data$resolution), y = .data$median_score, group = 1)
   ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = median_score - (1.96 * standard_error_score),
-        ymax = median_score + (1.96 * standard_error_score),
+        ymin = .data$median_score - (1.96 * .data$standard_error_score),
+        ymax = .data$median_score + (1.96 * .data$standard_error_score),
         width = .3
       ),
       color = "red"
@@ -63,15 +63,15 @@ create_sil_plots <- function(sil_dist) {
   plot4 <- ggplot2::ggplot(
     sil_summary,
     ggplot2::aes(
-      x = as.factor(resolution),
-      y = cluster_median_score,
+      x = as.factor(.data$resolution),
+      y = .data$cluster_median_score,
       group = 1
     )
   ) +
     ggplot2::geom_errorbar(
       ggplot2::aes(
-        ymin = cluster_median_score - (1.96 * standard_error_score),
-        ymax = cluster_median_score + (1.96 * standard_error_score),
+        ymin = .data$cluster_median_score - (1.96 * .data$standard_error_score),
+        ymax = .data$cluster_median_score + (1.96 * .data$standard_error_score),
         width = .3
       ),
       color = "red"

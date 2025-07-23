@@ -1,0 +1,25 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/404.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/LICENSE-text.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/LICENSE.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/articles/index.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/articles/quick_start_guide.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/authors.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/index.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/adjusted_rand_index.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/calculate_silhouette_score.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/check_size.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/clust_opt.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/convert_seurat_to_bpcells.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/create_sil_plots.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/get_valid_samples.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/index.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/leverage_sketch.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/prep_test.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/prep_train.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/project_PCA.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/sil_summary.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/split_pca_dimensions.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/train_random_forest.html</loc></url>
+</urlset>
+

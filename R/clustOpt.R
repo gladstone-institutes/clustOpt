@@ -1,5 +1,5 @@
 #' @include utils.R pca_split.R
-#'
+#' @importFrom rlang .data
 NULL
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -29,7 +29,7 @@ NULL
 #' @param min_cells Minimum cells per subject, default is 50
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
-#' 
+#'
 #' @details
 #' The clustOpt algorithm works by:
 #' \enumerate{
@@ -39,23 +39,27 @@ NULL
 #'   \item Training random forests on cluster assignments
 #'   \item Evaluating clustering quality using silhouette scores
 #' }
-#' 
-#' Both scRNA-seq and CyTOF data types support sketching for improved performance 
-#' on large datasets. For CyTOF data, normalization is skipped as data should 
+#'
+#' Both scRNA-seq and CyTOF data types support sketching for improved performance
+#' on large datasets. For CyTOF data, normalization is skipped as data should
 #' already be arcsinh transformed.
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' # Basic usage with scRNA-seq data
 #' results <- clust_opt(seurat_obj, ndim = 50, subject_ids = "donor_id")
-#' 
+#'
 #' # CyTOF data analysis
-#' cytof_results <- clust_opt(cytof_obj, ndim = 30, dtype = "CyTOF", 
-#'                           subject_ids = "sample_id")
-#' 
+#' cytof_results <- clust_opt(cytof_obj,
+#'   ndim = 30, dtype = "CyTOF",
+#'   subject_ids = "sample_id"
+#' )
+#'
 #' # Large dataset with custom sketch size
-#' large_results <- clust_opt(large_obj, ndim = 50, sketch_size = 10000,
-#'                           subject_ids = "donor_id")
+#' large_results <- clust_opt(large_obj,
+#'   ndim = 50, sketch_size = 10000,
+#'   subject_ids = "donor_id"
+#' )
 #' }
 #'
 #' @export
@@ -495,7 +499,7 @@ project_pca <- function(train_seurat,
       train_seurat[[train_with_pcs]]
     ) |>
       tibble::as_tibble(rownames = "features") |>
-      dplyr::filter(features %in% common_features) |>
+      dplyr::filter(.data$features %in% common_features) |>
       as.matrix()
 
     rownames(loadings_common_features) <- loadings_common_features[, 1]
@@ -513,7 +517,7 @@ project_pca <- function(train_seurat,
       train_seurat[[clust_pcs]]
     ) |>
       tibble::as_tibble(rownames = "features") |>
-      dplyr::filter(features %in% common_features) |>
+      dplyr::filter(.data$features %in% common_features) |>
       as.matrix()
 
     rownames(loadings_common_features) <- loadings_common_features[, 1]

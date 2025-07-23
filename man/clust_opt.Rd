@@ -67,8 +67,8 @@ The clustOpt algorithm works by:
   \item Evaluating clustering quality using silhouette scores
 }
 
-Both scRNA-seq and CyTOF data types support sketching for improved performance 
-on large datasets. For CyTOF data, normalization is skipped as data should 
+Both scRNA-seq and CyTOF data types support sketching for improved performance
+on large datasets. For CyTOF data, normalization is skipped as data should
 already be arcsinh transformed.
 }
 \examples{
@@ -77,12 +77,16 @@ already be arcsinh transformed.
 results <- clust_opt(seurat_obj, ndim = 50, subject_ids = "donor_id")
 
 # CyTOF data analysis
-cytof_results <- clust_opt(cytof_obj, ndim = 30, dtype = "CyTOF", 
-                          subject_ids = "sample_id")
+cytof_results <- clust_opt(cytof_obj,
+  ndim = 30, dtype = "CyTOF",
+  subject_ids = "sample_id"
+)
 
 # Large dataset with custom sketch size
-large_results <- clust_opt(large_obj, ndim = 50, sketch_size = 10000,
-                          subject_ids = "donor_id")
+large_results <- clust_opt(large_obj,
+  ndim = 50, sketch_size = 10000,
+  subject_ids = "donor_id"
+)
 }
 
 }

@@ -12,6 +12,8 @@ home:
   description: >
     Objective optimization of clustering resolution parameters 
     in single-cell and mass cytometry data
+  logo:
+    alt: "clustOpt R package logo"
 
 navbar:
   structure:
@@ -21,6 +23,7 @@ navbar:
     home:
       icon: fas fa-home fa-lg
       href: index.html
+      aria-label: Home
     reference:
       text: Reference
       href: reference/index.html
@@ -77,6 +80,13 @@ articles:
   navbar: Getting Started
   contents:
   - quick_start_guide
+
+build:
+  preview: false
+  
+vignettes:
+  build: cache
+  cache_dir: "vignettes/cache"
 
 footer:
   structure:

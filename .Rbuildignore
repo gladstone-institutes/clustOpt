@@ -6,4 +6,8 @@
 ^\.github$
 ^doc$
 ^Meta$
-vignettes/quick_start_guide.Rmd
+^\.claude$
+^\.vscode$
+^Dockerfile$
+^_pkgdown\.yml$
+^docs$

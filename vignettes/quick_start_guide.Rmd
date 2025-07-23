@@ -15,7 +15,9 @@ knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   fig.height = 5,
-  fig.width = 8
+  fig.width = 8,
+  cache = TRUE,
+  cache.lazy = FALSE
 )
 ```
 
@@ -23,8 +25,8 @@ knitr::opts_chunk$set(
 library(Seurat)
 # Only v5 Seurat Assays are supported
 options(Seurat.object.assay.version = "v5")
-# Only needs to be set for analyzing large datasets
-options(future.globals.maxSize = 1e20)
+# Increase future globals limit for large datasets
+options(future.globals.maxSize = 2e9)  # 2GB limit
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -95,9 +97,9 @@ DimPlot(input,
   coord_fixed()
 ```
 
-Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. Please see page on handling large datasets for information on how to scale clustOpt to a larger number of cells and subjects.
+Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. The repeated messages about "SeuratObject" are a side effect of using the future plan "multisession" and should not occur with other future plans.
 
-```{r clustOpt, warning=FALSE}
+```{r clustOpt, warning=FALSE, cache=TRUE}
 plan("multisession", workers = 10)
 
 sil_dist <- clust_opt(input,
