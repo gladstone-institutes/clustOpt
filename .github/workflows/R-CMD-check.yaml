@@ -39,7 +39,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, bnprks/BPCells@HEAD[r]
+          extra-packages: any::rcmdcheck, bnprks/BPCells/r
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
