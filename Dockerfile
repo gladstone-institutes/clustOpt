@@ -15,6 +15,9 @@ RUN R -e "remotes::install_github('bnprks/BPCells/r')"
 # Install the local package with all dependencies
 RUN R -e "devtools::install('.', dependencies = TRUE, upgrade = 'never')"
 
+# Install strongly suggested package
+RUN R -e  "BiocManager::install('glmGamPoi')"
+
 # Install extra packages for Rscripts
 RUN R -e 'install.packages(c("optparse", "readr"), repos = "https://cloud.r-project.org")'
 

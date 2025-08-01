@@ -1,0 +1,11 @@
+bibentry(
+  bibtype  = "Misc",
+  title    = "Optimizing Clustering Resolution for Multi-subject Single Cell Studies",
+  author   = c("Gill, N", "Shin, MG", "Agrawal, A", "Perez, E", "Thomas, R"),
+  howpublished = "Presented at Intelligent Systems for Molecular Biology (ISMB)",
+  year     = "2025",
+  month    = "July",
+  day      = "23",
+  note     = "R package version 1.0",
+  url      = "https://github.com/gladstone-institutes/clustOpt"
+)

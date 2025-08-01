@@ -7,12 +7,11 @@
 <!-- badges: end -->
    
 
-*Authors: Natalie Gill, Min-Gyoung Shin, Ayushi Agrawal, Erwin Perez, and Reuben Thomas*
 
 
 Selecting the clustering resolution parameter for Louvain clustering in scRNA-seq is often based on the concentration of expression of cell type marker genes within clusters, increasing the parameter as needed to resolve clusters with mixed cell type gene signatures. This approach is however subjective in situations where one does not have complete knowledge of condition/disease associated cell-types in the context of novel biology, it is time-consuming and has the potential to bias the final clustering results due to individual transcriptomic heterogeneity, and subject-specific differences in cell composition.
 
-clustOpt improves the reproducibility of modularity-based clustering in multi-subject experiments by using a combination of subject-wise cross-validation, feature splitting, random forests, and measures of cluster quality using the silhouette metric to guide the selection of the resolution parameter. The package supports both single-cell RNA-seq and CyTOF data with optimized preprocessing pipelines for each data type. 
+clustOpt improves the reproducibility of modularity-based clustering in multi-subject experiments by using a combination of subject-wise cross-validation, feature splitting, random forests, and measures of cluster quality using the silhouette metric to guide the selection of the resolution parameter. The package supports both single-cell RNA-seq and CyTOF Seurat object inputs. 
 
 ## clustOpt Algorithm
 
@@ -62,7 +61,7 @@ packageVersion("clustOpt")
 
 ### Docker Image
 
-For convienience we maintain a clustOpt docker image:
+For convenience we maintain a clustOpt docker image:
 
 ```
 docker pull natalie23gill/clustopt:1.0
@@ -138,10 +137,10 @@ plots <- create_sil_plots(results)
 ## Key Parameters
 
 - `subject_ids`: Metadata column with subject identifiers (≥3 subjects, ≥50 cells each)
-- `ndim`: Principal components to use (30-50 for scRNA-seq, 20-30 for CyTOF)
+- `ndim`: Principal components to use (For CyTOF set this to the number of markers in your panel)
 - `dtype`: Data type - `"scRNA"`  or `"CyTOF"` (assumes arcsinh normalized values in the counts layer)
 - `sketch_size`: Cells for sketching large datasets (auto: 10% if >200k cells)
-- `within_batch`: Batch column for within-batch cross-validation
+- `within_batch`: Batch column for within-batch cross-validation (use if you intend to batch correct before clustering)
 - `on_disk`: Use BPCells for memory efficiency
 
 ## Troubleshooting
@@ -150,7 +149,7 @@ plots <- create_sil_plots(results)
 
 **Memory issues**: Use `sketch_size = 10000` and `on_disk = TRUE` 
 
-**Slow performance**: Reduce `num_trees`,`res_range`, or sketch to a smaller size - too few cells will lead to a flat silhouette score curve
+**Slow performance**: Reduce `res_range`, or sketch to a smaller size - too few cells will lead to a flat silhouette score curve. It is recommended to sketch before running clustOpt on large datasets.
 
 **Requirements**: R ≥ 4.4.0, Seurat (>= 5.3.0), install BPCells for large datasets
 

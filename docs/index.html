@@ -60,9 +60,8 @@
 </h1></div>
 <!-- badges: start -->
 
-<p><em>Authors: Natalie Gill, Min-Gyoung Shin, Ayushi Agrawal, Erwin Perez, and Reuben Thomas</em></p>
 <p>Selecting the clustering resolution parameter for Louvain clustering in scRNA-seq is often based on the concentration of expression of cell type marker genes within clusters, increasing the parameter as needed to resolve clusters with mixed cell type gene signatures. This approach is however subjective in situations where one does not have complete knowledge of condition/disease associated cell-types in the context of novel biology, it is time-consuming and has the potential to bias the final clustering results due to individual transcriptomic heterogeneity, and subject-specific differences in cell composition.</p>
-<p>clustOpt improves the reproducibility of modularity-based clustering in multi-subject experiments by using a combination of subject-wise cross-validation, feature splitting, random forests, and measures of cluster quality using the silhouette metric to guide the selection of the resolution parameter. The package supports both single-cell RNA-seq and CyTOF data with optimized preprocessing pipelines for each data type.</p>
+<p>clustOpt improves the reproducibility of modularity-based clustering in multi-subject experiments by using a combination of subject-wise cross-validation, feature splitting, random forests, and measures of cluster quality using the silhouette metric to guide the selection of the resolution parameter. The package supports both single-cell RNA-seq and CyTOF Seurat object inputs.</p>
 <div class="section level2">
 <h2 id="clustopt-algorithm">clustOpt Algorithm<a class="anchor" aria-label="anchor" href="#clustopt-algorithm"></a>
 </h2>
@@ -108,7 +107,7 @@
 <div class="section level3">
 <h3 id="docker-image">Docker Image<a class="anchor" aria-label="anchor" href="#docker-image"></a>
 </h3>
-<p>For convienience we maintain a clustOpt docker image:</p>
+<p>For convenience we maintain a clustOpt docker image:</p>
 <pre><code>docker pull natalie23gill/clustopt:1.0</code></pre>
 </div>
 <div class="section level3">
@@ -189,13 +188,13 @@
 <li>
 <code>subject_ids</code>: Metadata column with subject identifiers (≥3 subjects, ≥50 cells each)</li>
 <li>
-<code>ndim</code>: Principal components to use (30-50 for scRNA-seq, 20-30 for CyTOF)</li>
+<code>ndim</code>: Principal components to use (For CyTOF set this to the number of markers in your panel)</li>
 <li>
 <code>dtype</code>: Data type - <code>"scRNA"</code> or <code>"CyTOF"</code> (assumes arcsinh normalized values in the counts layer)</li>
 <li>
 <code>sketch_size</code>: Cells for sketching large datasets (auto: 10% if &gt;200k cells)</li>
 <li>
-<code>within_batch</code>: Batch column for within-batch cross-validation</li>
+<code>within_batch</code>: Batch column for within-batch cross-validation (use if you intend to batch correct before clustering)</li>
 <li>
 <code>on_disk</code>: Use BPCells for memory efficiency</li>
 </ul>
@@ -205,7 +204,7 @@
 </h2>
 <p><strong>“fewer than 3 samples” error</strong>: Check <code>table(seurat_obj@meta.data$your_subject_column)</code> - ensure ≥3 subjects with ≥50 cells each</p>
 <p><strong>Memory issues</strong>: Use <code>sketch_size = 10000</code> and <code>on_disk = TRUE</code></p>
-<p><strong>Slow performance</strong>: Reduce <code>num_trees</code>,<code>res_range</code>, or sketch to a smaller size - too few cells will lead to a flat silhouette score curve</p>
+<p><strong>Slow performance</strong>: Reduce <code>res_range</code>, or sketch to a smaller size - too few cells will lead to a flat silhouette score curve. It is recommended to sketch before running clustOpt on large datasets.</p>
 <p><strong>Requirements</strong>: R ≥ 4.4.0, Seurat (&gt;= 5.3.0), install BPCells for large datasets</p>
 </div>
 <div class="section level2">

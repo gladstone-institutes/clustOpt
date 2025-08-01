@@ -6,6 +6,6 @@ inst/doc
 .DS_Store
 /doc/
 /Meta/
-.vscode/settings.json
+.vscode/
 CLAUDE.md
 .claude
