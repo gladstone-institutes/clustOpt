@@ -589,6 +589,11 @@ train_random_forest <- function(res, df_list, train_clusters,
     df_list[["test_proj_clust_pcs"]]
   )
 
+  mse_value <- calculate_mse_score(
+    predicted,
+    df_list[["test_proj_clust_pcs"]]
+  )
+  
   list(
     resolution = res,
     test_sample = sam,
@@ -596,7 +601,9 @@ train_random_forest <- function(res, df_list, train_clusters,
     cluster_median_widths = sil$group_median_width,
     n_predicted_clusters = length(unique(as.character(predicted))),
     min_predicted_cell_per_cluster = min(predicted_clusters_table),
-    max_predicted_cell_per_cluster = max(predicted_clusters_table)
+    max_predicted_cell_per_cluster = max(predicted_clusters_table),
+    mse = mse_value$mse,
+    mad = mse_value$mad
   )
 }
 #' @title calculate_silhouette_score
@@ -628,4 +635,50 @@ calculate_silhouette_score <- function(predicted, data_frame) {
     avg_width = sil_summary$avg.width,
     group_median_width = median(sil_summary$clus.avg.widths)
   ))
+}
+
+#' @title calculate_mse_score
+#' @description
+#' Calculate mean squared error score
+#' @param predicted Cluster assignments
+#' @param data_frame Data frame containing the data
+#' @return A numeric value representing the mse
+#'
+#' @export
+calculate_mse_score <- function(predicted, data_frame) {
+  
+  k <- length(unique(predicted))  # number of clusters
+  mse <- 0
+  mad <- 0
+  n <- nrow(data_frame)
+  
+  for (c in unique(predicted)) {
+    # Subset points in cluster c
+    cluster_points <- data_frame[predicted == c, , drop = FALSE]
+    # Compute centroid
+    centroid <- colMeans(cluster_points)
+    # Squared distances to centroid
+    dists <- rowSums((cluster_points - matrix(centroid, 
+                                              nrow = nrow(cluster_points), 
+                                              ncol = ncol(data_frame), 
+                                              byrow = TRUE))^2)
+    mse <- mse + sum(dists)
+    
+    median_centroid <- apply(cluster_points, 2, median)
+    mad_dists <- rowSums(abs(cluster_points - matrix(median_centroid, 
+                                              nrow = nrow(cluster_points), 
+                                              ncol = ncol(data_frame), 
+                                              byrow = TRUE)))
+    
+    mad <- mad + sum(mad_dists)
+    
+    
+  }
+  
+  # Mean squared error
+  mse <- mse / n
+  # Mean absolute deviation from median
+  mad <- mad /n
+  return(list(mse=mse, mad=mad))
+  
 }
