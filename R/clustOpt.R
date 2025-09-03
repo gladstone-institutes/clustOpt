@@ -569,6 +569,9 @@ train_random_forest <- function(res, df_list, train_clusters,
       dplyr::select(dplyr::contains(as.character(res))) |>
       dplyr::pull())
 
+  # proportion of clusters in train_df
+  qx <- data.frame(base::table(train_df$clusters))
+  colnames(qx) <- c("clusters", "Freq_q")
   # Train model
   rf <- ranger::ranger(as.factor(clusters) ~ .,
     data = train_df,
@@ -582,7 +585,24 @@ train_random_forest <- function(res, df_list, train_clusters,
   predicted <- stats::predict(rf, df_list[["test_proj_train_with_pcs"]])
   predicted <- ranger::predictions(predicted)
   predicted_clusters_table <- base::table(predicted)
+  
+  px <- data.frame(base::table(predicted))
+  colnames(px) <- c("clusters", "Freq_p")
+  
+  probs <- base::merge(qx, px, all = TRUE)
+  # assign count of 1 to clusters missing in the predicted test set, so that KL divergence does not blow up
+  probs[is.na(probs)] <- 0
+  probs[,2:3] <- probs[,2:3] + 1
+  probs[,2] <- probs[,2]/base::sum(probs[,2])
+  probs[,3] <- probs[,3]/base::sum(probs[,3])
+  
   rm(rf)
+  
+  # Kullback Leibler divergence
+  KLdivergence <- sum(probs$Freq_q*log(probs$Freq_p/probs$Freq_q))
+  
+  # Hellinger distance
+  Hellinger <- sqrt(0.5*sum((sqrt(probs$Freq_q) - sqrt(probs$Freq_p))^2))
   # Evaluate clustering on data project on to the opposite PCs
   sil <- calculate_silhouette_score(
     predicted,
@@ -603,7 +623,9 @@ train_random_forest <- function(res, df_list, train_clusters,
     min_predicted_cell_per_cluster = min(predicted_clusters_table),
     max_predicted_cell_per_cluster = max(predicted_clusters_table),
     mse = mse_value$mse,
-    mad = mse_value$mad
+    mad = mse_value$mad,
+    KLdivergence = KLdivergence,
+    Hellinger = Hellinger
   )
 }
 #' @title calculate_silhouette_score
