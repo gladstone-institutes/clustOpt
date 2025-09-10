@@ -614,6 +614,11 @@ train_random_forest <- function(res, df_list, train_clusters,
     df_list[["test_proj_clust_pcs"]]
   )
   
+  modularity_value <- calculate_modularity_from_coords(
+    predicted,
+    df_list[["test_proj_clust_pcs"]]
+  )
+  
   list(
     resolution = res,
     test_sample = sam,
@@ -625,7 +630,8 @@ train_random_forest <- function(res, df_list, train_clusters,
     mse = mse_value$mse,
     mad = mse_value$mad,
     KLdivergence = KLdivergence,
-    Hellinger = Hellinger
+    Hellinger = Hellinger,
+    modularity = modularity_value
   )
 }
 #' @title calculate_silhouette_score
@@ -703,4 +709,147 @@ calculate_mse_score <- function(predicted, data_frame) {
   mad <- mad /n
   return(list(mse=mse, mad=mad))
   
+}
+
+#' Compute k-nearest neighbor graph from coordinate matrix
+#' 
+#' @param coords Numeric matrix where rows are nodes and columns are coordinates
+#' @param k Number of nearest neighbors
+#' @param mutual Logical, whether to create mutual kNN graph (default: FALSE)
+#' @param distance_metric Distance metric to use ("euclidean", "manhattan", "cosine")
+#' @return Sparse adjacency matrix of the kNN graph
+compute_knn_graph <- function(coords, k, mutual = FALSE, distance_metric = "euclidean") {
+  
+  if (!is.matrix(coords) && !is.data.frame(coords)) {
+    stop("coords must be a matrix or data.frame")
+  }
+  
+  coords <- as.matrix(coords)
+  n_nodes <- nrow(coords)
+  
+  if (k >= n_nodes) {
+    stop("k must be less than the number of nodes")
+  }
+  
+  # Calculate distance matrix
+  if (distance_metric == "euclidean") {
+    dist_matrix <- as.matrix(dist(coords, method = "euclidean"))
+  } else if (distance_metric == "manhattan") {
+    dist_matrix <- as.matrix(dist(coords, method = "manhattan"))
+  } else if (distance_metric == "cosine") {
+    # Cosine distance = 1 - cosine similarity
+    coords_norm <- coords / sqrt(rowSums(coords^2))
+    cosine_sim <- coords_norm %*% t(coords_norm)
+    dist_matrix <- 1 - cosine_sim
+  } else {
+    stop("Unsupported distance metric. Use 'euclidean', 'manhattan', or 'cosine'")
+  }
+  
+  # Set diagonal to infinity to avoid self-loops
+  diag(dist_matrix) <- Inf
+  
+  # Find k nearest neighbors for each node
+  knn_indices <- t(apply(dist_matrix, 1, function(x) order(x)[1:k]))
+  
+  # Create adjacency matrix
+  adj_matrix <- Matrix::sparseMatrix(
+    i = rep(1:n_nodes, each = k),
+    j = as.vector(t(knn_indices)),
+    x = 1,
+    dims = c(n_nodes, n_nodes)
+  )
+  
+  if (mutual) {
+    # Keep only mutual connections
+    adj_matrix <- adj_matrix * t(adj_matrix)
+  }
+  
+  return(adj_matrix)
+}
+
+#' Calculate modularity for a graph given coordinate matrix and cluster assignments
+#' 
+#' @param coords Numeric matrix where rows are nodes and columns are coordinates
+#' @param clusters Vector of cluster assignments for each node
+#' @param k Number of nearest neighbors for kNN graph construction
+#' @param mutual Logical, whether to create mutual kNN graph (default: FALSE)
+#' @param distance_metric Distance metric to use ("euclidean", "manhattan", "cosine")
+#' @param directed Logical, whether the graph is directed (default: FALSE)
+#' @return List containing modularity value and the kNN adjacency matrix
+calculate_modularity_from_coords <- function(clusters, coords, k=20, 
+                                             mutual = FALSE, 
+                                             distance_metric = "euclidean",
+                                             directed = FALSE) {
+  
+  # Compute kNN graph
+  adj_matrix <- compute_knn_graph(coords, k, mutual, distance_metric)
+  
+  # Calculate modularity
+  Q <- calculate_modularity(adj_matrix, clusters, directed)
+  
+  return(list(modularity = Q, adjacency_matrix = adj_matrix))
+}
+
+#' 
+#' @param adj_matrix A sparse adjacency matrix (Matrix package format)
+#' @param clusters Vector of cluster assignments for each node
+#' @param directed Logical, whether the graph is directed (default: FALSE)
+#' @return Modularity value (numeric)
+calculate_modularity <- function(adj_matrix, clusters, directed = FALSE) {
+  
+  # Ensure adjacency matrix is sparse
+  if (!inherits(adj_matrix, "sparseMatrix")) {
+    adj_matrix <- as(adj_matrix, "dgCMatrix")
+  }
+  
+  n_nodes <- nrow(adj_matrix)
+  if (length(clusters) != n_nodes) {
+    stop("Number of cluster assignments must equal number of nodes")
+  }
+  
+  # Calculate total edges
+  if (directed) {
+    m <- sum(adj_matrix)
+  } else {
+    m <- sum(adj_matrix) / 2
+  }
+  
+  if (m == 0) return(0)
+  
+  # Create indicator matrix for clusters
+  unique_clusters <- unique(clusters)
+  n_clusters <- length(unique_clusters)
+  
+  # Create cluster indicator matrix (sparse)
+  B <- Matrix::sparseMatrix(
+    i = 1:n_nodes,
+    j = match(clusters, unique_clusters),
+    x = 1,
+    dims = c(n_nodes, n_clusters)
+  )
+  
+  # Calculate modularity using matrix operations
+  if (directed) {
+    k_in <- Matrix::rowSums(adj_matrix)
+    k_out <- Matrix::colSums(adj_matrix)
+    
+    # Edges within communities
+    trace_term <- sum(Matrix::diag(t(B) %*% adj_matrix %*% B))
+    
+    # Expected edges under null model
+    expected_term <- sum((t(B) %*% k_out) * (t(B) %*% k_in))
+    
+  } else {
+    k <- Matrix::rowSums(adj_matrix)
+    
+    # Edges within communities  
+    trace_term <- sum(Matrix::diag(t(B) %*% adj_matrix %*% B)) / 2
+    
+    # Expected edges under null model
+    k_communities <- as.vector(t(B) %*% k)
+    expected_term <- sum(k_communities^2) / (4 * m)
+  }
+  
+  Q <- trace_term / m - expected_term / m
+  return(Q)
 }
