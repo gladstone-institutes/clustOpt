@@ -631,7 +631,7 @@ train_random_forest <- function(res, df_list, train_clusters,
     mad = mse_value$mad,
     KLdivergence = KLdivergence,
     Hellinger = Hellinger,
-    modularity = modularity_value
+    modularity = modularity_value$modularity
   )
 }
 #' @title calculate_silhouette_score

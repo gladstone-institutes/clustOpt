@@ -447,7 +447,7 @@ adjusted_rand_index <- function(seurat_obj, meta1, meta2) {
 
   # Perfect agreement when both clusterings are identical singletons
   if (max_index == expected_index) {
-    return(0)
+    return(1)
   }
 
   # This is the ARI equation and will output our value
