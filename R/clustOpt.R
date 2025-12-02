@@ -199,6 +199,8 @@ clust_opt <- function(input,
         approx = FALSE,
         verbose = verbose
       )
+      
+      test <- Seurat::ScaleData(test, features = NULL, verbose = verbose)
 
       clust_pcs <- switch(train_with,
         odd = "even_pca",
@@ -449,7 +451,7 @@ prep_test <- function(input,
 #'
 #' @export
 #'
-#' @importFrom Seurat VariableFeatures Loadings
+#' @importFrom Seurat VariableFeatures Loadings GetAssayData
 #' @importFrom tibble as_tibble
 #' @importFrom dplyr filter
 project_pca <- function(train_seurat,
@@ -477,11 +479,17 @@ project_pca <- function(train_seurat,
   )
   # Features present in both the training variable features and test sample
   common_features <- base::intersect(
-    rownames(test_seurat@assays[[assay_id]]@scale.data),
+    rownames(Seurat::GetAssayData(test_seurat,
+      assay = assay_id,
+      layer = "scale.data"
+    )),
     Seurat::VariableFeatures(train_seurat)
   )
   n_shared_genes <- length(common_features)
-  total_genes <- length(rownames(train_seurat@assays[[assay_id]]@scale.data))
+  total_genes <- length(rownames(Seurat::GetAssayData(train_seurat,
+    assay = assay_id,
+    layer = "scale.data"
+  )))
   message(sprintf(
     "Found %d (%.2f%%) shared genes used for projecting test data",
     n_shared_genes,
@@ -505,7 +513,10 @@ project_pca <- function(train_seurat,
     rownames(loadings_common_features) <- loadings_common_features[, 1]
     loadings_common_features <- loadings_common_features[, -1]
     class(loadings_common_features) <- "numeric"
-    scale_data <- as.matrix(seurat_obj[[assay_id]]@scale.data)[common_features, ]
+    scale_data <- as.matrix(Seurat::GetAssayData(seurat_obj,
+      assay = assay_id,
+      layer = "scale.data"
+    ))[common_features, ]
 
     t(scale_data) %*% loadings_common_features
   }
@@ -523,7 +534,10 @@ project_pca <- function(train_seurat,
     rownames(loadings_common_features) <- loadings_common_features[, 1]
     loadings_common_features <- loadings_common_features[, -1]
     class(loadings_common_features) <- "numeric"
-    scale_data <- as.matrix(seurat_obj[[assay_id]]@scale.data)[common_features, ]
+    scale_data <- as.matrix(Seurat::GetAssayData(seurat_obj,
+      assay = assay_id,
+      layer = "scale.data"
+    ))[common_features, ]
 
     t(scale_data) %*% loadings_common_features
   }
