@@ -11,3 +11,4 @@
 ^Dockerfile$
 ^_pkgdown\.yml$
 ^docs$
+^vignettes/.*_cache$
