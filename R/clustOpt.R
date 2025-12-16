@@ -725,13 +725,17 @@ calculate_mse_score <- function(predicted, data_frame) {
   
 }
 
+#' @title compute_knn_graph
+#' @description
 #' Compute k-nearest neighbor graph from coordinate matrix
-#' 
+#'
 #' @param coords Numeric matrix where rows are nodes and columns are coordinates
 #' @param k Number of nearest neighbors
 #' @param mutual Logical, whether to create mutual kNN graph (default: FALSE)
 #' @param distance_metric Distance metric to use ("euclidean", "manhattan", "cosine")
 #' @return Sparse adjacency matrix of the kNN graph
+#'
+#' @export
 compute_knn_graph <- function(coords, k, mutual = FALSE, distance_metric = "euclidean") {
   
   if (!is.matrix(coords) && !is.data.frame(coords)) {
@@ -804,11 +808,17 @@ calculate_modularity_from_coords <- function(clusters, coords, k=20,
   return(list(modularity = Q, adjacency_matrix = adj_matrix))
 }
 
-#' 
+#' @title calculate_modularity
+#' @description
+#' Calculate modularity score for a graph given an adjacency matrix and cluster
+#' assignments
+#'
 #' @param adj_matrix A sparse adjacency matrix (Matrix package format)
 #' @param clusters Vector of cluster assignments for each node
 #' @param directed Logical, whether the graph is directed (default: FALSE)
 #' @return Modularity value (numeric)
+#'
+#' @export
 calculate_modularity <- function(adj_matrix, clusters, directed = FALSE) {
   
   # Ensure adjacency matrix is sparse
