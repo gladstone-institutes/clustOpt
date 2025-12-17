@@ -31,11 +31,13 @@ URL: https://gladstone-institutes.github.io/clustOpt, https://github.com/gladsto
 BugReports: https://github.com/gladstone-institutes/clustOpt/issues
 RoxygenNote: 7.3.2
 Encoding: UTF-8
-Collate: 
-    'pca_split.R'
-    'utils.R'
-    'clustOpt.R'
-    'plot.R'
+Collate:
+    'metrics.R'
+    'data_preparation.R'
+    'sketching.R'
+    'validation.R'
+    'clust_opt.R'
+    'visualization.R'
 Suggests: 
     knitr,
     rmarkdown,

@@ -102,7 +102,7 @@ Subject-wise cross validation is parallelized with `future` and `future.batchtoo
 ```{r clustOpt, warning=FALSE, cache=TRUE}
 plan("multisession", workers = 10)
 
-sil_dist <- clust_opt(input,
+cv_results <- clust_opt(input,
   subject_ids = "donor_id",
   ndim = 20,
   verbose = FALSE,
@@ -117,7 +117,7 @@ plan("sequential")
 ## Plotting the silhouette score distributions
 
 ```{r plotting}
-plots <- create_sil_plots(sil_dist |> drop_na())
+plots <- create_sil_plots(cv_results |> drop_na())
 
 plots[[1]]
 plots[[2]]
@@ -126,6 +126,111 @@ plots[[4]]
 ```
 
 The median silhouette scores across all cells start to fall off at 0.2, indicating that this clustering resolution is the most reproducible across all biological replicates. It is also possible to see a local maximum which would indicate a reproducible resolution.
+
+## Additional Quality Metrics
+
+The `clust_opt()` function calculates several metrics beyond silhouette scores to help evaluate clustering quality. Let's examine the full output:
+
+```{r metrics_overview}
+# View all available metrics
+colnames(cv_results)
+
+# Preview the data
+head(cv_results)
+```
+
+### Understanding the Metrics
+
+- **avg_width / cluster_median_widths**: Silhouette scores measuring cluster separation
+- **mse / mad**: Mean Squared Error and Mean Absolute Deviation measure within-cluster compactness
+- **KLdivergence / Hellinger**: Measure similarity between training and predicted cluster distributions
+- **modularity**: Graph-based metric measuring clustering coherence
+
+### Within-Cluster Compactness (MSE & MAD)
+
+Mean Squared Error (MSE) and Mean Absolute Deviation (MAD) measure how tightly cells are grouped around their cluster centroids. Lower values indicate more compact clusters. These metrics will generally decrease as resolution increases (more clusters = tighter groupings), so they are most useful for comparing resolutions with similar silhouette scores.
+
+```{r plot_mse}
+cv_results |>
+  drop_na() |>
+  ggplot(aes(x = as.factor(resolution), y = mse)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(
+    title = "Mean Squared Error by Resolution",
+    x = "Resolution",
+    y = "MSE"
+  )
+```
+
+```{r plot_mad}
+cv_results |>
+  drop_na() |>
+  ggplot(aes(x = as.factor(resolution), y = mad)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(
+    title = "Mean Absolute Deviation by Resolution",
+    x = "Resolution",
+    y = "MAD"
+  )
+```
+
+### Distribution Similarity (KL Divergence & Hellinger Distance)
+
+These metrics measure how similar the cluster proportions are between the training data and the predicted test data. Lower values indicate that the clustering is more reproducible across subjects. KL Divergence is asymmetric and can be more sensitive to rare clusters, while Hellinger Distance is symmetric and bounded between 0 and 1.
+
+```{r plot_kl}
+cv_results |>
+  drop_na() |>
+  ggplot(aes(x = as.factor(resolution), y = KLdivergence)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(
+    title = "KL Divergence by Resolution",
+    x = "Resolution",
+    y = "KL Divergence"
+  )
+```
+
+```{r plot_hellinger}
+cv_results |>
+  drop_na() |>
+  ggplot(aes(x = as.factor(resolution), y = Hellinger)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(
+    title = "Hellinger Distance by Resolution",
+    x = "Resolution",
+    y = "Hellinger Distance"
+  )
+```
+
+### Graph-Based Clustering Quality (Modularity)
+
+Modularity measures how well the predicted clusters partition a k-nearest neighbor graph of the test data. Higher values indicate that cells within clusters are more connected to each other than to cells in other clusters. This provides a complementary view of cluster quality based on local neighborhood structure rather than global distances.
+
+```{r plot_modularity}
+cv_results |>
+  drop_na() |>
+  ggplot(aes(x = as.factor(resolution), y = modularity)) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(
+    title = "Modularity by Resolution",
+    x = "Resolution",
+    y = "Modularity"
+  )
+```
+
+### Interpreting Multiple Metrics
+
+When selecting an optimal resolution, consider multiple metrics together:
+
+1. **Silhouette scores** (primary): Look for the resolution where scores begin to decline
+2. **KL Divergence / Hellinger**: Lower values indicate the clustering is reproducible across subjects
+3. **Modularity**: Higher values suggest better-defined cluster boundaries in the kNN graph
+4. **MSE/MAD**: Lower is better, but will always decrease with more clusters; useful for comparing similar resolutions
 
 ## Comparison to the cell annotations
 
