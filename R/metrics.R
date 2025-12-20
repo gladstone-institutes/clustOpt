@@ -7,6 +7,140 @@ NULL
 # Clustering Quality Metrics Functions
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Distribution Distance Metrics
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#' @title calculate_kl_divergence
+#' @description
+#' Calculate Kullback-Leibler divergence between two probability distributions.
+#' D_KL(Q || P) measures how much information is lost when P is used to
+#' approximate Q. The result is always non-negative, with 0 indicating
+#' identical distributions.
+#'
+#' @param q Numeric vector representing the "true" probability distribution.
+#'   Must be non-negative and sum to 1.
+#' @param p Numeric vector representing the "approximating" probability
+#'   distribution. Must be non-negative, sum to 1, and have the same length as q.
+#'
+#' @return Numeric value representing D_KL(Q || P), always >= 0.
+#'   Returns 0 when distributions are identical.
+#'
+#' @details
+#' The KL divergence is calculated as: D_KL(Q || P) = sum(q * log(q / p))
+#'
+#' Note that KL divergence is asymmetric: D_KL(Q || P) != D_KL(P || Q).
+#' When q[i] > 0 but p[i] = 0, the divergence is infinite. This implementation
+#' requires all elements of p to be positive when corresponding elements of q
+#' are positive.
+#'
+#' @examples
+#' # Identical distributions
+#' p <- c(0.25, 0.25, 0.25, 0.25)
+#' calculate_kl_divergence(p, p)  # Returns 0
+#'
+#' # Different distributions
+#' q <- c(0.5, 0.3, 0.1, 0.1)
+#' p <- c(0.25, 0.25, 0.25, 0.25)
+#' calculate_kl_divergence(q, p)  # Returns positive value
+#'
+#' @export
+calculate_kl_divergence <- function(q, p) {
+  # Input validation
+  if (!is.numeric(q) || !is.numeric(p)) {
+    stop("q and p must be numeric vectors")
+  }
+
+  if (length(q) != length(p)) {
+    stop("q and p must have the same length")
+  }
+
+  if (any(q < 0) || any(p < 0)) {
+    stop("q and p must contain non-negative values")
+  }
+
+  # Check that distributions sum to 1 (with tolerance for floating point)
+  if (abs(sum(q) - 1) > 1e-6) {
+    stop("q must sum to 1 (current sum: ", sum(q), ")")
+  }
+
+  if (abs(sum(p) - 1) > 1e-6) {
+    stop("p must sum to 1 (current sum: ", sum(p), ")")
+  }
+
+  # Handle case where q[i] > 0 but p[i] = 0 (would give infinite divergence)
+  if (any(q > 0 & p == 0)) {
+    stop("p must be positive wherever q is positive (KL divergence undefined)")
+  }
+
+  # Calculate KL divergence, only for indices where q > 0
+  # (0 * log(0/p) = 0 by convention)
+  positive_q <- q > 0
+  kl <- sum(q[positive_q] * log(q[positive_q] / p[positive_q]))
+
+  return(kl)
+}
+
+#' @title calculate_hellinger_distance
+#' @description
+#' Calculate Hellinger distance between two probability distributions.
+#' The Hellinger distance is a symmetric measure bounded between 0 and 1,
+#' where 0 indicates identical distributions and 1 indicates distributions
+#' with no overlap.
+#'
+#' @param q Numeric vector representing the first probability distribution.
+#'   Must be non-negative and sum to 1.
+#' @param p Numeric vector representing the second probability distribution.
+#'   Must be non-negative, sum to 1, and have the same length as q.
+#'
+#' @return Numeric value between 0 and 1 representing the Hellinger distance.
+#'
+#' @details
+#' The Hellinger distance is calculated as:
+#' H(P, Q) = sqrt(0.5 * sum((sqrt(p) - sqrt(q))^2))
+#'
+#' Unlike KL divergence, Hellinger distance is symmetric: H(P, Q) = H(Q, P).
+#'
+#' @examples
+#' # Identical distributions
+#' p <- c(0.25, 0.25, 0.25, 0.25)
+#' calculate_hellinger_distance(p, p)  # Returns 0
+#'
+#' # Completely different distributions (no overlap)
+#' q <- c(1, 0, 0, 0)
+#' p <- c(0, 1, 0, 0)
+#' calculate_hellinger_distance(q, p)  # Returns 1
+#'
+#' @export
+calculate_hellinger_distance <- function(q, p) {
+  # Input validation
+  if (!is.numeric(q) || !is.numeric(p)) {
+    stop("q and p must be numeric vectors")
+  }
+
+  if (length(q) != length(p)) {
+    stop("q and p must have the same length")
+  }
+
+  if (any(q < 0) || any(p < 0)) {
+    stop("q and p must contain non-negative values")
+  }
+
+  # Check that distributions sum to 1 (with tolerance for floating point)
+  if (abs(sum(q) - 1) > 1e-6) {
+    stop("q must sum to 1 (current sum: ", sum(q), ")")
+  }
+
+  if (abs(sum(p) - 1) > 1e-6) {
+    stop("p must sum to 1 (current sum: ", sum(p), ")")
+  }
+
+  # Calculate Hellinger distance
+  hellinger <- sqrt(0.5 * sum((sqrt(q) - sqrt(p))^2))
+
+  return(hellinger)
+}
+
 #' @title calculate_silhouette_score
 #' @description
 #' Calculate silhouette score
@@ -95,6 +229,7 @@ calculate_mse_score <- function(predicted, data_frame) {
 #' @return Sparse adjacency matrix of the kNN graph
 #'
 #' @keywords internal
+#' @importFrom Matrix sparseMatrix
 compute_knn_graph <- function(coords, k, mutual = FALSE, distance_metric = "euclidean") {
 
   if (!is.matrix(coords) && !is.data.frame(coords)) {

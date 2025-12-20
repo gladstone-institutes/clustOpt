@@ -154,7 +154,8 @@ leverage_sketch <- function(input,
   # to avoid issues with functions that expect "RNA"
   input <- Seurat::DietSeurat(input, assays = "sketch")
 
-  return(RenameAssays(object = input, sketch = "RNA"))
+  # Suppress expected warning about key conflict when renaming sketch -> RNA
+  return(suppressWarnings(RenameAssays(object = input, sketch = "RNA")))
 }
 
 #' @title convert_seurat_to_bpcells
@@ -203,10 +204,12 @@ convert_seurat_to_bpcells <- function(seurat_obj, output_dir = NULL,
       next
     }
 
-    # Convert to v5 assay
-    seurat_obj[[assay_name]] <- as(
-      object = seurat_obj[[assay_name]],
-      Class = "Assay5"
+    # Convert to v5 assay (suppress expected warning about Assay -> Assay5)
+    suppressWarnings(
+      seurat_obj[[assay_name]] <- as(
+        object = seurat_obj[[assay_name]],
+        Class = "Assay5"
+      )
     )
     # Check if the counts matrix is already in BPCells format
     if (inherits(seurat_obj[[assay_name]]@layers$counts, "BPMatrix")) {

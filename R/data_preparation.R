@@ -390,11 +390,9 @@ train_random_forest <- function(res, df_list, train_clusters,
 
   rm(rf)
 
-  # Kullback Leibler divergence D_KL(Q || P) = sum(q * log(q/p))
-  KLdivergence <- sum(probs$Freq_q * log(probs$Freq_q / probs$Freq_p))
-
-  # Hellinger distance
-  Hellinger <- sqrt(0.5*sum((sqrt(probs$Freq_q) - sqrt(probs$Freq_p))^2))
+  # Calculate distribution divergence metrics
+  KLdivergence <- calculate_kl_divergence(probs$Freq_q, probs$Freq_p)
+  Hellinger <- calculate_hellinger_distance(probs$Freq_q, probs$Freq_p)
   # Evaluate clustering on data project on to the opposite PCs
   sil <- calculate_silhouette_score(
     predicted,

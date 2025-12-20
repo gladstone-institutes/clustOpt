@@ -23,6 +23,8 @@ Imports:
     ggplot2 (>= 3.3.5),
     purrr (>= 0.3.4),
     tibble (>= 3.2.1),
+    tidyr,
+    Matrix,
     methods,
     stats,
     rlang
@@ -38,10 +40,9 @@ Collate:
     'validation.R'
     'clust_opt.R'
     'visualization.R'
-Suggests: 
+Suggests:
     knitr,
     rmarkdown,
-    tidyr,
     testthat (>= 3.0.0),
     BPCells,
     glmGamPoi

@@ -97,6 +97,18 @@ DimPlot(input,
   coord_fixed()
 ```
 
+## How clustOpt Works
+
+clustOpt uses subject-wise leave-one-out cross-validation to find clustering resolutions that generalize across biological replicates:
+
+1. **PC Splitting**: Principal components are split into two independent sets (odd: PC1, PC3, PC5... and even: PC2, PC4, PC6...)
+2. **Training**: For each held-out subject, a Random Forest is trained on one PC set to predict cluster assignments
+3. **Evaluation**: Clustering quality metrics are calculated on the opposite PC set
+
+This separation ensures that the evaluation is performed on data independent from what was used for training, preventing overfitting and providing a more honest assessment of clustering reproducibility.
+
+## Running clustOpt
+
 Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. The repeated messages about "SeuratObject" are a side effect of using the future plan "multisession" and should not occur with other future plans.
 
 ```{r clustOpt, warning=FALSE, cache=TRUE}
@@ -125,62 +137,53 @@ plots[[3]]
 plots[[4]]
 ```
 
-The median silhouette scores across all cells start to fall off at 0.2, indicating that this clustering resolution is the most reproducible across all biological replicates. It is also possible to see a local maximum which would indicate a reproducible resolution.
+The silhouette score distribution shows how consistently clusters are separated across subjects at each resolution. Key patterns to look for:
+
+- **Declining scores at higher resolutions** indicate over-clustering, where cells are forced into clusters that don't represent distinct populations
+- **Low variance across subjects** (narrow boxes) indicates reproducible clustering
+- **Local maxima** may indicate resolutions that capture natural biological structure
+
+The optimal resolution typically shows high median silhouette scores with low variance across subjects, suggesting that the clustering captures cell populations that are consistently distinguishable regardless of which subjects are used for training. Use `suggest_resolution()` to identify the best resolution across all metrics.
 
 ## Additional Quality Metrics
 
 The `clust_opt()` function calculates several metrics beyond silhouette scores to help evaluate clustering quality. Let's examine the full output:
 
 ```{r metrics_overview}
-# View all available metrics
-colnames(cv_results)
-
 # Preview the data
 head(cv_results)
 ```
 
 ### Understanding the Metrics
 
-- **avg_width / cluster_median_widths**: Silhouette scores measuring cluster separation
-- **mse / mad**: Mean Squared Error and Mean Absolute Deviation measure within-cluster compactness
-- **KLdivergence / Hellinger**: Measure similarity between training and predicted cluster distributions
-- **modularity**: Graph-based metric measuring clustering coherence
+Each metric provides a different perspective on clustering quality:
 
-### Within-Cluster Compactness (MSE & MAD)
+- **avg_width**: Average silhouette score across all test cells. Measures how well-separated clusters are (range: -1 to +1, higher is better).
 
-Mean Squared Error (MSE) and Mean Absolute Deviation (MAD) measure how tightly cells are grouped around their cluster centroids. Lower values indicate more compact clusters. These metrics will generally decrease as resolution increases (more clusters = tighter groupings), so they are most useful for comparing resolutions with similar silhouette scores.
+- **cluster_median_widths**: Median silhouette score per cluster, then averaged. 
 
-```{r plot_mse}
-cv_results |>
-  drop_na() |>
-  ggplot(aes(x = as.factor(resolution), y = mse)) +
-  geom_boxplot() +
-  theme_bw() +
-  labs(
-    title = "Mean Squared Error by Resolution",
-    x = "Resolution",
-    y = "MSE"
-  )
-```
+- **KLdivergence**: Kullback-Leibler divergence D_KL(training || predicted). Measures how much the predicted cluster proportions in the test subject differ from the training data. Lower values indicate more reproducible clustering (0 = identical distributions).
 
-```{r plot_mad}
-cv_results |>
-  drop_na() |>
-  ggplot(aes(x = as.factor(resolution), y = mad)) +
-  geom_boxplot() +
-  theme_bw() +
-  labs(
-    title = "Mean Absolute Deviation by Resolution",
-    x = "Resolution",
-    y = "MAD"
-  )
-```
+- **Hellinger**: Hellinger distance between training and predicted cluster proportions. Similar to KL divergence but symmetric and bounded (0 to 1). Lower is better.
+
+- **modularity**: Measures clustering quality using a k-nearest neighbor graph (k=20). Higher values indicate that cells cluster with their assigned neighbors rather than cells from other clusters (range: -0.5 to 1, higher is better).
 
 ### Distribution Similarity (KL Divergence & Hellinger Distance)
 
-These metrics measure how similar the cluster proportions are between the training data and the predicted test data. Lower values indicate that the clustering is more reproducible across subjects. KL Divergence is asymmetric and can be more sensitive to rare clusters, while Hellinger Distance is symmetric and bounded between 0 and 1.
+These metrics assess whether cluster proportions are **reproducible across subjects**. When a subject is held out:
+
+- The Random Forest predicts cluster assignments for the test subject
+- The predicted cluster proportions are compared to the training cluster proportions
+
+**Lower values** indicate that different subjects produce similar cluster compositions at that resolution. This is important because a reproducible resolution should identify the same underlying cell populations regardless of which subjects are used for training.
+
+- **KL Divergence** is asymmetric and can approach infinity if a cluster is present in training but completely absent in predictions
+- **Hellinger Distance** is symmetric and bounded (0-1), providing a more stable comparison
+
+Both metrics use a pseudocount of 1 to handle clusters that may be missing in predictions.
 
 ```{r plot_kl}
+
 cv_results |>
   drop_na() |>
   ggplot(aes(x = as.factor(resolution), y = KLdivergence)) +
@@ -208,7 +211,12 @@ cv_results |>
 
 ### Graph-Based Clustering Quality (Modularity)
 
-Modularity measures how well the predicted clusters partition a k-nearest neighbor graph of the test data. Higher values indicate that cells within clusters are more connected to each other than to cells in other clusters. This provides a complementary view of cluster quality based on local neighborhood structure rather than global distances.
+Modularity measures whether the predicted cluster assignments partition the data's neighborhood graph better than expected by chance:
+
+1. A k-nearest neighbor graph (k=20) is constructed from the test data projected onto the clustering PCs
+2. Modularity compares the fraction of edges within clusters to what would be expected if edges were distributed randomly (while preserving node degrees)
+
+Modularity complements silhouette scores by capturing local connectivity patterns rather than global distances.
 
 ```{r plot_modularity}
 cv_results |>
@@ -225,18 +233,40 @@ cv_results |>
 
 ### Interpreting Multiple Metrics
 
-When selecting an optimal resolution, consider multiple metrics together:
+When selecting an optimal resolution, consider these guidelines:
 
-1. **Silhouette scores** (primary): Look for the resolution where scores begin to decline
-2. **KL Divergence / Hellinger**: Lower values indicate the clustering is reproducible across subjects
-3. **Modularity**: Higher values suggest better-defined cluster boundaries in the kNN graph
-4. **MSE/MAD**: Lower is better, but will always decrease with more clusters; useful for comparing similar resolutions
+1. **Silhouette scores**: Look for resolutions where scores are high and stable across subjects. Declining silhouette at higher resolutions often indicates over-clustering.
+
+2. **KL Divergence / Hellinger**: Lower values indicate reproducible cluster proportions across subjects. Increasing values at higher resolutions suggest that the clustering becomes subject-specific rather than capturing shared biology.
+
+3. **Modularity**: Higher values indicate predicted clusters that match the local neighborhood structure of the test data. Decreasing modularity at higher resolutions suggests clusters are becoming subject-specific and don't generalize well.
+
+
+We encourage you to look at the plots for all of the metrics before picking a resolution. The `suggest_resolution()` function uses a rank aggregation approach to help pick a resolution that performs well across all metrics when they conflict:
+
+```{r suggest_resolution}
+# Get resolution rankings across all metrics
+rankings <- suggest_resolution(cv_results)
+rankings
+```
+
+```{r plot_rankings}
+# Visualize individual metric ranks with mean rank overlay
+plot_rank_metrics(rankings)
+```
+
+```{r plot_mean_rank}
+# Visualize mean rank only
+plot_mean_rank(rankings)
+```
+
+
 
 ## Comparison to the cell annotations
 
 ```{r cluster}
 input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.2)
+input <- FindClusters(input, resolution = 0.1)
 
 DimPlot(input,
   group.by = "seurat_clusters",
@@ -244,7 +274,7 @@ DimPlot(input,
 )
 ```
 
-We can see that at the reproducible resolution there are 4 clusters, with the naive B cells being distinct enough to be separated into their own cluster based on the ability to detect them across the CV folds. In other words the naive B cells are present in high enough amounts across the subjects and transcriptomically distinct enough to be consistently detected.
+We can see that at the reproducible resolution there are 3 clusters, cooresponding to each celltype in the example dataset.
 
 For convenience we provide a function to calculate the adjusted rand index for any 2 metadata columns in a seurat object so that the clustOpt resolution parameter can be compared to clusters derived from other methods.
 
