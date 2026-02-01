@@ -230,6 +230,7 @@ calculate_mse_score <- function(predicted, data_frame) {
 #'
 #' @keywords internal
 #' @importFrom Matrix sparseMatrix
+#' @importFrom RcppAnnoy AnnoyEuclidean AnnoyManhattan AnnoyAngular
 compute_knn_graph <- function(coords, k, mutual = FALSE, distance_metric = "euclidean") {
 
   if (!is.matrix(coords) && !is.data.frame(coords)) {
@@ -240,32 +241,40 @@ compute_knn_graph <- function(coords, k, mutual = FALSE, distance_metric = "eucl
   n_nodes <- nrow(coords)
 
   if (k >= n_nodes) {
-    stop("k must be less than the number of nodes")
+    warning(sprintf("k (%d) >= number of nodes (%d), reducing k to %d", k, n_nodes, n_nodes - 1L))
+    k <- n_nodes - 1L
   }
 
-  # Calculate distance matrix
-  if (distance_metric == "euclidean") {
-    dist_matrix <- as.matrix(dist(coords, method = "euclidean"))
-  } else if (distance_metric == "manhattan") {
-    dist_matrix <- as.matrix(dist(coords, method = "manhattan"))
-  } else if (distance_metric == "cosine") {
-    # Cosine distance = 1 - cosine similarity
-    coords_norm <- coords / sqrt(rowSums(coords^2))
-    cosine_sim <- coords_norm %*% t(coords_norm)
-    dist_matrix <- 1 - cosine_sim
-  } else {
+  # Use RcppAnnoy for efficient approximate nearest neighbors (O(n log n))
+  # This avoids creating a full n×n distance matrix which causes integer
+  # overflow for large datasets (>65k cells)
+  ndim <- ncol(coords)
+
+  # RcppAnnoy exposes classes directly via Rcpp modules
+  annoy_index <- switch(
+    distance_metric,
+    "euclidean" = new(Class = AnnoyEuclidean, ndim),
+    "manhattan" = new(Class = AnnoyManhattan, ndim),
+    "cosine" = new(Class = AnnoyAngular, ndim),
     stop("Unsupported distance metric. Use 'euclidean', 'manhattan', or 'cosine'")
+  )
+
+  # Build the index - add all items first
+  for (i in seq_len(n_nodes)) {
+    annoy_index$addItem(i - 1L, as.numeric(coords[i, ]))
   }
+  annoy_index$build(50L)
 
-  # Set diagonal to infinity to avoid self-loops
-  diag(dist_matrix) <- Inf
-
-  # Find k nearest neighbors for each node
-  knn_indices <- t(apply(dist_matrix, 1, function(x) order(x)[1:k]))
+  # Query k+1 neighbors (first is self)
+  knn_indices <- matrix(0L, nrow = n_nodes, ncol = k)
+  for (i in seq_len(n_nodes)) {
+    neighbors <- annoy_index$getNNsByItem(i - 1L, k + 1L)
+    knn_indices[i, ] <- neighbors[-1] + 1L
+  }
 
   # Create adjacency matrix
   adj_matrix <- Matrix::sparseMatrix(
-    i = rep(1:n_nodes, each = k),
+    i = rep(seq_len(n_nodes), each = k),
     j = as.vector(t(knn_indices)),
     x = 1,
     dims = c(n_nodes, n_nodes)
@@ -273,7 +282,7 @@ compute_knn_graph <- function(coords, k, mutual = FALSE, distance_metric = "eucl
 
   if (mutual) {
     # Keep only mutual connections
-    adj_matrix <- adj_matrix * t(adj_matrix)
+    adj_matrix <- adj_matrix * Matrix::t(adj_matrix)
   }
 
   return(adj_matrix)

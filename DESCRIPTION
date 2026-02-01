@@ -27,7 +27,8 @@ Imports:
     Matrix,
     methods,
     stats,
-    rlang
+    rlang,
+    RcppAnnoy
 License: MIT + file LICENSE
 URL: https://gladstone-institutes.github.io/clustOpt, https://github.com/gladstone-institutes/clustOpt
 BugReports: https://github.com/gladstone-institutes/clustOpt/issues
