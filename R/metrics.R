@@ -160,10 +160,19 @@ calculate_silhouette_score <- function(predicted, data_frame) {
   }
 
   # Calculate silhouette scores
-  sil <- cluster::silhouette(
-    as.numeric(as.character(predicted)),
-    dist(data_frame)
-  )
+  sil <- tryCatch({
+    cluster::silhouette(
+      as.numeric(as.character(predicted)),
+      dist(data_frame)
+    )
+  }, error = function(e) {
+    warning(sprintf("Silhouette calculation failed: %s", e$message))
+    return(NULL)
+  })
+
+  if (is.null(sil)) {
+    return(list(avg_width = NA, group_median_width = NA))
+  }
 
   sil_summary <- summary(sil)
   return(list(
