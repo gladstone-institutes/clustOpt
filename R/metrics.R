@@ -174,7 +174,10 @@ calculate_silhouette_score <- function(predicted, data_frame) {
     return(list(avg_width = NA, group_median_width = NA))
   }
 
-  sil_summary <- summary(sil)
+  sil_summary <- tryCatch(summary(sil), error = function(e) NULL)
+  if (is.null(sil_summary) || is.atomic(sil_summary)) {
+    return(list(avg_width = NA, group_median_width = NA))
+  }
   return(list(
     avg_width = sil_summary$avg.width,
     group_median_width = median(sil_summary$clus.avg.widths)
