@@ -4,12 +4,13 @@
 \alias{split_pca_dimensions}
 \title{split_pca_dimensions}
 \usage{
-split_pca_dimensions(input, verbose = FALSE)
+split_pca_dimensions(input, verbose = 0)
 }
 \arguments{
 \item{input}{Seurat object}
 
-\item{verbose}{Output messages}
+\item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
+2 = detailed, 3 = includes Seurat output)}
 }
 \value{
 Seurat object with new PCA reductions

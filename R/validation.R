@@ -44,7 +44,7 @@ check_size <- function(input) {
 #' @export
 #'
 #' @importFrom dplyr group_by summarize filter n sym
-get_valid_samples <- function(input, subject_ids, min_cells) {
+get_valid_samples <- function(input, subject_ids, min_cells, verbose = 0) {
   # Summarize the number of cells per sample
   sample_summary <- input@meta.data |>
     dplyr::group_by(!!dplyr::sym(subject_ids)) |>
@@ -63,13 +63,15 @@ get_valid_samples <- function(input, subject_ids, min_cells) {
     removed_subjects <- insufficient_samples |>
       dplyr::pull(!!sym(subject_ids))
 
-    message(
-      "Removing ", nrow(insufficient_samples), " subject(s) with fewer than ",
-      min_cells, " cells:\n",
-      paste(paste0(removed_subjects, " (", insufficient_samples$cell_count, " cells)"),
-        collapse = "\n"
+    if (verbose >= 1) {
+      message(
+        "Removing ", nrow(insufficient_samples), " subject(s) with fewer than ",
+        min_cells, " cells:\n",
+        paste(paste0(removed_subjects, " (", insufficient_samples$cell_count, " cells)"),
+          collapse = "\n"
+        )
       )
-    )
+    }
   }
 
   if (nrow(sufficient_samples) < 3) {
@@ -85,13 +87,15 @@ get_valid_samples <- function(input, subject_ids, min_cells) {
     dplyr::pull(!!sym(subject_ids))
 
   # Return the list of valid subject names with confirmation message
-  message(
-    "Using ", nrow(sufficient_samples), " subject(s) that have at least ",
-    min_cells, " cells:\n",
-    paste(paste0(valid_samples, " (", sufficient_samples$cell_count, " cells)"),
-      collapse = "\n"
+  if (verbose >= 1) {
+    message(
+      "Using ", nrow(sufficient_samples), " subject(s) that have at least ",
+      min_cells, " cells:\n",
+      paste(paste0(valid_samples, " (", sufficient_samples$cell_count, " cells)"),
+        collapse = "\n"
+      )
     )
-  )
+  }
 
   return(valid_samples)
 }

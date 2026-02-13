@@ -4,7 +4,7 @@
 \alias{get_valid_samples}
 \title{get_valid_samples}
 \usage{
-get_valid_samples(input, subject_ids, min_cells)
+get_valid_samples(input, subject_ids, min_cells, verbose = 0)
 }
 \arguments{
 \item{input}{A Seurat object containing metadata}

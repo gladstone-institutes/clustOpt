@@ -13,7 +13,7 @@ clust_opt(
   subject_ids,
   res_range = c(0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
   within_batch = NA,
-  verbose = FALSE,
+  verbose = 0,
   num_trees = 1000,
   train_with = "even",
   min_cells = 50
@@ -40,7 +40,8 @@ slot). Sketching is supported for both data types.}
 \item{within_batch}{Batch variable, for a given sample only those with the
 same value for the batch variable will be used for training.}
 
-\item{verbose}{Output messages.}
+\item{verbose}{Integer verbosity level: 0 = silent, 1 = key milestones,
+2 = detailed progress, 3 = includes Seurat function output.}
 
 \item{num_trees}{Number of trees to use in the random forest.}
 

@@ -24,7 +24,8 @@ NULL
 #'   speed up sketching for very large datasets (default FALSE)
 #' @param output_dir Character. Directory path for storing on-disk count
 #'   matrices when `on_disk = TRUE`. If NULL, uses temporary directory
-#' @param verbose Logical. Whether to print progress messages (default TRUE)
+#' @param verbose Integer verbosity level: 0 = silent, 1 = milestones,
+#'   2 = detailed progress, 3 = includes Seurat function output (default 1)
 #'
 #' @return A Seurat object containing only the sketch assay, renamed to "RNA"
 #'   for compatibility with downstream functions
@@ -64,27 +65,27 @@ leverage_sketch <- function(input,
                             skip_norm = FALSE,
                             on_disk = FALSE,
                             output_dir = NULL,
-                            verbose = TRUE) {
+                            verbose = 1) {
   # Validate input parameters
   if (!(dtype %in% c("scRNA", "CyTOF"))) {
     stop("dtype must be either 'scRNA' or 'CyTOF'")
   }
 
   if (is.null(sketch_size)) {
-    if (verbose) {
+    if (verbose >= 2) {
       message("No sketch_size specified, defaulting to 10% of cells")
     }
     sketch_size <- ncol(input) * 0.1
   }
 
-  if (verbose) {
+  if (verbose >= 2) {
     message(sprintf(
       "Sketching %s data: %d -> %d cells",
       dtype, ncol(input), as.integer(sketch_size)
     ))
   }
   if (!is.null(input@meta.data[["leverage.score"]])) {
-    message("\nRemoving previously calculated leverage scores...")
+    if (verbose >= 1) message("\nRemoving previously calculated leverage scores...")
     input@meta.data[["leverage.score"]] <- NULL
   }
 
@@ -93,7 +94,7 @@ leverage_sketch <- function(input,
     if (!requireNamespace("BPCells", quietly = TRUE)) {
       stop("The BPCells package must be installed to use on_disk")
     }
-    if (verbose) {
+    if (verbose >= 2) {
       message("Converting to on-disk format before sketching...")
     }
     # Use the convert_seurat_to_bpcells function to convert to on-disk format
@@ -103,29 +104,29 @@ leverage_sketch <- function(input,
 
   # Handle data type-specific normalization
   if (dtype == "scRNA" && !skip_norm) {
-    if (verbose) {
+    if (verbose >= 2) {
       message("Normalizing scRNA-seq data...")
     }
-    input <- Seurat::NormalizeData(input)
+    input <- Seurat::NormalizeData(input, verbose = (verbose >= 3))
   } else if (dtype == "CyTOF") {
-    if (verbose) {
+    if (verbose >= 2) {
       message("CyTOF data detected - skipping normalization
               (expected to be arcsinh normalized)")
     }
   } else if (dtype == "scRNA" && skip_norm) {
-    if (verbose) {
+    if (verbose >= 2) {
       message("Skipping normalization for scRNA-seq data as requested")
     }
   }
 
   # Handle feature selection based on data type
   if (dtype == "scRNA") {
-    if (verbose) {
+    if (verbose >= 2) {
       message("Finding variable features for scRNA-seq data...")
     }
-    input <- Seurat::FindVariableFeatures(input)
+    input <- Seurat::FindVariableFeatures(input, verbose = (verbose >= 3))
     features_to_use <- Seurat::VariableFeatures(input)
-    if (verbose) {
+    if (verbose >= 2) {
       message(sprintf(
         "Using %d variable features for sketching",
         length(features_to_use)
@@ -134,7 +135,7 @@ leverage_sketch <- function(input,
   } else if (dtype == "CyTOF") {
     # For CyTOF, use all features since they represent a curated panel of markers
     features_to_use <- rownames(input)
-    if (verbose) {
+    if (verbose >= 2) {
       message(sprintf(
         "Using all %d features for CyTOF sketching",
         length(features_to_use)
@@ -147,7 +148,8 @@ leverage_sketch <- function(input,
     ncells = sketch_size,
     method = "LeverageScore",
     sketched.assay = "sketch",
-    features = features_to_use
+    features = features_to_use,
+    verbose = (verbose >= 3)
   )
   Seurat::DefaultAssay(input) <- "sketch"
   # Return only the sketch assay, renaming it to "RNA"

@@ -19,7 +19,8 @@ NULL
 #' 200,000 cells is sketched to 10\% of the cells.
 #' @param subject_ids Metadata field that identifies unique subjects.
 #' @param res_range Range of resolutions to test.
-#' @param verbose Output messages.
+#' @param verbose Integer verbosity level: 0 = silent, 1 = key milestones,
+#' 2 = detailed progress, 3 = includes Seurat function output.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
 #' @param num_trees Number of trees to use in the random forest.
@@ -80,14 +81,14 @@ clust_opt <- function(input,
                         0.2, 0.4, 0.6, 0.8, 1, 1.2
                       ),
                       within_batch = NA,
-                      verbose = FALSE,
+                      verbose = 0,
                       num_trees = 1000,
                       train_with = "even",
                       min_cells = 50) {
   # Make sure a seed is set, only setting if the user has not set one
   if (!exists(".Random.seed", envir = .GlobalEnv)) {
     t <- as.integer(Sys.time())
-    message("Setting seed: ", t)
+    if (verbose >= 1) message("Setting seed: ", t)
     set.seed(t)
   }
 
@@ -101,15 +102,16 @@ clust_opt <- function(input,
 
   if (!skip_sketch) {
     if (check_size(input) || !is.null(sketch_size)) {
-      message("Sketching input data")
-      input <- leverage_sketch(input, sketch_size, dtype)
+      if (verbose >= 1) message("Sketching input data")
+      input <- leverage_sketch(input, sketch_size, dtype, verbose = verbose)
     } else {
-      message("Input is small enough to run with all cells")
+      if (verbose >= 1) message("Input is small enough to run with all cells")
     }
   }
 
 
-  sample_names <- get_valid_samples(input, subject_ids, min_cells)
+  sample_names <- get_valid_samples(input, subject_ids, min_cells,
+                                    verbose = verbose)
   if (is.null(sample_names)) {
     stop(paste0(
       "Unable to perform cluster resolution optimization for this data. ",
@@ -119,10 +121,12 @@ clust_opt <- function(input,
 
   # Get every combination of test sample and resolution
   runs <- expand.grid(sample_names, res_range)
-  message(paste0(
-    "Found ", nrow(runs),
-    " combinations of test subject and resolution"
-  ))
+  if (verbose >= 1) {
+    message(paste0(
+      "Found ", nrow(runs),
+      " combinations of test subject and resolution"
+    ))
+  }
 
   # Set up progress logging
   progressr::handlers("progress")
@@ -130,8 +134,8 @@ clust_opt <- function(input,
 
   res <- NULL
   for (sam in unique(runs[, 1])) {
-    message(paste0("Holdout subject: ", sam))
-    if (verbose) {
+    if (verbose >= 1) message(paste0("Holdout subject: ", sam))
+    if (verbose >= 2) {
       message(paste0("Preparing training data.."))
     }
 
@@ -140,10 +144,11 @@ clust_opt <- function(input,
       dtype = dtype,
       subject_ids = subject_ids,
       within_batch = within_batch,
-      test_id = sam
+      test_id = sam,
+      verbose = verbose
     )
 
-    if (verbose) {
+    if (verbose >= 2) {
       message(paste0("Preparing test data.."))
     }
 
@@ -151,13 +156,14 @@ clust_opt <- function(input,
       input = input,
       dtype = dtype,
       subject_ids = subject_ids,
-      test_id = sam
+      test_id = sam,
+      verbose = verbose
     )
 
     if (dtype == "scRNA") {
       train <- Seurat::RunPCA(train,
         npcs = ndim,
-        verbose = FALSE,
+        verbose = (verbose >= 3),
         assay = "SCT"
       )
 
@@ -173,34 +179,35 @@ clust_opt <- function(input,
       # Create 2 separate PCA reductions
       train <- split_pca_dimensions(train, verbose)
 
-      if (verbose) {
+      if (verbose >= 2) {
         message(sprintf("Clustering with %s", clust_pcs))
       }
 
       train <- Seurat::FindNeighbors(
         object = train,
         dims = seq_len(ncol(train@reductions[[clust_pcs]]@cell.embeddings)),
-        verbose = FALSE,
+        verbose = (verbose >= 3),
         reduction = clust_pcs
       )
 
       train <- Seurat::FindClusters(
         object = train,
         resolution = res_range,
-        verbose = FALSE
+        verbose = (verbose >= 3)
       )
     } else {
-      train <- Seurat::ScaleData(train, features = NULL, verbose = verbose)
+      train <- Seurat::ScaleData(train, features = NULL, verbose = (verbose >= 3))
       train <- Seurat::FindVariableFeatures(train,
-        selection.method = "vst", nfeatures = ndim
+        selection.method = "vst", nfeatures = ndim,
+        verbose = (verbose >= 3)
       )
       train <- Seurat::RunPCA(train,
         npcs = ndim,
         approx = FALSE,
-        verbose = verbose
+        verbose = (verbose >= 3)
       )
 
-      test <- Seurat::ScaleData(test, features = NULL, verbose = verbose)
+      test <- Seurat::ScaleData(test, features = NULL, verbose = (verbose >= 3))
 
       clust_pcs <- switch(train_with,
         odd = "even_pca",
@@ -215,17 +222,17 @@ clust_opt <- function(input,
       train <- Seurat::FindNeighbors(
         object = train,
         dims = seq_len(ncol(train@reductions[[clust_pcs]]@cell.embeddings)),
-        verbose = FALSE,
+        verbose = (verbose >= 3),
         reduction = clust_pcs
       )
 
       train <- Seurat::FindClusters(
         object = train,
         resolution = res_range,
-        verbose = FALSE
+        verbose = (verbose >= 3)
       )
     }
-    if (verbose) {
+    if (verbose >= 2) {
       message("Clustering complete..")
     }
 

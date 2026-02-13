@@ -4,7 +4,7 @@
 \alias{prep_test}
 \title{prep_test}
 \usage{
-prep_test(input, subject_ids, dtype = "scRNA", test_id)
+prep_test(input, subject_ids, dtype = "scRNA", test_id, verbose = 0)
 }
 \arguments{
 \item{input}{Seurat object}

@@ -25,7 +25,8 @@ project_pca(
 
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF"}
 
-\item{verbose}{print messages}
+\item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
+2 = detailed, 3 = includes Seurat output)}
 }
 \value{
 A list containing two elements: `train_df` and `test_df`. Each is a matrix

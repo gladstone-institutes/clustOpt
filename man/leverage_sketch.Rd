@@ -11,7 +11,7 @@ leverage_sketch(
   skip_norm = FALSE,
   on_disk = FALSE,
   output_dir = NULL,
-  verbose = TRUE
+  verbose = 1
 )
 }
 \arguments{
@@ -34,7 +34,8 @@ speed up sketching for very large datasets (default FALSE)}
 \item{output_dir}{Character. Directory path for storing on-disk count
 matrices when `on_disk = TRUE`. If NULL, uses temporary directory}
 
-\item{verbose}{Logical. Whether to print progress messages (default TRUE)}
+\item{verbose}{Integer verbosity level: 0 = silent, 1 = milestones,
+2 = detailed progress, 3 = includes Seurat function output (default 1)}
 }
 \value{
 A Seurat object containing only the sketch assay, renamed to "RNA"

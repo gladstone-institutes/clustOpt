@@ -4,7 +4,14 @@
 \alias{prep_train}
 \title{prep_train}
 \usage{
-prep_train(input, subject_ids, dtype = "scRNA", within_batch = NA, test_id)
+prep_train(
+  input,
+  subject_ids,
+  dtype = "scRNA",
+  within_batch = NA,
+  test_id,
+  verbose = 0
+)
 }
 \arguments{
 \item{input}{Seurat object}

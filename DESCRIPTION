@@ -32,7 +32,7 @@ Imports:
 License: MIT + file LICENSE
 URL: https://gladstone-institutes.github.io/clustOpt, https://github.com/gladstone-institutes/clustOpt
 BugReports: https://github.com/gladstone-institutes/clustOpt/issues
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Encoding: UTF-8
 Collate:
     'metrics.R'

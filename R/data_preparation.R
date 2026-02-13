@@ -12,13 +12,14 @@ NULL
 #' dimensions into 2 sets odd and even PCs.
 #'
 #' @param input Seurat object
-#' @param verbose Output messages
+#' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
+#' 2 = detailed, 3 = includes Seurat output)
 #'
 #' @return Seurat object with new PCA reductions
 #' @keywords internal
 #' @import Seurat
 split_pca_dimensions <- function(input,
-                                 verbose = FALSE) {
+                                 verbose = 0) {
   if (!inherits(input, "Seurat")) {
     stop("Input must be a Seurat object")
   }
@@ -27,7 +28,7 @@ split_pca_dimensions <- function(input,
   }
 
 
-  if (verbose) {
+  if (verbose >= 2) {
     message("Splitting PCs into 2 sets odd and even")
   }
   pca <- input@reductions$pca
@@ -81,7 +82,8 @@ prep_train <- function(input,
                        subject_ids,
                        dtype = "scRNA",
                        within_batch = NA,
-                       test_id) {
+                       test_id,
+                       verbose = 0) {
   if (dtype == "scRNA") {
     # If within_batch is provided, then use only training samples from the
     # same batch
@@ -105,7 +107,7 @@ prep_train <- function(input,
       # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = "RNA",
-        verbose = FALSE
+        verbose = (verbose >= 3)
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
       return(train_seurat)
@@ -121,7 +123,7 @@ prep_train <- function(input,
       # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = Seurat::DefaultAssay(train_seurat),
-        verbose = FALSE
+        verbose = (verbose >= 3)
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
       return(train_seurat)
@@ -175,7 +177,8 @@ prep_train <- function(input,
 prep_test <- function(input,
                       subject_ids,
                       dtype = "scRNA",
-                      test_id) {
+                      test_id,
+                      verbose = 0) {
   if (dtype == "scRNA") {
     Seurat::Idents(input) <- subject_ids
     test_cells <- Seurat::WhichCells(object = input, idents = test_id)
@@ -183,7 +186,7 @@ prep_test <- function(input,
 
     test_seurat <- Seurat::SCTransform(test_seurat,
       assay = "RNA",
-      verbose = FALSE,
+      verbose = (verbose >= 3),
       variable.features.n = length(rownames(test_seurat)),
       return.only.var.genes = FALSE,
       min_cells = 1
@@ -212,7 +215,8 @@ prep_test <- function(input,
 #' "odd_pca" or "even_pca"
 #' @param clust_pcs Which reduction was used for clustering
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF"
-#' @param verbose print messages
+#' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
+#' 2 = detailed, 3 = includes Seurat output)
 #'
 #' @details
 #' Identifies features that are common between the training
@@ -247,7 +251,7 @@ project_pca <- function(train_seurat,
     stop("Both train_seurat and test_seurat must be Seurat objects")
   }
 
-  if (verbose) {
+  if (verbose >= 2) {
     message(sprintf("Training with data projected onto %s", train_with_pcs))
   }
 
@@ -268,11 +272,13 @@ project_pca <- function(train_seurat,
     assay = assay_id,
     layer = "scale.data"
   )))
-  message(sprintf(
-    "Found %d (%.2f%%) shared genes used for projecting test data",
-    n_shared_genes,
-    (n_shared_genes / total_genes) * 100
-  ))
+  if (verbose >= 2) {
+    message(sprintf(
+      "Found %d (%.2f%%) shared genes used for projecting test data",
+      n_shared_genes,
+      (n_shared_genes / total_genes) * 100
+    ))
+  }
 
   if ((n_shared_genes / total_genes) * 100 < 80) {
     warning("Less than 80% of genes available for projection.")
@@ -298,7 +304,7 @@ project_pca <- function(train_seurat,
 
     t(scale_data) %*% loadings_common_features
   }
-  if (verbose) {
+  if (verbose >= 2) {
     message(sprintf("Evaluating test data projected onto %s", clust_pcs))
   }
   project_data_for_eval <- function(seurat_obj, assay_id) {
