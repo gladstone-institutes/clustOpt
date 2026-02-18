@@ -4,12 +4,19 @@
 \alias{plot_rank_metrics}
 \title{plot_rank_metrics}
 \usage{
-plot_rank_metrics(rank_results, highlight_best = TRUE, base_size = 12)
+plot_rank_metrics(
+  rank_results,
+  method = "rank",
+  highlight_best = TRUE,
+  base_size = 12
+)
 }
 \arguments{
-\item{rank_results}{A data.frame output from \code{\link{suggest_resolution}}
-containing rank columns (rank_sil, rank_kl, rank_hellinger, rank_modularity,
-mean_rank).}
+\item{rank_results}{A data.frame output from \code{\link{suggest_resolution}}.}
+
+\item{method}{Character; \code{"rank"} (default) for direct rank aggregation,
+or \code{"curvature"} for curvature-based ranking. The curvature method
+requires at least 3 resolutions.}
 
 \item{highlight_best}{Logical; if TRUE (default), highlight the resolution with
 the lowest mean rank with a vertical dashed line.}
@@ -20,9 +27,8 @@ the lowest mean rank with a vertical dashed line.}
 A ggplot object
 }
 \description{
-Create a publication-quality plot showing individual metric ranks and mean rank
-across clustering resolutions. This visualization helps identify optimal resolutions
-by comparing how each resolution ranks across different quality metrics.
+Create a publication-quality plot showing individual metric ranks
+and mean rank across clustering resolutions.
 }
 \details{
 The plot shows:
@@ -37,8 +43,10 @@ Uses a colorblind-friendly palette (Okabe-Ito) for metric colors.
 }
 \examples{
 \dontrun{
+cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
 rankings <- suggest_resolution(cv_results)
 plot_rank_metrics(rankings)
+plot_rank_metrics(rankings, method = "curvature")
 }
 
 }

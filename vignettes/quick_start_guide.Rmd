@@ -242,22 +242,19 @@ When selecting an optimal resolution, consider these guidelines:
 3. **Modularity**: Higher values indicate predicted clusters that match the local neighborhood structure of the test data. Decreasing modularity at higher resolutions suggests clusters are becoming subject-specific and don't generalize well.
 
 
-We encourage you to look at the plots for all of the metrics before picking a resolution. The `suggest_resolution()` function uses a rank aggregation approach to help pick a resolution that performs well across all metrics when they conflict:
+We encourage you to look at the plots for all of the metrics before picking a resolution. The `suggest_resolution()` function computes two complementary ranking approaches: a direct rank aggregation of median metric values, and a curvature-based local optima detection using second-order finite differences. Both are returned in a single data frame for comparison.
 
 ```{r suggest_resolution}
-# Get resolution rankings across all metrics
 rankings <- suggest_resolution(cv_results)
 rankings
 ```
 
 ```{r plot_rankings}
-# Visualize individual metric ranks with mean rank overlay
 plot_rank_metrics(rankings)
 ```
 
 ```{r plot_mean_rank}
-# Visualize mean rank only
-plot_mean_rank(rankings)
+plot_mean_rank(rankings, method = "rank")
 ```
 
 
@@ -266,7 +263,7 @@ plot_mean_rank(rankings)
 
 ```{r cluster}
 input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.1)
+input <- FindClusters(input, resolution = 0.04)
 
 DimPlot(input,
   group.by = "seurat_clusters",

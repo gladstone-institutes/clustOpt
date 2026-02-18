@@ -7,57 +7,30 @@
 suggest_resolution(cv_results)
 }
 \arguments{
-\item{cv_results}{A data.frame output from \code{\link{clust_opt}} containing
-cross-validation results with columns: resolution, avg_width, KLdivergence,
-Hellinger, and modularity.}
+\item{cv_results}{Data frame from \code{\link{clust_opt}} cross-validation.}
 }
 \value{
-A tibble with columns:
-  \itemize{
-    \item \code{resolution}: The resolution parameter values
-    \item \code{median_sil}: Median silhouette score (avg_width)
-    \item \code{median_kl}: Median KL divergence
-    \item \code{median_hellinger}: Median Hellinger distance
-    \item \code{median_modularity}: Median modularity score
-    \item \code{rank_sil}: Rank by silhouette (higher is better, ranked descending)
-    \item \code{rank_kl}: Rank by KL divergence (lower is better)
-    \item \code{rank_hellinger}: Rank by Hellinger distance (lower is better)
-    \item \code{rank_modularity}: Rank by modularity (higher is better, ranked descending)
-    \item \code{mean_rank}: Average of the individual ranks
-  }
-  The tibble is sorted by mean_rank (ascending), with the best resolution first.
+A data frame with one row per resolution containing summarized
+  median metrics, rank-based columns (\code{rank_sil}, \code{rank_kl},
+  \code{rank_hellinger}, \code{rank_modularity}, \code{mean_rank}),
+  curvature-based columns (\code{curvature_rank_sil}, etc.,
+  \code{curvature_mean_rank}), and \code{upper_Hell_95ci}. Sorted by
+  \code{mean_rank} ascending.
 }
 \description{
-Aggregate multiple clustering quality metrics using rank-based analysis to
-suggest optimal clustering resolution(s). This function computes median values
-for each metric across cross-validation folds, ranks resolutions by each metric,
-and calculates a mean rank for comprehensive comparison.
-}
-\details{
-The rank aggregation approach helps identify resolutions that perform well across
-multiple metrics. When individual metrics conflict, the mean rank provides a
-balanced recommendation.
-
-Metric interpretations:
-\itemize{
-  \item Silhouette: Higher is better (well-separated clusters)
-  \item KL Divergence: Lower is better (reproducible cluster proportions)
-  \item Hellinger Distance: Lower is better (reproducible cluster proportions)
-  \item Modularity: Higher is better (well-defined graph clusters)
-}
+Compute two complementary resolution rankings and return them in a single
+data frame: a direct rank aggregation of median metric values, and a
+curvature-based local optima detection using second-order finite differences.
 }
 \examples{
 \dontrun{
 cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
-
-# Get resolution recommendations
 rankings <- suggest_resolution(cv_results)
-
-# View top recommendations
-head(rankings)
+rankings
 }
 
 }
 \seealso{
-\code{\link{clust_opt}}, \code{\link{plot_rank_metrics}}
+\code{\link{clust_opt}}, \code{\link{plot_rank_metrics}},
+  \code{\link{plot_mean_rank}}
 }

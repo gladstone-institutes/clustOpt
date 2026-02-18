@@ -73,6 +73,7 @@ reference:
   contents:
   - create_sil_plots
   - sil_summary
+  - summarize_cv_metrics
   - suggest_resolution
   - plot_rank_metrics
   - plot_mean_rank

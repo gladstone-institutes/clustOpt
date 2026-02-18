@@ -4,13 +4,22 @@
 \alias{plot_mean_rank}
 \title{plot_mean_rank}
 \usage{
-plot_mean_rank(rank_results, highlight_best = TRUE, base_size = 12)
+plot_mean_rank(
+  rank_results,
+  method = "rank",
+  highlight_best = TRUE,
+  base_size = 12
+)
 }
 \arguments{
 \item{rank_results}{A data.frame output from \code{\link{suggest_resolution}}.}
 
+\item{method}{Character; \code{"rank"} (default) for direct rank aggregation,
+or \code{"curvature"} for curvature-based ranking. The curvature method
+requires at least 3 resolutions.}
+
 \item{highlight_best}{Logical; if TRUE (default), highlight the best resolution
-with a larger outlined point.}
+with a vertical dashed line.}
 
 \item{base_size}{Numeric; base font size for theme. Default is 12.}
 }
@@ -23,8 +32,10 @@ Lower mean rank indicates better overall performance across all metrics.
 }
 \examples{
 \dontrun{
+cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
 rankings <- suggest_resolution(cv_results)
 plot_mean_rank(rankings)
+plot_mean_rank(rankings, method = "curvature")
 }
 
 }

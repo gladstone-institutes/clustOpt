@@ -1,5 +1,6 @@
 #' @include metrics.R
 #' @importFrom rlang .data
+#' @importFrom dplyr all_of
 #' @importFrom tidyr drop_na pivot_longer
 #' @importFrom ggplot2 ggplot aes geom_boxplot theme_bw labs geom_errorbar
 #' @importFrom ggplot2 geom_point geom_line scale_color_manual scale_y_reverse
@@ -90,91 +91,121 @@ create_sil_plots <- function(sil_dist) {
 
   list(plot1, plot2, plot3, plot4)
 }
+ 
+#' Compute second-order finite differences for a numeric vector
+#'
+#' @param x Numeric vector, ordered by resolution.
+#' @return Numeric vector of same length, with NA at endpoints.
+#' @keywords internal
+second_order_diff <- function(x) {
+  n <- length(x)
+  result <- rep(NA_real_, n)
+  if (n < 3) return(result)
+  for (i in 2:(n - 1)) {
+    result[i] <- x[i] - (x[i + 1] + x[i - 1]) / 2
+  }
+  result
+}
+
+#' @title summarize_cv_metrics
+#' @description Summarize cross-validation metrics across resolutions.
+#' @param cv_results Data frame from clust_opt cross-validation.
+#' @return Summarized data frame with one row per resolution.
+#' @export
+summarize_cv_metrics <- function(cv_results) {
+  cv_results |>
+    dplyr::group_by(.data$resolution) |>
+    dplyr::summarize(
+      median_score            = median(.data$avg_width, na.rm = TRUE),
+      median_KLD_score        = median(.data$KLdivergence, na.rm = TRUE),
+      median_Hell_score       = median(.data$Hellinger, na.rm = TRUE),
+      median_modularity_score = median(.data$modularity, na.rm = TRUE),
+      standard_error_Hell_score = sd(.data$Hellinger, na.rm = TRUE) /
+        sqrt(length(.data$Hellinger)),
+      .groups = "drop"
+    )
+}
 
 #' @title suggest_resolution
 #' @description
-#' Aggregate multiple clustering quality metrics using rank-based analysis to
-#' suggest optimal clustering resolution(s). This function computes median values
-#' for each metric across cross-validation folds, ranks resolutions by each metric,
-#' and calculates a mean rank for comprehensive comparison.
+#' Compute two complementary resolution rankings and return them in a single
+#' data frame: a direct rank aggregation of median metric values, and a
+#' curvature-based local optima detection using second-order finite differences.
 #'
-#' @param cv_results A data.frame output from \code{\link{clust_opt}} containing
-#'   cross-validation results with columns: resolution, avg_width, KLdivergence,
-#'   Hellinger, and modularity.
-#'
-#' @return A tibble with columns:
-#'   \itemize{
-#'     \item \code{resolution}: The resolution parameter values
-#'     \item \code{median_sil}: Median silhouette score (avg_width)
-#'     \item \code{median_kl}: Median KL divergence
-#'     \item \code{median_hellinger}: Median Hellinger distance
-#'     \item \code{median_modularity}: Median modularity score
-#'     \item \code{rank_sil}: Rank by silhouette (higher is better, ranked descending)
-#'     \item \code{rank_kl}: Rank by KL divergence (lower is better)
-#'     \item \code{rank_hellinger}: Rank by Hellinger distance (lower is better)
-#'     \item \code{rank_modularity}: Rank by modularity (higher is better, ranked descending)
-#'     \item \code{mean_rank}: Average of the individual ranks
-#'   }
-#'   The tibble is sorted by mean_rank (ascending), with the best resolution first.
-#'
-#' @details
-#' The rank aggregation approach helps identify resolutions that perform well across
-#' multiple metrics. When individual metrics conflict, the mean rank provides a
-#' balanced recommendation.
-#'
-#' Metric interpretations:
-#' \itemize{
-#'   \item Silhouette: Higher is better (well-separated clusters)
-#'   \item KL Divergence: Lower is better (reproducible cluster proportions)
-#'   \item Hellinger Distance: Lower is better (reproducible cluster proportions)
-#'   \item Modularity: Higher is better (well-defined graph clusters)
-#' }
+#' @param cv_results Data frame from \code{\link{clust_opt}} cross-validation.
+#' @return A data frame with one row per resolution containing summarized
+#'   median metrics, rank-based columns (\code{rank_sil}, \code{rank_kl},
+#'   \code{rank_hellinger}, \code{rank_modularity}, \code{mean_rank}),
+#'   curvature-based columns (\code{curvature_rank_sil}, etc.,
+#'   \code{curvature_mean_rank}), and \code{upper_Hell_95ci}. Sorted by
+#'   \code{mean_rank} ascending.
 #'
 #' @examples
 #' \dontrun{
 #' cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
-#'
-#' # Get resolution recommendations
 #' rankings <- suggest_resolution(cv_results)
-#'
-#' # View top recommendations
-#' head(rankings)
+#' rankings
 #' }
 #'
-#' @seealso \code{\link{clust_opt}}, \code{\link{plot_rank_metrics}}
+#' @seealso \code{\link{clust_opt}}, \code{\link{plot_rank_metrics}},
+#'   \code{\link{plot_mean_rank}}
 #' @export
 suggest_resolution <- function(cv_results) {
-  cv_results |>
-    tidyr::drop_na() |>
-    dplyr::group_by(.data$resolution) |>
-    dplyr::summarize(
-      median_sil = stats::median(.data$avg_width),
-      median_kl = stats::median(.data$KLdivergence),
-      median_hellinger = stats::median(.data$Hellinger),
-      median_modularity = stats::median(.data$modularity)
-    ) |>
-    dplyr::mutate(
-      rank_sil = rank(-.data$median_sil),
-      rank_kl = rank(.data$median_kl),
-      rank_hellinger = rank(.data$median_hellinger),
-      rank_modularity = rank(-.data$median_modularity)
-    ) |>
-    dplyr::mutate(
-      mean_rank = (.data$rank_sil + .data$rank_kl +
-                     .data$rank_hellinger + .data$rank_modularity) / 4
-    ) |>
-    dplyr::arrange(.data$mean_rank)
+
+  # --- Summarize CV folds per resolution ---
+  summ <- summarize_cv_metrics(cv_results)
+  summ[is.na(summ)] <- 0
+
+  # --- Upper confidence bound on Hellinger ---
+  summ$upper_Hell_95ci <- summ$median_Hell_score +
+    1.96 * summ$standard_error_Hell_score
+
+  # --- Rank-based ranking (direct ranking of median values) ---
+  # Silhouette & modularity: higher is better -> rank descending
+
+  # KL & Hellinger: lower is better -> rank ascending
+  summ$rank_sil        <- rank(-summ$median_score)
+  summ$rank_kl         <- rank(summ$median_KLD_score)
+  summ$rank_hellinger  <- rank(summ$median_Hell_score)
+  summ$rank_modularity <- rank(-summ$median_modularity_score)
+  summ$mean_rank <- rowMeans(
+    cbind(summ$rank_sil, summ$rank_kl,
+          summ$rank_hellinger, summ$rank_modularity)
+  )
+
+  # --- Curvature-based ranking (second-order finite differences) ---
+  curv_sil  <- second_order_diff(summ$median_score)
+  curv_kl   <- second_order_diff(summ$median_KLD_score)
+  curv_hell <- second_order_diff(summ$median_Hell_score)
+  curv_mod  <- second_order_diff(summ$median_modularity_score)
+
+  # Silhouette, KL, modularity: want local peaks -> rank descending
+  # Hellinger: want local minima -> rank ascending
+  summ$curvature_rank_sil        <- rank(-curv_sil, na.last = "keep")
+  summ$curvature_rank_kl         <- rank(-curv_kl, na.last = "keep")
+  summ$curvature_rank_hellinger  <- rank(curv_hell, na.last = "keep")
+  summ$curvature_rank_modularity <- rank(-curv_mod, na.last = "keep")
+  summ$curvature_mean_rank <- rowMeans(
+    cbind(summ$curvature_rank_sil, summ$curvature_rank_kl,
+          summ$curvature_rank_hellinger, summ$curvature_rank_modularity),
+    na.rm = TRUE
+  )
+
+  # --- Sort by rank-based mean_rank ---
+  summ <- summ[order(summ$mean_rank), ]
+  rownames(summ) <- NULL
+  summ
 }
 
 #' @title plot_rank_metrics
 #' @description
-#' Create a publication-quality plot showing individual metric ranks and mean rank
-#' across clustering resolutions. This visualization helps identify optimal resolutions
-#' by comparing how each resolution ranks across different quality metrics.
+#' Create a publication-quality plot showing individual metric ranks
+#' and mean rank across clustering resolutions.
 #'
-#' @param rank_results A data.frame output from \code{\link{suggest_resolution}}
-#'   containing rank columns (rank_sil, rank_kl, rank_hellinger, rank_modularity,
-#'   mean_rank).
+#' @param rank_results A data.frame output from \code{\link{suggest_resolution}}.
+#' @param method Character; \code{"rank"} (default) for direct rank aggregation,
+#'   or \code{"curvature"} for curvature-based ranking. The curvature method
+#'   requires at least 3 resolutions.
 #' @param highlight_best Logical; if TRUE (default), highlight the resolution with
 #'   the lowest mean rank with a vertical dashed line.
 #' @param base_size Numeric; base font size for theme. Default is 12.
@@ -194,25 +225,49 @@ suggest_resolution <- function(cv_results) {
 #'
 #' @examples
 #' \dontrun{
+#' cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
 #' rankings <- suggest_resolution(cv_results)
 #' plot_rank_metrics(rankings)
+#' plot_rank_metrics(rankings, method = "curvature")
 #' }
 #'
 #' @seealso \code{\link{suggest_resolution}}, \code{\link{plot_mean_rank}}
 #' @export
-plot_rank_metrics <- function(rank_results, highlight_best = TRUE, base_size = 12) {
-  # Reshape data for plotting - include mean_rank as a metric
+plot_rank_metrics <- function(rank_results, method = "rank",
+                              highlight_best = TRUE, base_size = 12) {
+  method <- match.arg(method, c("rank", "curvature"))
+
+  if (method == "curvature" && nrow(rank_results) < 3) {
+    stop("At least 3 resolutions are required for curvature-based ranking.")
+  }
+
+  # Select column prefix based on method
+  if (method == "rank") {
+    rank_cols <- c("rank_sil", "rank_kl", "rank_hellinger",
+                   "rank_modularity", "mean_rank")
+    mean_col <- "mean_rank"
+    n_ranks <- nrow(rank_results)
+  } else {
+    rank_cols <- c("curvature_rank_sil", "curvature_rank_kl",
+                   "curvature_rank_hellinger", "curvature_rank_modularity",
+                   "curvature_mean_rank")
+    mean_col <- "curvature_mean_rank"
+    n_ranks <- nrow(rank_results) - 2
+  }
+
+  # Reshape data for plotting
   plot_data <- rank_results |>
     tidyr::pivot_longer(
-      cols = c("rank_sil", "rank_kl", "rank_hellinger", "rank_modularity", "mean_rank"),
+      cols = dplyr::all_of(rank_cols),
       names_to = "metric",
       values_to = "rank"
     ) |>
     dplyr::mutate(
       resolution = as.factor(.data$resolution),
       metric = factor(.data$metric,
-        levels = c("rank_sil", "rank_kl", "rank_hellinger", "rank_modularity", "mean_rank"),
-        labels = c("Silhouette", "KL Divergence", "Hellinger", "Modularity", "Mean Rank")
+        levels = rank_cols,
+        labels = c("Silhouette", "KL Divergence", "Hellinger",
+                   "Modularity", "Mean Rank")
       )
     )
 
@@ -225,34 +280,20 @@ plot_rank_metrics <- function(rank_results, highlight_best = TRUE, base_size = 1
     "Mean Rank" = "black"
   )
 
-  # Set line widths - thicker for mean rank
   linewidths <- c(
-    "Silhouette" = 0.8,
-    "KL Divergence" = 0.8,
-    "Hellinger" = 0.8,
-    "Modularity" = 0.8,
-    "Mean Rank" = 1.2
+    "Silhouette" = 0.8, "KL Divergence" = 0.8,
+    "Hellinger" = 0.8, "Modularity" = 0.8, "Mean Rank" = 1.2
   )
 
-  # Set point sizes - larger for mean rank
   point_sizes <- c(
-    "Silhouette" = 2.5,
-    "KL Divergence" = 2.5,
-    "Hellinger" = 2.5,
-    "Modularity" = 2.5,
-    "Mean Rank" = 3.5
+    "Silhouette" = 2.5, "KL Divergence" = 2.5,
+    "Hellinger" = 2.5, "Modularity" = 2.5, "Mean Rank" = 3.5
   )
 
-  # Set alpha - more opaque for mean rank
   alphas <- c(
-    "Silhouette" = 0.7,
-    "KL Divergence" = 0.7,
-    "Hellinger" = 0.7,
-    "Modularity" = 0.7,
-    "Mean Rank" = 1.0
+    "Silhouette" = 0.7, "KL Divergence" = 0.7,
+    "Hellinger" = 0.7, "Modularity" = 0.7, "Mean Rank" = 1.0
   )
-
-  n_resolutions <- nrow(rank_results)
 
   p <- ggplot2::ggplot(
     plot_data,
@@ -272,7 +313,7 @@ plot_rank_metrics <- function(rank_results, highlight_best = TRUE, base_size = 1
     ggplot2::scale_linewidth_manual(values = linewidths, guide = "none") +
     ggplot2::scale_size_manual(values = point_sizes, guide = "none") +
     ggplot2::scale_alpha_manual(values = alphas, guide = "none") +
-    ggplot2::scale_y_reverse(breaks = seq_len(n_resolutions)) +
+    ggplot2::scale_y_reverse(breaks = seq_len(n_ranks)) +
     ggplot2::labs(
       x = "Resolution",
       y = "Rank (lower is better)",
@@ -286,7 +327,8 @@ plot_rank_metrics <- function(rank_results, highlight_best = TRUE, base_size = 1
     )
 
   if (highlight_best) {
-    best_res <- as.factor(rank_results$resolution[which.min(rank_results$mean_rank)])
+    best_idx <- which.min(rank_results[[mean_col]])
+    best_res <- as.factor(rank_results$resolution[best_idx])
     p <- p + ggplot2::geom_vline(
       xintercept = best_res,
       linetype = "dashed",
@@ -304,33 +346,46 @@ plot_rank_metrics <- function(rank_results, highlight_best = TRUE, base_size = 1
 #' Lower mean rank indicates better overall performance across all metrics.
 #'
 #' @param rank_results A data.frame output from \code{\link{suggest_resolution}}.
+#' @param method Character; \code{"rank"} (default) for direct rank aggregation,
+#'   or \code{"curvature"} for curvature-based ranking. The curvature method
+#'   requires at least 3 resolutions.
 #' @param highlight_best Logical; if TRUE (default), highlight the best resolution
-#'   with a larger outlined point.
+#'   with a vertical dashed line.
 #' @param base_size Numeric; base font size for theme. Default is 12.
 #'
 #' @return A ggplot object
 #'
 #' @examples
 #' \dontrun{
+#' cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
 #' rankings <- suggest_resolution(cv_results)
 #' plot_mean_rank(rankings)
+#' plot_mean_rank(rankings, method = "curvature")
 #' }
 #'
 #' @seealso \code{\link{suggest_resolution}}, \code{\link{plot_rank_metrics}}
 #' @export
-plot_mean_rank <- function(rank_results, highlight_best = TRUE, base_size = 12) {
+plot_mean_rank <- function(rank_results, method = "rank",
+                           highlight_best = TRUE, base_size = 12) {
+  method <- match.arg(method, c("rank", "curvature"))
+
+  if (method == "curvature" && nrow(rank_results) < 3) {
+    stop("At least 3 resolutions are required for curvature-based ranking.")
+  }
+
+  mean_col <- if (method == "rank") "mean_rank" else "curvature_mean_rank"
+  n_ranks <- if (method == "rank") nrow(rank_results) else nrow(rank_results) - 2
+
   plot_data <- rank_results |>
     dplyr::mutate(resolution = as.factor(.data$resolution))
 
-  n_resolutions <- nrow(rank_results)
-
   p <- ggplot2::ggplot(
     plot_data,
-    ggplot2::aes(x = .data$resolution, y = .data$mean_rank, group = 1)
+    ggplot2::aes(x = .data$resolution, y = .data[[mean_col]], group = 1)
   ) +
     ggplot2::geom_line(linewidth = 1, color = "#0072B2") +
     ggplot2::geom_point(size = 4, color = "#0072B2") +
-    ggplot2::scale_y_reverse(breaks = seq_len(n_resolutions)) +
+    ggplot2::scale_y_reverse(breaks = seq_len(n_ranks)) +
     ggplot2::labs(
       x = "Resolution",
       y = "Mean Rank (lower is better)",
@@ -343,7 +398,8 @@ plot_mean_rank <- function(rank_results, highlight_best = TRUE, base_size = 12) 
     )
 
   if (highlight_best) {
-    best_res <- as.factor(rank_results$resolution[which.min(rank_results$mean_rank)])
+    best_idx <- which.min(rank_results[[mean_col]])
+    best_res <- as.factor(rank_results$resolution[best_idx])
     p <- p + ggplot2::geom_vline(
       xintercept = best_res,
       linetype = "dashed",
