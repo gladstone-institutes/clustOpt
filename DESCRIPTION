@@ -22,13 +22,11 @@ Imports:
     dplyr (>= 1.1.3),
     ggplot2 (>= 3.3.5),
     purrr (>= 0.3.4),
-    tibble (>= 3.2.1),
     tidyr,
     Matrix,
     methods,
     stats,
-    rlang,
-    RcppAnnoy
+    rlang
 License: MIT + file LICENSE
 URL: https://gladstone-institutes.github.io/clustOpt, https://github.com/gladstone-institutes/clustOpt
 BugReports: https://github.com/gladstone-institutes/clustOpt/issues

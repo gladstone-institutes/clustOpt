@@ -146,24 +146,30 @@ calculate_hellinger_distance <- function(q, p) {
 #' Calculate silhouette score
 #' @param predicted Cluster assignments
 #' @param data_frame Data frame containing the data
+#' @param precomputed_dist Optional precomputed distance matrix (output of
+#'   \code{\link[stats]{dist}}). If \code{NULL} (default), the distance matrix
+#'   is computed from \code{data_frame}.
 #' @return A list containing the average silhouette score and the average
 #' silhouette score for each cluster.
 #'
 #' @export
 #' @importFrom stats dist
 #' @importFrom cluster silhouette
-calculate_silhouette_score <- function(predicted, data_frame) {
+calculate_silhouette_score <- function(predicted, data_frame,
+                                       precomputed_dist = NULL) {
   # Check if there's only one unique cluster
   unique_clusters <- length(unique(predicted))
   if (unique_clusters <= 1) {
     return(list(avg_width = NA, group_median_width = NA))
   }
 
+  d <- if (!is.null(precomputed_dist)) precomputed_dist else dist(data_frame)
+
   # Calculate silhouette scores
   sil <- tryCatch({
     cluster::silhouette(
       as.numeric(as.character(predicted)),
-      dist(data_frame)
+      d
     )
   }, error = function(e) {
     warning(sprintf("Silhouette calculation failed: %s", e$message))
@@ -193,136 +199,29 @@ calculate_silhouette_score <- function(predicted, data_frame) {
 #'
 #' @export
 calculate_mse_score <- function(predicted, data_frame) {
-
-  k <- length(unique(predicted))  # number of clusters
-  mse <- 0
-  mad <- 0
   n <- nrow(data_frame)
+  data_mat <- as.matrix(data_frame)
+  # Use character labels for safe named-row indexing (avoids factor level issues)
+  pred_char <- as.character(predicted)
+  unique_clusters <- unique(pred_char)
 
-  for (c in unique(predicted)) {
-    # Subset points in cluster c
-    cluster_points <- data_frame[predicted == c, , drop = FALSE]
-    # Compute centroid
-    centroid <- colMeans(cluster_points)
-    # Squared distances to centroid
-    dists <- rowSums((cluster_points - matrix(centroid,
-                                              nrow = nrow(cluster_points),
-                                              ncol = ncol(data_frame),
-                                              byrow = TRUE))^2)
-    mse <- mse + sum(dists)
+  # MSE: vectorized via rowsum + character-based row indexing
+  cluster_sums <- rowsum(data_mat, pred_char)
+  cluster_sizes <- as.numeric(table(pred_char))
+  centroids <- cluster_sums / cluster_sizes
+  centroid_expanded <- centroids[pred_char, , drop = FALSE]
+  diff_mat <- data_mat - centroid_expanded
+  mse <- sum(diff_mat^2) / n
 
-    median_centroid <- apply(cluster_points, 2, median)
-    mad_dists <- rowSums(abs(cluster_points - matrix(median_centroid,
-                                              nrow = nrow(cluster_points),
-                                              ncol = ncol(data_frame),
-                                              byrow = TRUE)))
+  # MAD: per-cluster medians (no vectorized rowMedian in base R)
+  cluster_medians <- do.call(rbind, lapply(unique_clusters, function(cl) {
+    apply(data_mat[pred_char == cl, , drop = FALSE], 2, median)
+  }))
+  rownames(cluster_medians) <- unique_clusters
+  median_expanded <- cluster_medians[pred_char, , drop = FALSE]
+  mad <- sum(abs(data_mat - median_expanded)) / n
 
-    mad <- mad + sum(mad_dists)
-
-
-  }
-
-  # Mean squared error
-  mse <- mse / n
-  # Mean absolute deviation from median
-  mad <- mad /n
-  return(list(mse=mse, mad=mad))
-
-}
-
-#' @title compute_knn_graph
-#' @description
-#' Compute k-nearest neighbor graph from coordinate matrix
-#'
-#' @param coords Numeric matrix where rows are nodes and columns are coordinates
-#' @param k Number of nearest neighbors
-#' @param mutual Logical, whether to create mutual kNN graph (default: FALSE)
-#' @param distance_metric Distance metric to use ("euclidean", "manhattan", "cosine")
-#' @return Sparse adjacency matrix of the kNN graph
-#'
-#' @keywords internal
-#' @importFrom Matrix sparseMatrix
-#' @importFrom RcppAnnoy AnnoyEuclidean AnnoyManhattan AnnoyAngular
-compute_knn_graph <- function(coords, k, mutual = FALSE, distance_metric = "euclidean") {
-
-  if (!is.matrix(coords) && !is.data.frame(coords)) {
-    stop("coords must be a matrix or data.frame")
-  }
-
-  coords <- as.matrix(coords)
-  n_nodes <- nrow(coords)
-
-  if (k >= n_nodes) {
-    warning(sprintf("k (%d) >= number of nodes (%d), reducing k to %d", k, n_nodes, n_nodes - 1L))
-    k <- n_nodes - 1L
-  }
-
-  # Use RcppAnnoy for efficient approximate nearest neighbors (O(n log n))
-  # This avoids creating a full n×n distance matrix which causes integer
-  # overflow for large datasets (>65k cells)
-  ndim <- ncol(coords)
-
-  # RcppAnnoy exposes classes directly via Rcpp modules
-  annoy_index <- switch(
-    distance_metric,
-    "euclidean" = new(Class = AnnoyEuclidean, ndim),
-    "manhattan" = new(Class = AnnoyManhattan, ndim),
-    "cosine" = new(Class = AnnoyAngular, ndim),
-    stop("Unsupported distance metric. Use 'euclidean', 'manhattan', or 'cosine'")
-  )
-
-  # Build the index - add all items first
-  for (i in seq_len(n_nodes)) {
-    annoy_index$addItem(i - 1L, as.numeric(coords[i, ]))
-  }
-  annoy_index$build(50L)
-
-  # Query k+1 neighbors (first is self)
-  knn_indices <- matrix(0L, nrow = n_nodes, ncol = k)
-  for (i in seq_len(n_nodes)) {
-    neighbors <- annoy_index$getNNsByItem(i - 1L, k + 1L)
-    knn_indices[i, ] <- neighbors[-1] + 1L
-  }
-
-  # Create adjacency matrix
-  adj_matrix <- Matrix::sparseMatrix(
-    i = rep(seq_len(n_nodes), each = k),
-    j = as.vector(t(knn_indices)),
-    x = 1,
-    dims = c(n_nodes, n_nodes)
-  )
-
-  if (mutual) {
-    # Keep only mutual connections
-    adj_matrix <- adj_matrix * Matrix::t(adj_matrix)
-  }
-
-  return(adj_matrix)
-}
-
-#' Calculate modularity for a graph given coordinate matrix and cluster assignments
-#'
-#' @param coords Numeric matrix where rows are nodes and columns are coordinates
-#' @param clusters Vector of cluster assignments for each node
-#' @param k Number of nearest neighbors for kNN graph construction
-#' @param mutual Logical, whether to create mutual kNN graph (default: FALSE)
-#' @param distance_metric Distance metric to use ("euclidean", "manhattan", "cosine")
-#' @param directed Logical, whether the graph is directed (default: FALSE)
-#' @return List containing modularity value and the kNN adjacency matrix
-#'
-#' @keywords internal
-calculate_modularity_from_coords <- function(clusters, coords, k=20,
-                                             mutual = FALSE,
-                                             distance_metric = "euclidean",
-                                             directed = FALSE) {
-
-  # Compute kNN graph
-  adj_matrix <- compute_knn_graph(coords, k, mutual, distance_metric)
-
-  # Calculate modularity
-  Q <- calculate_modularity(adj_matrix, clusters, directed)
-
-  return(list(modularity = Q, adjacency_matrix = adj_matrix))
+  list(mse = mse, mad = mad)
 }
 
 #' @title calculate_modularity

@@ -16,7 +16,8 @@ clust_opt(
   verbose = 0,
   num_trees = 1000,
   train_with = "even",
-  min_cells = 50
+  min_cells = 50,
+  rf_num_threads = 1
 )
 }
 \arguments{
@@ -50,6 +51,11 @@ Default is "even". It is recommended to keep train_with set to "even" so
 that the 1st PC is in the set used to calculate silhouette scores.}
 
 \item{min_cells}{Minimum cells per subject, default is 50}
+
+\item{rf_num_threads}{Number of threads for ranger random forest. Default is
+1 to avoid contention with \code{\link[future.apply]{future_lapply}} workers.
+When using \code{future::plan(sequential)} (the default), increase to utilize
+available cores.}
 }
 \value{
 A data.frame containing a distribution of silhouette scores for each

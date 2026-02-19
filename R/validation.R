@@ -5,6 +5,29 @@ NULL
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Input Validation Functions
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#' Normalize verbose parameter for backward compatibility
+#'
+#' Converts logical TRUE/FALSE to integer 1/0 and validates numeric input.
+#'
+#' @param verbose A logical or non-negative numeric value
+#' @return An integer verbosity level
+#' @keywords internal
+normalize_verbose <- function(verbose) {
+  if (length(verbose) != 1 || is.na(verbose)) {
+    stop("verbose must be a logical or non-negative integer")
+  }
+  if (is.logical(verbose)) {
+    return(as.integer(verbose))
+  }
+  if (!is.numeric(verbose)) {
+    stop("verbose must be a logical or non-negative integer")
+  }
+  if (verbose < 0) {
+    stop("verbose must be a non-negative integer")
+  }
+  as.integer(verbose)
+}
 #' @title check_size
 #' @description
 #' Checks if input Seurat object is small enough to run clustOpt
@@ -30,6 +53,8 @@ check_size <- function(input) {
 #' @param input A Seurat object containing metadata
 #' @param subject_ids The name of the metadata column containing subject IDs
 #' @param min_cells Minimum cells per subject
+#' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
+#' 2 = detailed, 3 = includes Seurat output)
 #' @return A vector of sample names meeting the criteria, or NULL if the
 #' requirement is not met
 #' @details
@@ -48,15 +73,12 @@ get_valid_samples <- function(input, subject_ids, min_cells, verbose = 0) {
   # Summarize the number of cells per sample
   sample_summary <- input@meta.data |>
     dplyr::group_by(!!dplyr::sym(subject_ids)) |>
-    dplyr::summarize(cell_count = dplyr::n(), .groups = "drop") |>
-    dplyr::ungroup()
+    dplyr::summarize(cell_count = dplyr::n(), .groups = "drop")
 
   # Split samples into sufficient and insufficient
-  sufficient_samples <- sample_summary |>
-    dplyr::filter(.data$cell_count >= min_cells)
-
-  insufficient_samples <- sample_summary |>
-    dplyr::filter(.data$cell_count < min_cells)
+  sufficient <- sample_summary$cell_count >= min_cells
+  sufficient_samples <- sample_summary[sufficient, ]
+  insufficient_samples <- sample_summary[!sufficient, ]
 
   # Show removed subjects if any
   if (nrow(insufficient_samples) > 0) {

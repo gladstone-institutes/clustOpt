@@ -226,6 +226,35 @@ test_that("calculate_silhouette_score returns list with expected elements", {
   expect_true("group_median_width" %in% names(result))
 })
 
+test_that("calculate_silhouette_score with precomputed dist gives identical results", {
+  set.seed(42)
+  cluster1 <- data.frame(x = rnorm(20, mean = 0), y = rnorm(20, mean = 0))
+  cluster2 <- data.frame(x = rnorm(20, mean = 10), y = rnorm(20, mean = 10))
+  data_frame <- rbind(cluster1, cluster2)
+  predicted <- c(rep(1, 20), rep(2, 20))
+
+  result_default <- calculate_silhouette_score(predicted, data_frame)
+  precomputed <- dist(data_frame)
+  result_precomputed <- calculate_silhouette_score(
+    predicted, data_frame, precomputed_dist = precomputed
+  )
+
+  expect_equal(result_default$avg_width, result_precomputed$avg_width)
+  expect_equal(result_default$group_median_width,
+               result_precomputed$group_median_width)
+})
+
+test_that("calculate_silhouette_score NULL default still works", {
+  set.seed(42)
+  data_frame <- data.frame(x = rnorm(30), y = rnorm(30))
+  predicted <- c(rep(1, 10), rep(2, 10), rep(3, 10))
+
+  result <- calculate_silhouette_score(predicted, data_frame,
+                                       precomputed_dist = NULL)
+  expect_type(result, "list")
+  expect_false(is.na(result$avg_width))
+})
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # MSE Score Tests
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

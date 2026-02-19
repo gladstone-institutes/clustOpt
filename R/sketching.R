@@ -51,7 +51,7 @@ NULL
 #' # Large dataset with on-disk matrices
 #' large_sketch <- leverage_sketch(large_obj,
 #'   sketch_size = 10000,
-#'   on_disk = TRUE, verbose = TRUE
+#'   on_disk = TRUE, verbose = 2
 #' )
 #' }
 #'
@@ -66,6 +66,8 @@ leverage_sketch <- function(input,
                             on_disk = FALSE,
                             output_dir = NULL,
                             verbose = 1) {
+  verbose <- normalize_verbose(verbose)
+
   # Validate input parameters
   if (!(dtype %in% c("scRNA", "CyTOF"))) {
     stop("dtype must be either 'scRNA' or 'CyTOF'")
@@ -78,7 +80,7 @@ leverage_sketch <- function(input,
     sketch_size <- ncol(input) * 0.1
   }
 
-  if (verbose >= 2) {
+  if (verbose >= 1) {
     message(sprintf(
       "Sketching %s data: %d -> %d cells",
       dtype, ncol(input), as.integer(sketch_size)
@@ -104,7 +106,7 @@ leverage_sketch <- function(input,
 
   # Handle data type-specific normalization
   if (dtype == "scRNA" && !skip_norm) {
-    if (verbose >= 2) {
+    if (verbose >= 1) {
       message("Normalizing scRNA-seq data...")
     }
     input <- Seurat::NormalizeData(input, verbose = (verbose >= 3))
@@ -121,7 +123,7 @@ leverage_sketch <- function(input,
 
   # Handle feature selection based on data type
   if (dtype == "scRNA") {
-    if (verbose >= 2) {
+    if (verbose >= 1) {
       message("Finding variable features for scRNA-seq data...")
     }
     input <- Seurat::FindVariableFeatures(input, verbose = (verbose >= 3))

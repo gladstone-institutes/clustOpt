@@ -10,7 +10,8 @@ project_pca(
   train_with_pcs,
   clust_pcs,
   dtype,
-  verbose
+  verbose = 0,
+  compute_train_eval = FALSE
 )
 }
 \arguments{
@@ -27,11 +28,20 @@ project_pca(
 
 \item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
 2 = detailed, 3 = includes Seurat output)}
+
+\item{compute_train_eval}{Logical; if \code{TRUE}, also compute the
+training data projected onto clustering PCs (\code{train_proj_clust_pcs}).
+Default is \code{FALSE} because this projection is not used in the
+standard \code{\link{clust_opt}} pipeline.}
 }
 \value{
-A list containing two elements: `train_df` and `test_df`. Each is a matrix
-of the projected data for the training and test sets, respectively, using
-the specified number of principal components.
+A list containing projected data frames/matrices:
+\describe{
+  \item{train_proj_train_with_pcs}{Training data projected onto training PCs (data.frame)}
+  \item{test_proj_train_with_pcs}{Test data projected onto training PCs (data.frame)}
+  \item{test_proj_clust_pcs}{Test data projected onto clustering PCs (matrix)}
+  \item{train_proj_clust_pcs}{Training data projected onto clustering PCs (data.frame); only present when \code{compute_train_eval = TRUE}}
+}
 }
 \description{
 Project Training and Test Seurat Objects onto Principal Components

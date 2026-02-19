@@ -4,12 +4,16 @@
 \alias{calculate_silhouette_score}
 \title{calculate_silhouette_score}
 \usage{
-calculate_silhouette_score(predicted, data_frame)
+calculate_silhouette_score(predicted, data_frame, precomputed_dist = NULL)
 }
 \arguments{
 \item{predicted}{Cluster assignments}
 
 \item{data_frame}{Data frame containing the data}
+
+\item{precomputed_dist}{Optional precomputed distance matrix (output of
+\code{\link[stats]{dist}}). If \code{NULL} (default), the distance matrix
+is computed from \code{data_frame}.}
 }
 \value{
 A list containing the average silhouette score and the average

@@ -71,6 +71,8 @@ split_pca_dimensions <- function(input,
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
 #' @param test_id subject_id for the test sample
+#' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
+#' 2 = detailed, 3 = includes Seurat output)
 #' @return Training data formatted for sil_score, format depends on dtype
 #'
 #' @export
@@ -169,6 +171,8 @@ prep_train <- function(input,
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF", default
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized.
 #' @param test_id subject_id for the test sample
+#' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
+#' 2 = detailed, 3 = includes Seurat output)
 #' @return Training data formatted for sil_score, format depends on dtype
 #'
 #' @export
@@ -217,6 +221,10 @@ prep_test <- function(input,
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF"
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
 #' 2 = detailed, 3 = includes Seurat output)
+#' @param compute_train_eval Logical; if \code{TRUE}, also compute the
+#'   training data projected onto clustering PCs (\code{train_proj_clust_pcs}).
+#'   Default is \code{FALSE} because this projection is not used in the
+#'   standard \code{\link{clust_opt}} pipeline.
 #'
 #' @details
 #' Identifies features that are common between the training
@@ -226,22 +234,25 @@ prep_test <- function(input,
 #'
 #'
 #' @return
-#' A list containing two elements: `train_df` and `test_df`. Each is a matrix
-#' of the projected data for the training and test sets, respectively, using
-#' the specified number of principal components.
+#' A list containing projected data frames/matrices:
+#' \describe{
+#'   \item{train_proj_train_with_pcs}{Training data projected onto training PCs (data.frame)}
+#'   \item{test_proj_train_with_pcs}{Test data projected onto training PCs (data.frame)}
+#'   \item{test_proj_clust_pcs}{Test data projected onto clustering PCs (matrix)}
+#'   \item{train_proj_clust_pcs}{Training data projected onto clustering PCs (data.frame); only present when \code{compute_train_eval = TRUE}}
+#' }
 #'
 #'
 #' @export
 #'
 #' @importFrom Seurat VariableFeatures Loadings GetAssayData
-#' @importFrom tibble as_tibble
-#' @importFrom dplyr filter
 project_pca <- function(train_seurat,
                         test_seurat,
                         train_with_pcs,
                         clust_pcs,
                         dtype,
-                        verbose) {
+                        verbose = 0,
+                        compute_train_eval = FALSE) {
   if (clust_pcs == train_with_pcs) {
     stop("clust_pcs and train_with_pcs must be independent")
   }
@@ -259,19 +270,21 @@ project_pca <- function(train_seurat,
     scRNA = "SCT",
     CyTOF = "RNA"
   )
+  # Extract scale.data ONCE per Seurat object
+  train_scale_full <- as.matrix(Seurat::GetAssayData(
+    train_seurat, assay = assay_id, layer = "scale.data"
+  ))
+  test_scale_full <- as.matrix(Seurat::GetAssayData(
+    test_seurat, assay = assay_id, layer = "scale.data"
+  ))
+
   # Features present in both the training variable features and test sample
   common_features <- base::intersect(
-    rownames(Seurat::GetAssayData(test_seurat,
-      assay = assay_id,
-      layer = "scale.data"
-    )),
+    rownames(test_scale_full),
     Seurat::VariableFeatures(train_seurat)
   )
   n_shared_genes <- length(common_features)
-  total_genes <- length(rownames(Seurat::GetAssayData(train_seurat,
-    assay = assay_id,
-    layer = "scale.data"
-  )))
+  total_genes <- nrow(train_scale_full)
   if (verbose >= 2) {
     message(sprintf(
       "Found %d (%.2f%%) shared genes used for projecting test data",
@@ -286,62 +299,35 @@ project_pca <- function(train_seurat,
 
 
 
-  project_data_train <- function(seurat_obj, assay_id) {
-    loadings_common_features <- Seurat::Loadings(
-      train_seurat[[train_with_pcs]]
-    ) |>
-      tibble::as_tibble(rownames = "features") |>
-      dplyr::filter(.data$features %in% common_features) |>
-      as.matrix()
+  # Subset to common features
+  train_scale <- train_scale_full[common_features, ]
+  test_scale <- test_scale_full[common_features, ]
+  rm(train_scale_full, test_scale_full)
 
-    rownames(loadings_common_features) <- loadings_common_features[, 1]
-    loadings_common_features <- loadings_common_features[, -1]
-    class(loadings_common_features) <- "numeric"
-    scale_data <- as.matrix(Seurat::GetAssayData(seurat_obj,
-      assay = assay_id,
-      layer = "scale.data"
-    ))[common_features, ]
+  # Extract loadings ONCE per reduction, using direct matrix subsetting
+  loadings_train <- Seurat::Loadings(
+    train_seurat[[train_with_pcs]]
+  )[common_features, ]
+  loadings_eval <- Seurat::Loadings(
+    train_seurat[[clust_pcs]]
+  )[common_features, ]
 
-    t(scale_data) %*% loadings_common_features
-  }
   if (verbose >= 2) {
     message(sprintf("Evaluating test data projected onto %s", clust_pcs))
   }
-  project_data_for_eval <- function(seurat_obj, assay_id) {
-    loadings_common_features <- Seurat::Loadings(
-      train_seurat[[clust_pcs]]
-    ) |>
-      tibble::as_tibble(rownames = "features") |>
-      dplyr::filter(.data$features %in% common_features) |>
-      as.matrix()
 
-    rownames(loadings_common_features) <- loadings_common_features[, 1]
-    loadings_common_features <- loadings_common_features[, -1]
-    class(loadings_common_features) <- "numeric"
-    scale_data <- as.matrix(Seurat::GetAssayData(seurat_obj,
-      assay = assay_id,
-      layer = "scale.data"
-    ))[common_features, ]
+  # Projections using cached data
+  result <- list(
+    train_proj_train_with_pcs = as.data.frame(t(train_scale) %*% loadings_train),
+    test_proj_train_with_pcs  = as.data.frame(t(test_scale)  %*% loadings_train),
+    test_proj_clust_pcs       = t(test_scale) %*% loadings_eval
+  )
 
-    t(scale_data) %*% loadings_common_features
+  if (compute_train_eval) {
+    result$train_proj_clust_pcs <- as.data.frame(t(train_scale) %*% loadings_eval)
   }
 
-  # Project the cells in the training and test data onto the opposite PCs
-  pca_train_data <- project_data_train(train_seurat, assay_id)
-  pca_test_data <- project_data_train(test_seurat, assay_id)
-  pca_test_eval_data <- project_data_for_eval(test_seurat, assay_id)
-  pca_train_eval_data <- project_data_for_eval(train_seurat, assay_id)
-
-  list(
-    train_proj_train_with_pcs = pca_train_data |>
-      as.data.frame(),
-    test_proj_train_with_pcs = pca_test_data |>
-      as.data.frame(),
-    test_proj_clust_pcs = pca_test_eval_data |>
-      as.data.frame(),
-    train_proj_clust_pcs = pca_train_eval_data |>
-      as.data.frame()
-  )
+  result
 }
 
 #' @title train_random_forest
@@ -349,23 +335,32 @@ project_pca <- function(train_seurat,
 #' Train the random forest and predict on the test sample
 #' @param res Resolution to train on
 #' @param df_list List containing training and test data
-#' @param train_clusters Cluster assignments for the training data
+#' @param cluster_by_res Named list of cluster assignment vectors, keyed by
+#'   resolution (as character). Pre-extracted from training metadata using
+#'   exact column names.
 #' @param sam Test sample
 #' @param num_trees Number of trees for the random forest
+#' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
+#' 2 = detailed, 3 = includes Seurat output)
+#' @param snn_graph Precomputed SNN graph (sparse matrix). Required.
+#' @param precomputed_dist Optional precomputed distance matrix (output of
+#'   \code{\link[stats]{dist}}). Passed through to
+#'   \code{\link{calculate_silhouette_score}}.
+#' @param rf_num_threads Number of threads for ranger (default 1).
 #' @return A list containing the resolution, silhouette score, and number of
 #' predicted clusters.
 #'
 #' @export
-#' @importFrom dplyr mutate select contains pull
 #' @importFrom ranger ranger predictions
 #' @importFrom stats predict
-train_random_forest <- function(res, df_list, train_clusters,
-                                sam, num_trees) {
+train_random_forest <- function(res, df_list, cluster_by_res,
+                                sam, num_trees, verbose = 0,
+                                snn_graph = NULL,
+                                precomputed_dist = NULL,
+                                rf_num_threads = 1) {
   # Get cluster assignments for this res
-  train_df <- df_list[["train_proj_train_with_pcs"]] |>
-    dplyr::mutate(clusters = train_clusters |>
-      dplyr::select(dplyr::contains(as.character(res))) |>
-      dplyr::pull())
+  train_df <- df_list[["train_proj_train_with_pcs"]]
+  train_df$clusters <- cluster_by_res[[as.character(res)]]
 
   # proportion of clusters in train_df
   qx <- data.frame(base::table(train_df$clusters))
@@ -375,7 +370,7 @@ train_random_forest <- function(res, df_list, train_clusters,
     data = train_df,
     num.trees = num_trees,
     write.forest = TRUE,
-    num.threads = 1
+    num.threads = rf_num_threads
   )
   rm(train_df)
 
@@ -402,7 +397,8 @@ train_random_forest <- function(res, df_list, train_clusters,
   # Evaluate clustering on data project on to the opposite PCs
   sil <- calculate_silhouette_score(
     predicted,
-    df_list[["test_proj_clust_pcs"]]
+    df_list[["test_proj_clust_pcs"]],
+    precomputed_dist = precomputed_dist
   )
 
   mse_value <- calculate_mse_score(
@@ -410,10 +406,10 @@ train_random_forest <- function(res, df_list, train_clusters,
     df_list[["test_proj_clust_pcs"]]
   )
 
-  modularity_value <- calculate_modularity_from_coords(
-    predicted,
-    df_list[["test_proj_clust_pcs"]]
-  )
+  if (is.null(snn_graph)) {
+    stop("snn_graph must be provided (precomputed via FindNeighbors)")
+  }
+  modularity_value <- calculate_modularity(snn_graph, predicted)
 
   list(
     resolution = res,
@@ -427,6 +423,6 @@ train_random_forest <- function(res, df_list, train_clusters,
     mad = mse_value$mad,
     KLdivergence = KLdivergence,
     Hellinger = Hellinger,
-    modularity = modularity_value$modularity
+    modularity = modularity_value
   )
 }

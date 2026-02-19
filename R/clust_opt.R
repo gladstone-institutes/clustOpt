@@ -2,6 +2,11 @@
 #' @importFrom rlang .data
 NULL
 
+# Internal timing helper
+.elapsed <- function(t0) {
+  sprintf("%.1fs", as.numeric(difftime(Sys.time(), t0, units = "secs")))
+}
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Main Algorithm
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,6 +33,10 @@ NULL
 #' Default is "even". It is recommended to keep train_with set to "even" so
 #' that the 1st PC is in the set used to calculate silhouette scores.
 #' @param min_cells Minimum cells per subject, default is 50
+#' @param rf_num_threads Number of threads for ranger random forest. Default is
+#' 1 to avoid contention with \code{\link[future.apply]{future_lapply}} workers.
+#' When using \code{future::plan(sequential)} (the default), increase to utilize
+#' available cores.
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
 #'
@@ -66,7 +75,6 @@ NULL
 #' @export
 #' @importFrom Seurat DefaultAssay DietSeurat RunPCA FindNeighbors FindClusters
 #' @importFrom Seurat ScaleData FindVariableFeatures
-#' @importFrom dplyr select contains
 #' @importFrom future.apply future_lapply
 #' @importFrom progressr progressor handlers
 #' @importFrom purrr map_df
@@ -84,7 +92,11 @@ clust_opt <- function(input,
                       verbose = 0,
                       num_trees = 1000,
                       train_with = "even",
-                      min_cells = 50) {
+                      min_cells = 50,
+                      rf_num_threads = 1) {
+  verbose <- normalize_verbose(verbose)
+  t0_total <- Sys.time()
+
   # Make sure a seed is set, only setting if the user has not set one
   if (!exists(".Random.seed", envir = .GlobalEnv)) {
     t <- as.integer(Sys.time())
@@ -103,7 +115,9 @@ clust_opt <- function(input,
   if (!skip_sketch) {
     if (check_size(input) || !is.null(sketch_size)) {
       if (verbose >= 1) message("Sketching input data")
+      t0_sketch <- Sys.time()
       input <- leverage_sketch(input, sketch_size, dtype, verbose = verbose)
+      if (verbose >= 1) message(sprintf("[sketch] %s", .elapsed(t0_sketch)))
     } else {
       if (verbose >= 1) message("Input is small enough to run with all cells")
     }
@@ -134,11 +148,13 @@ clust_opt <- function(input,
 
   res <- NULL
   for (sam in unique(runs[, 1])) {
+    t0_sam <- Sys.time()
     if (verbose >= 1) message(paste0("Holdout subject: ", sam))
     if (verbose >= 2) {
       message(paste0("Preparing training data.."))
     }
 
+    t0_prep_train <- Sys.time()
     train <- prep_train(
       input = input,
       dtype = dtype,
@@ -147,11 +163,13 @@ clust_opt <- function(input,
       test_id = sam,
       verbose = verbose
     )
+    if (verbose >= 1) message(sprintf("[prep_train] %s", .elapsed(t0_prep_train)))
 
     if (verbose >= 2) {
       message(paste0("Preparing test data.."))
     }
 
+    t0_prep_test <- Sys.time()
     test <- prep_test(
       input = input,
       dtype = dtype,
@@ -159,7 +177,9 @@ clust_opt <- function(input,
       test_id = sam,
       verbose = verbose
     )
+    if (verbose >= 1) message(sprintf("[prep_test] %s", .elapsed(t0_prep_test)))
 
+    t0_pca <- Sys.time()
     if (dtype == "scRNA") {
       train <- Seurat::RunPCA(train,
         npcs = ndim,
@@ -178,11 +198,15 @@ clust_opt <- function(input,
 
       # Create 2 separate PCA reductions
       train <- split_pca_dimensions(train, verbose)
+      if (verbose >= 1) {
+        message(sprintf("[RunPCA + split_pca_dimensions] %s", .elapsed(t0_pca)))
+      }
 
       if (verbose >= 2) {
         message(sprintf("Clustering with %s", clust_pcs))
       }
 
+      t0_clust <- Sys.time()
       train <- Seurat::FindNeighbors(
         object = train,
         dims = seq_len(ncol(train@reductions[[clust_pcs]]@cell.embeddings)),
@@ -195,6 +219,9 @@ clust_opt <- function(input,
         resolution = res_range,
         verbose = (verbose >= 3)
       )
+      if (verbose >= 1) {
+        message(sprintf("[FindNeighbors + FindClusters] %s", .elapsed(t0_clust)))
+      }
     } else {
       train <- Seurat::ScaleData(train, features = NULL, verbose = (verbose >= 3))
       train <- Seurat::FindVariableFeatures(train,
@@ -219,6 +246,11 @@ clust_opt <- function(input,
       )
       # Create 2 separate PCA reductions
       train <- split_pca_dimensions(train, verbose)
+      if (verbose >= 1) {
+        message(sprintf("[RunPCA + split_pca_dimensions] %s", .elapsed(t0_pca)))
+      }
+
+      t0_clust <- Sys.time()
       train <- Seurat::FindNeighbors(
         object = train,
         dims = seq_len(ncol(train@reductions[[clust_pcs]]@cell.embeddings)),
@@ -231,58 +263,94 @@ clust_opt <- function(input,
         resolution = res_range,
         verbose = (verbose >= 3)
       )
+      if (verbose >= 1) {
+        message(sprintf("[FindNeighbors + FindClusters] %s", .elapsed(t0_clust)))
+      }
     }
     if (verbose >= 2) {
       message("Clustering complete..")
     }
 
-    if (dtype == "scRNA") {
-      train_clusters <- train@meta.data |>
-        dplyr::select(dplyr::contains("SCT_snn_res"))
+    t0_project <- Sys.time()
 
+    # Pre-extract cluster assignments using exact column names
+    prefix <- if (dtype == "scRNA") "SCT_snn_res." else "RNA_snn_res."
+    cluster_by_res <- lapply(res_range, function(r) {
+      train@meta.data[[paste0(prefix, r)]]
+    })
+    names(cluster_by_res) <- as.character(res_range)
 
-      df_list <- project_pca(
-        train_seurat = train,
-        test_seurat = test,
-        train_with_pcs = train_with_pcs,
-        clust_pcs = clust_pcs,
-        dtype = dtype,
-        verbose = verbose
-      )
+    df_list <- project_pca(
+      train_seurat = train,
+      test_seurat = test,
+      train_with_pcs = train_with_pcs,
+      clust_pcs = clust_pcs,
+      dtype = dtype,
+      verbose = verbose
+    )
+    rm(train, test)
+    if (verbose >= 1) message(sprintf("[project_pca] %s", .elapsed(t0_project)))
 
-      rm(train, test)
-    } else {
-      train_clusters <- train@meta.data |>
-        dplyr::select(dplyr::contains("RNA_snn_res"))
-
-      df_list <- project_pca(
-        train_seurat = train,
-        test_seurat = test,
-        train_with_pcs = train_with_pcs,
-        clust_pcs = clust_pcs,
-        dtype = dtype,
-        verbose = verbose
-      )
-      rm(train, test)
+    if (verbose >= 1) {
+      message(sprintf(
+        "[data dimensions] train: %d cells, test: %d cells, %d PCs, %d resolutions",
+        nrow(df_list[["train_proj_train_with_pcs"]]),
+        nrow(df_list[["test_proj_train_with_pcs"]]),
+        ncol(df_list[["test_proj_train_with_pcs"]]),
+        length(res_range)
+      ))
     }
 
+    # Precompute SNN graph (resolution-invariant)
+    t0_snn <- Sys.time()
+    coords_mat <- df_list[["test_proj_clust_pcs"]]
+    rownames(coords_mat) <- seq_len(nrow(coords_mat))
+    precomputed_snn <- Seurat::FindNeighbors(
+      coords_mat, k.param = 20, compute.SNN = TRUE,
+      prune.SNN = 1 / 15, verbose = (verbose >= 3)
+    )[["snn"]]
+    if (verbose >= 1) message(sprintf("[precompute SNN] %s", .elapsed(t0_snn)))
+
+    # Precompute distance matrix for silhouette (resolution-invariant)
+    t0_dist <- Sys.time()
+    precomputed_dist <- dist(df_list[["test_proj_clust_pcs"]])
+    if (verbose >= 1) {
+      message(sprintf(
+        "[precompute dist] %s (%d cells)",
+        .elapsed(t0_dist), nrow(df_list[["test_proj_clust_pcs"]])
+      ))
+    }
+
+    t0_rf <- Sys.time()
     this_result <- future.apply::future_lapply(
       rownames(runs[runs$Var1 == sam, ]),
       function(i) {
         train_random_forest(
           res = runs[i, 2],
           df_list = df_list,
-          train_clusters = train_clusters,
+          cluster_by_res = cluster_by_res,
           sam = runs[i, 1],
-          num_trees = num_trees
+          num_trees = num_trees,
+          verbose = verbose,
+          snn_graph = precomputed_snn,
+          precomputed_dist = precomputed_dist,
+          rf_num_threads = rf_num_threads
         )
       },
       future.seed = TRUE,
-      future.packages = c("SeuratObject", "Seurat", "ranger", "cluster", "dplyr")
+      future.packages = c("SeuratObject", "Seurat", "ranger", "cluster")
     )
+    if (verbose >= 1) {
+      message(sprintf(
+        "[future_lapply RF] %s (%d resolutions)",
+        .elapsed(t0_rf), length(res_range)
+      ))
+    }
     res <- c(res, this_result)
     p()
+    if (verbose >= 1) message(sprintf("[sample %s total] %s", sam, .elapsed(t0_sam)))
   }
 
+  if (verbose >= 1) message(sprintf("[total pipeline] %s", .elapsed(t0_total)))
   purrr::map_df(res, .f = as.data.frame)
 }

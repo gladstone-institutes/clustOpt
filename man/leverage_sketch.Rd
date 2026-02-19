@@ -68,7 +68,7 @@ cytof_sketch <- leverage_sketch(cytof_obj,
 # Large dataset with on-disk matrices
 large_sketch <- leverage_sketch(large_obj,
   sketch_size = 10000,
-  on_disk = TRUE, verbose = TRUE
+  on_disk = TRUE, verbose = 2
 )
 }
 

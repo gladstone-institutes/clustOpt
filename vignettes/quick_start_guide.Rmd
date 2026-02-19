@@ -117,7 +117,7 @@ plan("multisession", workers = 10)
 cv_results <- clust_opt(input,
   subject_ids = "donor_id",
   ndim = 20,
-  verbose = FALSE,
+  verbose = 1,
   train_with = "even"
 ) |>
   progressr::with_progress() # Optional, just adds progress bar
@@ -250,11 +250,14 @@ rankings
 ```
 
 ```{r plot_rankings}
-plot_rank_metrics(rankings)
+plot_rank_metrics(rankings, method = "rank")
+plot_rank_metrics(rankings, method = "curvature")
 ```
 
+
+
 ```{r plot_mean_rank}
-plot_mean_rank(rankings, method = "rank")
+plot_mean_rank(rankings, method = "curvature")
 ```
 
 
@@ -262,8 +265,8 @@ plot_mean_rank(rankings, method = "rank")
 ## Comparison to the cell annotations
 
 ```{r cluster}
-input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.04)
+input <- FindNeighbors(input, dims = 1:10, verbose = FALSE)
+input <- FindClusters(input, resolution = 0.4)
 
 DimPlot(input,
   group.by = "seurat_clusters",

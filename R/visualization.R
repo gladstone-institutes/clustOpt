@@ -99,12 +99,10 @@ create_sil_plots <- function(sil_dist) {
 #' @keywords internal
 second_order_diff <- function(x) {
   n <- length(x)
-  result <- rep(NA_real_, n)
-  if (n < 3) return(result)
-  for (i in 2:(n - 1)) {
-    result[i] <- x[i] - (x[i + 1] + x[i - 1]) / 2
-  }
-  result
+  if (n < 3) return(rep(NA_real_, n))
+  c(NA_real_,
+    x[2:(n - 1)] - (x[3:n] + x[1:(n - 2)]) / 2,
+    NA_real_)
 }
 
 #' @title summarize_cv_metrics
