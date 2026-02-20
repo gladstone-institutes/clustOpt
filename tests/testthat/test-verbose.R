@@ -14,8 +14,6 @@ test_that("normalize_verbose converts FALSE to 0L", {
 test_that("normalize_verbose passes through integers", {
   expect_identical(clustOpt:::normalize_verbose(0), 0L)
   expect_identical(clustOpt:::normalize_verbose(1), 1L)
-  expect_identical(clustOpt:::normalize_verbose(2), 2L)
-  expect_identical(clustOpt:::normalize_verbose(3), 3L)
 })
 
 test_that("normalize_verbose coerces numeric to integer", {

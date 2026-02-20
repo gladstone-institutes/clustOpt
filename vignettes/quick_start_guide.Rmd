@@ -112,7 +112,7 @@ This separation ensures that the evaluation is performed on data independent fro
 Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. The repeated messages about "SeuratObject" are a side effect of using the future plan "multisession" and should not occur with other future plans.
 
 ```{r clustOpt, warning=FALSE, cache=TRUE}
-plan("multisession", workers = 10)
+plan("multisession", workers = 11)
 
 cv_results <- clust_opt(input,
   subject_ids = "donor_id",
@@ -251,13 +251,12 @@ rankings
 
 ```{r plot_rankings}
 plot_rank_metrics(rankings, method = "rank")
-plot_rank_metrics(rankings, method = "curvature")
 ```
 
 
 
 ```{r plot_mean_rank}
-plot_mean_rank(rankings, method = "curvature")
+plot_mean_rank(rankings, method = "rank")
 ```
 
 
@@ -265,8 +264,8 @@ plot_mean_rank(rankings, method = "curvature")
 ## Comparison to the cell annotations
 
 ```{r cluster}
-input <- FindNeighbors(input, dims = 1:10, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.4)
+input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
+input <- FindClusters(input, resolution = 0.04)
 
 DimPlot(input,
   group.by = "seurat_clusters",
@@ -274,7 +273,7 @@ DimPlot(input,
 )
 ```
 
-We can see that at the reproducible resolution there are 3 clusters, cooresponding to each celltype in the example dataset.
+We can see that at the reproducible resolution there are 3 clusters, corresponding to each celltype in the example dataset.
 
 For convenience we provide a function to calculate the adjusted rand index for any 2 metadata columns in a seurat object so that the clustOpt resolution parameter can be compared to clusters derived from other methods.
 

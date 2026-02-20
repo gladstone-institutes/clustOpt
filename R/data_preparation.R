@@ -316,15 +316,15 @@ project_pca <- function(train_seurat,
     message(sprintf("Evaluating test data projected onto %s", clust_pcs))
   }
 
-  # Projections using cached data
+  # Projections using crossprod (avoids materializing transposed matrices)
   result <- list(
-    train_proj_train_with_pcs = as.data.frame(t(train_scale) %*% loadings_train),
-    test_proj_train_with_pcs  = as.data.frame(t(test_scale)  %*% loadings_train),
-    test_proj_clust_pcs       = t(test_scale) %*% loadings_eval
+    train_proj_train_with_pcs = as.data.frame(crossprod(train_scale, loadings_train)),
+    test_proj_train_with_pcs  = as.data.frame(crossprod(test_scale, loadings_train)),
+    test_proj_clust_pcs       = crossprod(test_scale, loadings_eval)
   )
 
   if (compute_train_eval) {
-    result$train_proj_clust_pcs <- as.data.frame(t(train_scale) %*% loadings_eval)
+    result$train_proj_clust_pcs <- as.data.frame(crossprod(train_scale, loadings_eval))
   }
 
   result

@@ -213,10 +213,10 @@ calculate_mse_score <- function(predicted, data_frame) {
   diff_mat <- data_mat - centroid_expanded
   mse <- sum(diff_mat^2) / n
 
-  # MAD: per-cluster medians (no vectorized rowMedian in base R)
-  cluster_medians <- do.call(rbind, lapply(unique_clusters, function(cl) {
+  # MAD: per-cluster medians (vapply avoids intermediate list allocation)
+  cluster_medians <- t(vapply(unique_clusters, function(cl) {
     apply(data_mat[pred_char == cl, , drop = FALSE], 2, median)
-  }))
+  }, numeric(ncol(data_mat))))
   rownames(cluster_medians) <- unique_clusters
   median_expanded <- cluster_medians[pred_char, , drop = FALSE]
   mad <- sum(abs(data_mat - median_expanded)) / n
@@ -268,25 +268,27 @@ calculate_modularity <- function(adj_matrix, clusters, directed = FALSE) {
     dims = c(n_nodes, n_clusters)
   )
 
-  # Calculate modularity using matrix operations
+  # Calculate modularity using matrix operations (crossprod avoids dense t(B))
+  AB <- adj_matrix %*% B
   if (directed) {
     k_in <- Matrix::rowSums(adj_matrix)
     k_out <- Matrix::colSums(adj_matrix)
 
     # Edges within communities
-    trace_term <- sum(Matrix::diag(t(B) %*% adj_matrix %*% B))
+    trace_term <- sum(Matrix::diag(Matrix::crossprod(B, AB)))
 
     # Expected edges under null model
-    expected_term <- sum((t(B) %*% k_out) * (t(B) %*% k_in))
+    expected_term <- sum(Matrix::crossprod(B, k_out) *
+                         Matrix::crossprod(B, k_in))
 
   } else {
     k <- Matrix::rowSums(adj_matrix)
 
     # Edges within communities
-    trace_term <- sum(Matrix::diag(t(B) %*% adj_matrix %*% B)) / 2
+    trace_term <- sum(Matrix::diag(Matrix::crossprod(B, AB))) / 2
 
     # Expected edges under null model
-    k_communities <- as.vector(t(B) %*% k)
+    k_communities <- as.vector(Matrix::crossprod(B, k))
     expected_term <- sum(k_communities^2) / (4 * m)
   }
 

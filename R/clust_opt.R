@@ -146,8 +146,10 @@ clust_opt <- function(input,
   progressr::handlers("progress")
   p <- progressr::progressor(along = unique(runs[, 1]))
 
-  res <- NULL
-  for (sam in unique(runs[, 1])) {
+  unique_samples <- unique(runs[, 1])
+  res <- vector("list", length(unique_samples))
+  for (sam_idx in seq_along(unique_samples)) {
+    sam <- unique_samples[sam_idx]
     t0_sam <- Sys.time()
     if (verbose >= 1) message(paste0("Holdout subject: ", sam))
     if (verbose >= 2) {
@@ -346,11 +348,12 @@ clust_opt <- function(input,
         .elapsed(t0_rf), length(res_range)
       ))
     }
-    res <- c(res, this_result)
+    res[[sam_idx]] <- this_result
     p()
     if (verbose >= 1) message(sprintf("[sample %s total] %s", sam, .elapsed(t0_sam)))
   }
 
   if (verbose >= 1) message(sprintf("[total pipeline] %s", .elapsed(t0_total)))
+  res <- unlist(res, recursive = FALSE)
   purrr::map_df(res, .f = as.data.frame)
 }
