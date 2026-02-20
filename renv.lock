@@ -858,7 +858,7 @@
     },
     "future.apply": {
       "Package": "future.apply",
-      "Version": "1.20.1",
+      "Version": "1.20.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -868,7 +868,7 @@
         "parallel",
         "utils"
       ],
-      "Hash": "8275d30422b5ba5f96a90b706d4cd14c"
+      "Hash": "d1fe7b3f0899c110c2a6ccc460328ea9"
     },
     "generics": {
       "Package": "generics",
@@ -1937,7 +1937,7 @@
     },
     "shiny": {
       "Package": "shiny",
-      "Version": "1.12.1",
+      "Version": "1.13.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1967,7 +1967,7 @@
         "withr",
         "xtable"
       ],
-      "Hash": "4eee104c56972c9ef07741219099b0dd"
+      "Hash": "3ae8521a5a4576fc4b78d00d401f22f9"
     },
     "sitmo": {
       "Package": "sitmo",

@@ -29,7 +29,7 @@ split_pca_dimensions <- function(input,
 
 
   if (verbose >= 2) {
-    message("Splitting PCs into 2 sets odd and even")
+    cli::cli_alert_info("Splitting PCs into 2 sets odd and even")
   }
   pca <- input@reductions$pca
   dims <- ncol(pca@cell.embeddings)
@@ -263,7 +263,7 @@ project_pca <- function(train_seurat,
   }
 
   if (verbose >= 2) {
-    message(sprintf("Training with data projected onto %s", train_with_pcs))
+    cli::cli_alert_info("Training with data projected onto {.field {train_with_pcs}}")
   }
 
   assay_id <- switch(dtype,
@@ -286,11 +286,10 @@ project_pca <- function(train_seurat,
   n_shared_genes <- length(common_features)
   total_genes <- nrow(train_scale_full)
   if (verbose >= 2) {
-    message(sprintf(
-      "Found %d (%.2f%%) shared genes used for projecting test data",
-      n_shared_genes,
-      (n_shared_genes / total_genes) * 100
-    ))
+    pct <- round((n_shared_genes / total_genes) * 100, 2)
+    cli::cli_alert_info(
+      "Found {n_shared_genes} ({pct}%) shared genes for projecting test data"
+    )
   }
 
   if ((n_shared_genes / total_genes) * 100 < 80) {
@@ -313,7 +312,7 @@ project_pca <- function(train_seurat,
   )[common_features, ]
 
   if (verbose >= 2) {
-    message(sprintf("Evaluating test data projected onto %s", clust_pcs))
+    cli::cli_alert_info("Evaluating test data projected onto {.field {clust_pcs}}")
   }
 
   # Projections using crossprod (avoids materializing transposed matrices)

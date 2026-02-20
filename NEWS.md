@@ -14,6 +14,7 @@
   curvature-based local optima detection via second-order finite differences.
 - New `summarize_cv_metrics()` for per-resolution metric summaries.
 - New visualization functions `plot_rank_metrics()` and `plot_mean_rank()`.
+- Logging improvements to make clustOpt messages distinct from its dependencies.
 
 ## Performance improvements
 

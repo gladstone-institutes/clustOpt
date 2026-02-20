@@ -96,11 +96,12 @@ clust_opt <- function(input,
                       rf_num_threads = 1) {
   verbose <- normalize_verbose(verbose)
   t0_total <- Sys.time()
+  if (verbose >= 1) cli::cli_rule(left = "{.pkg clustOpt}")
 
   # Make sure a seed is set, only setting if the user has not set one
   if (!exists(".Random.seed", envir = .GlobalEnv)) {
     t <- as.integer(Sys.time())
-    if (verbose >= 1) message("Setting seed: ", t)
+    if (verbose >= 1) cli::cli_alert_info("Setting seed: {t}")
     set.seed(t)
   }
 
@@ -114,12 +115,12 @@ clust_opt <- function(input,
 
   if (!skip_sketch) {
     if (check_size(input) || !is.null(sketch_size)) {
-      if (verbose >= 1) message("Sketching input data")
+      if (verbose >= 1) cli::cli_alert_info("Sketching input data")
       t0_sketch <- Sys.time()
       input <- leverage_sketch(input, sketch_size, dtype, verbose = verbose)
-      if (verbose >= 1) message(sprintf("[sketch] %s", .elapsed(t0_sketch)))
+      if (verbose >= 1) cli::cli_alert_success("[sketch] {(.elapsed(t0_sketch))}")
     } else {
-      if (verbose >= 1) message("Input is small enough to run with all cells")
+      if (verbose >= 1) cli::cli_alert_info("Input is small enough to run with all cells")
     }
   }
 
@@ -136,10 +137,9 @@ clust_opt <- function(input,
   # Get every combination of test sample and resolution
   runs <- expand.grid(sample_names, res_range)
   if (verbose >= 1) {
-    message(paste0(
-      "Found ", nrow(runs),
-      " combinations of test subject and resolution"
-    ))
+    cli::cli_alert_info(
+      "Found {nrow(runs)} combinations of test subject and resolution"
+    )
   }
 
   # Set up progress logging
@@ -151,9 +151,9 @@ clust_opt <- function(input,
   for (sam_idx in seq_along(unique_samples)) {
     sam <- unique_samples[sam_idx]
     t0_sam <- Sys.time()
-    if (verbose >= 1) message(paste0("Holdout subject: ", sam))
+    if (verbose >= 1) cli::cli_h2("Holdout subject: {sam}")
     if (verbose >= 2) {
-      message(paste0("Preparing training data.."))
+      cli::cli_alert_info("Preparing training data...")
     }
 
     t0_prep_train <- Sys.time()
@@ -165,10 +165,10 @@ clust_opt <- function(input,
       test_id = sam,
       verbose = verbose
     )
-    if (verbose >= 1) message(sprintf("[prep_train] %s", .elapsed(t0_prep_train)))
+    if (verbose >= 1) cli::cli_alert_success("[prep_train] {(.elapsed(t0_prep_train))}")
 
     if (verbose >= 2) {
-      message(paste0("Preparing test data.."))
+      cli::cli_alert_info("Preparing test data...")
     }
 
     t0_prep_test <- Sys.time()
@@ -179,7 +179,7 @@ clust_opt <- function(input,
       test_id = sam,
       verbose = verbose
     )
-    if (verbose >= 1) message(sprintf("[prep_test] %s", .elapsed(t0_prep_test)))
+    if (verbose >= 1) cli::cli_alert_success("[prep_test] {(.elapsed(t0_prep_test))}")
 
     t0_pca <- Sys.time()
     if (dtype == "scRNA") {
@@ -201,11 +201,11 @@ clust_opt <- function(input,
       # Create 2 separate PCA reductions
       train <- split_pca_dimensions(train, verbose)
       if (verbose >= 1) {
-        message(sprintf("[RunPCA + split_pca_dimensions] %s", .elapsed(t0_pca)))
+        cli::cli_alert_success("[RunPCA + split_pca_dimensions] {(.elapsed(t0_pca))}")
       }
 
       if (verbose >= 2) {
-        message(sprintf("Clustering with %s", clust_pcs))
+        cli::cli_alert_info("Clustering with {.field {clust_pcs}}")
       }
 
       t0_clust <- Sys.time()
@@ -222,7 +222,7 @@ clust_opt <- function(input,
         verbose = (verbose >= 3)
       )
       if (verbose >= 1) {
-        message(sprintf("[FindNeighbors + FindClusters] %s", .elapsed(t0_clust)))
+        cli::cli_alert_success("[FindNeighbors + FindClusters] {(.elapsed(t0_clust))}")
       }
     } else {
       train <- Seurat::ScaleData(train, features = NULL, verbose = (verbose >= 3))
@@ -249,7 +249,7 @@ clust_opt <- function(input,
       # Create 2 separate PCA reductions
       train <- split_pca_dimensions(train, verbose)
       if (verbose >= 1) {
-        message(sprintf("[RunPCA + split_pca_dimensions] %s", .elapsed(t0_pca)))
+        cli::cli_alert_success("[RunPCA + split_pca_dimensions] {(.elapsed(t0_pca))}")
       }
 
       t0_clust <- Sys.time()
@@ -266,11 +266,11 @@ clust_opt <- function(input,
         verbose = (verbose >= 3)
       )
       if (verbose >= 1) {
-        message(sprintf("[FindNeighbors + FindClusters] %s", .elapsed(t0_clust)))
+        cli::cli_alert_success("[FindNeighbors + FindClusters] {(.elapsed(t0_clust))}")
       }
     }
     if (verbose >= 2) {
-      message("Clustering complete..")
+      cli::cli_alert_success("Clustering complete")
     }
 
     t0_project <- Sys.time()
@@ -291,16 +291,16 @@ clust_opt <- function(input,
       verbose = verbose
     )
     rm(train, test)
-    if (verbose >= 1) message(sprintf("[project_pca] %s", .elapsed(t0_project)))
+    if (verbose >= 1) cli::cli_alert_success("[project_pca] {(.elapsed(t0_project))}")
 
     if (verbose >= 1) {
-      message(sprintf(
-        "[data dimensions] train: %d cells, test: %d cells, %d PCs, %d resolutions",
-        nrow(df_list[["train_proj_train_with_pcs"]]),
-        nrow(df_list[["test_proj_train_with_pcs"]]),
-        ncol(df_list[["test_proj_train_with_pcs"]]),
-        length(res_range)
-      ))
+      n_train <- nrow(df_list[["train_proj_train_with_pcs"]])
+      n_test <- nrow(df_list[["test_proj_train_with_pcs"]])
+      n_pcs <- ncol(df_list[["test_proj_train_with_pcs"]])
+      n_res <- length(res_range)
+      cli::cli_alert_info(
+        "train: {n_train} cells, test: {n_test} cells, {n_pcs} PCs, {n_res} resolutions"
+      )
     }
 
     # Precompute SNN graph (resolution-invariant)
@@ -311,16 +311,14 @@ clust_opt <- function(input,
       coords_mat, k.param = 20, compute.SNN = TRUE,
       prune.SNN = 1 / 15, verbose = (verbose >= 3)
     )[["snn"]]
-    if (verbose >= 1) message(sprintf("[precompute SNN] %s", .elapsed(t0_snn)))
+    if (verbose >= 1) cli::cli_alert_success("[precompute SNN] {(.elapsed(t0_snn))}")
 
     # Precompute distance matrix for silhouette (resolution-invariant)
     t0_dist <- Sys.time()
     precomputed_dist <- dist(df_list[["test_proj_clust_pcs"]])
     if (verbose >= 1) {
-      message(sprintf(
-        "[precompute dist] %s (%d cells)",
-        .elapsed(t0_dist), nrow(df_list[["test_proj_clust_pcs"]])
-      ))
+      n_cells <- nrow(df_list[["test_proj_clust_pcs"]])
+      cli::cli_alert_success("[precompute dist] {(.elapsed(t0_dist))} ({n_cells} cells)")
     }
 
     t0_rf <- Sys.time()
@@ -343,17 +341,18 @@ clust_opt <- function(input,
       future.packages = c("SeuratObject", "Seurat", "ranger", "cluster")
     )
     if (verbose >= 1) {
-      message(sprintf(
-        "[future_lapply RF] %s (%d resolutions)",
-        .elapsed(t0_rf), length(res_range)
-      ))
+      n_res <- length(res_range)
+      cli::cli_alert_success("[future_lapply RF] {(.elapsed(t0_rf))} ({n_res} resolutions)")
     }
     res[[sam_idx]] <- this_result
     p()
-    if (verbose >= 1) message(sprintf("[sample %s total] %s", sam, .elapsed(t0_sam)))
+    if (verbose >= 1) cli::cli_rule(right = "{sam} {(.elapsed(t0_sam))}")
   }
 
-  if (verbose >= 1) message(sprintf("[total pipeline] %s", .elapsed(t0_total)))
+  if (verbose >= 1) {
+    cli::cli_alert_success("[total pipeline] {(.elapsed(t0_total))}")
+    cli::cli_rule()
+  }
   res <- unlist(res, recursive = FALSE)
   purrr::map_df(res, .f = as.data.frame)
 }

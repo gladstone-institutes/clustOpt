@@ -75,19 +75,18 @@ leverage_sketch <- function(input,
 
   if (is.null(sketch_size)) {
     if (verbose >= 2) {
-      message("No sketch_size specified, defaulting to 10% of cells")
+      cli::cli_alert_info("No sketch_size specified, defaulting to 10% of cells")
     }
     sketch_size <- ncol(input) * 0.1
   }
 
   if (verbose >= 1) {
-    message(sprintf(
-      "Sketching %s data: %d -> %d cells",
-      dtype, ncol(input), as.integer(sketch_size)
-    ))
+    n_in <- ncol(input)
+    n_out <- as.integer(sketch_size)
+    cli::cli_alert_info("Sketching {dtype} data: {n_in} -> {n_out} cells")
   }
   if (!is.null(input@meta.data[["leverage.score"]])) {
-    if (verbose >= 1) message("\nRemoving previously calculated leverage scores...")
+    if (verbose >= 1) cli::cli_alert_info("Removing previously calculated leverage scores...")
     input@meta.data[["leverage.score"]] <- NULL
   }
 
@@ -97,7 +96,7 @@ leverage_sketch <- function(input,
       stop("The BPCells package must be installed to use on_disk")
     }
     if (verbose >= 2) {
-      message("Converting to on-disk format before sketching...")
+      cli::cli_alert_info("Converting to on-disk format before sketching...")
     }
     # Use the convert_seurat_to_bpcells function to convert to on-disk format
     input <- convert_seurat_to_bpcells(input, output_dir = output_dir)
@@ -107,41 +106,40 @@ leverage_sketch <- function(input,
   # Handle data type-specific normalization
   if (dtype == "scRNA" && !skip_norm) {
     if (verbose >= 1) {
-      message("Normalizing scRNA-seq data...")
+      cli::cli_alert_info("Normalizing scRNA-seq data...")
     }
     input <- Seurat::NormalizeData(input, verbose = (verbose >= 3))
   } else if (dtype == "CyTOF") {
     if (verbose >= 2) {
-      message("CyTOF data detected - skipping normalization
-              (expected to be arcsinh normalized)")
+      cli::cli_alert_info(
+        "CyTOF data detected - skipping normalization (expected to be arcsinh normalized)"
+      )
     }
   } else if (dtype == "scRNA" && skip_norm) {
     if (verbose >= 2) {
-      message("Skipping normalization for scRNA-seq data as requested")
+      cli::cli_alert_info("Skipping normalization for scRNA-seq data as requested")
     }
   }
 
   # Handle feature selection based on data type
   if (dtype == "scRNA") {
     if (verbose >= 1) {
-      message("Finding variable features for scRNA-seq data...")
+      cli::cli_alert_info("Finding variable features for scRNA-seq data...")
     }
     input <- Seurat::FindVariableFeatures(input, verbose = (verbose >= 3))
     features_to_use <- Seurat::VariableFeatures(input)
     if (verbose >= 2) {
-      message(sprintf(
-        "Using %d variable features for sketching",
-        length(features_to_use)
-      ))
+      cli::cli_alert_info(
+        "Using {length(features_to_use)} variable features for sketching"
+      )
     }
   } else if (dtype == "CyTOF") {
     # For CyTOF, use all features since they represent a curated panel of markers
     features_to_use <- rownames(input)
     if (verbose >= 2) {
-      message(sprintf(
-        "Using all %d features for CyTOF sketching",
-        length(features_to_use)
-      ))
+      cli::cli_alert_info(
+        "Using all {length(features_to_use)} features for CyTOF sketching"
+      )
     }
   }
 
@@ -217,10 +215,9 @@ convert_seurat_to_bpcells <- function(seurat_obj, output_dir = NULL,
     )
     # Check if the counts matrix is already in BPCells format
     if (inherits(seurat_obj[[assay_name]]@layers$counts, "BPMatrix")) {
-      message(paste(
-        "Counts matrix for assay",
-        assay_name, "is already in BPCells format. Skipping."
-      ))
+      cli::cli_alert_info(
+        "Counts matrix for assay {.field {assay_name}} is already in BPCells format. Skipping."
+      )
       next
     }
 

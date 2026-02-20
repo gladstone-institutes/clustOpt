@@ -86,13 +86,14 @@ get_valid_samples <- function(input, subject_ids, min_cells, verbose = 0) {
       dplyr::pull(!!sym(subject_ids))
 
     if (verbose >= 1) {
-      message(
-        "Removing ", nrow(insufficient_samples), " subject(s) with fewer than ",
-        min_cells, " cells:\n",
-        paste(paste0(removed_subjects, " (", insufficient_samples$cell_count, " cells)"),
-          collapse = "\n"
-        )
+      n_removed <- nrow(insufficient_samples)
+      cli::cli_alert_warning(
+        "Removing {n_removed} subject(s) with fewer than {min_cells} cells:"
       )
+      items <- paste0(
+        removed_subjects, " (", insufficient_samples$cell_count, " cells)"
+      )
+      cli::cli_ul(items)
     }
   }
 
@@ -110,13 +111,14 @@ get_valid_samples <- function(input, subject_ids, min_cells, verbose = 0) {
 
   # Return the list of valid subject names with confirmation message
   if (verbose >= 1) {
-    message(
-      "Using ", nrow(sufficient_samples), " subject(s) that have at least ",
-      min_cells, " cells:\n",
-      paste(paste0(valid_samples, " (", sufficient_samples$cell_count, " cells)"),
-        collapse = "\n"
-      )
+    n_valid <- nrow(sufficient_samples)
+    cli::cli_alert_success(
+      "Using {n_valid} subject(s) with at least {min_cells} cells:"
     )
+    items <- paste0(
+      valid_samples, " (", sufficient_samples$cell_count, " cells)"
+    )
+    cli::cli_ul(items)
   }
 
   return(valid_samples)
