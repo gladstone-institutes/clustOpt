@@ -1,6 +1,6 @@
 Package: clustOpt
-Version: 1.1
-Date: 2024-07-22
+Version: 1.2
+Date: 2025-02-20
 Title: Optimizing Clustering Resolution for Multi-subject Single Cell Studies
 Description: Optimal clustering resolution parameters determined through Random Forests, a silhouette score-based assessment of clustering validity, and subject-wise cross-validation.
 Author: Natalie Gill [aut, cre], Reuben Thomas [aut], Min-Gyoung Shin [aut], Ayushi Agrawal [aut]
