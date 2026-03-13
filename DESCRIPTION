@@ -11,7 +11,7 @@ Authors@R: c(person("Natalie", "Gill", role = c("aut", "cre"), email = "natalie.
 	person("Erwin", "Perez", role = c("aut"), email = "perezerw@usc.edu"),
 	person("Reuben", "Thomas", role = c("aut"), email = "reuben.thomas@gladstone.ucsf.edu"))
 Depends:
-    R (>= 4.4)
+    R (>= 4.5.0)
 Imports:
     cli,
     progressr,
