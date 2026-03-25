@@ -28,7 +28,7 @@ jobs:
           echo "source_changed=true" >> "$GITHUB_OUTPUT"
 
           # Check the rendered vignette for its compile date
-          VIGNETTE="vignettes/quick_start_guide.html"
+          VIGNETTE="docs/articles/quick_start_guide.html"
           if [ ! -f "$VIGNETTE" ]; then
             echo "status=missing" >> "$GITHUB_OUTPUT"
             exit 0
@@ -58,7 +58,7 @@ jobs:
         with:
           header: vignette-check
           message: |
-            ${{ steps.check.outputs.status == 'stale' && format('⚠️ **Vignette and site are out of date.** Compiled on {0} but source files were changed on {1}.', steps.check.outputs.compile_date, steps.check.outputs.last_source_change) || steps.check.outputs.status == 'missing' && '⚠️ **Rendered vignette not found.** No `vignettes/quick_start_guide.html` in this branch.' || '⚠️ **Could not determine vignette compile date.** Please verify it has been re-rendered.' }}
+            ${{ steps.check.outputs.status == 'stale' && format('⚠️ **Vignette and site are out of date.** Compiled on {0} but source files were changed on {1}.', steps.check.outputs.compile_date, steps.check.outputs.last_source_change) || steps.check.outputs.status == 'missing' && '⚠️ **Rendered vignette not found.** No `docs/articles/quick_start_guide.html` in this branch.' || '⚠️ **Could not determine vignette compile date.** Please verify it has been re-rendered.' }}
 
             Please rebuild the site locally before merging:
 
