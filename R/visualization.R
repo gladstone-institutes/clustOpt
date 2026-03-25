@@ -126,42 +126,130 @@ summarize_cv_metrics <- function(cv_results) {
 
 #' @title suggest_resolution
 #' @description
-#' Compute two complementary resolution rankings and return them in a single
-#' data frame: a direct rank aggregation of median metric values, and a
-#' curvature-based local optima detection using second-order finite differences.
+#' Rank clustering resolutions using one of two methods: \code{"rank"}
+#' (default) ranks all resolutions by their median metric values, while
+#' \code{"local_optima"} first filters to reproducible resolutions (low upper
+#' Hellinger CI), then ranks the filtered set using both direct rank
+#' aggregation and curvature-based local optima detection.
 #'
 #' @param cv_results Data frame from \code{\link{clust_opt}} cross-validation.
-#' @return A data frame with one row per resolution containing summarized
-#'   median metrics, rank-based columns (\code{rank_sil}, \code{rank_kl},
-#'   \code{rank_hellinger}, \code{rank_modularity}, \code{mean_rank}),
-#'   curvature-based columns (\code{curvature_rank_sil}, etc.,
-#'   \code{curvature_mean_rank}), and \code{upper_Hell_95ci}. Sorted by
-#'   \code{mean_rank} ascending.
+#' @param method Character; \code{"rank"} (default) ranks all resolutions by
+#'   median metric values without filtering, \code{"local_optima"} applies
+#'   the Hellinger reproducibility filter and ranks the filtered set by both
+#'   rank aggregation and curvature.
+#' @param upper_Hell_score_thresh Numeric. Initial threshold on the upper 95\%
+#'   Hellinger CI for filtering reproducible resolutions. Default is scaled
+#'   dynamically based on the number of subjects (calibrated at 0.1 for 11
+#'   subjects). Only used when \code{method = "local_optima"}.
+#' @param upper_Hell_score_thresh_relaxed Numeric. Relaxed threshold used when
+#'   fewer than \code{min_resolutions} pass the initial filter. Default is
+#'   scaled dynamically (calibrated at 0.2 for 11 subjects). Only used when
+#'   \code{method = "local_optima"}.
+#' @param min_resolutions Integer. Minimum number of resolutions required to
+#'   pass the initial threshold before relaxing (default 4). Capped at the
+#'   total number of resolutions tested. Only used when
+#'   \code{method = "local_optima"}.
+#'
+#' @details
+#' For \code{method = "local_optima"}, resolutions are filtered to those with
+#' \code{upper_Hell_95ci < upper_Hell_score_thresh}. If fewer than
+#' \code{min_resolutions} pass, the threshold is relaxed to
+#' \code{upper_Hell_score_thresh_relaxed}. An error is raised if no resolutions
+#' pass the relaxed threshold. Curvature values (\code{second_order_diff}) are
+#' computed on the full, unfiltered resolution sequence to preserve consecutive
+#' spacing, then ranked on only the filtered subset. Both rank aggregation
+#' (\code{mean_rank}) and curvature (\code{curvature_mean_rank}) columns are
+#' included in the output for comparison.
+#'
+#' The base thresholds (0.1 / 0.2) were validated with 11-subject leave-one-out
+#' cross-validation simulations. When not explicitly set, thresholds are scaled
+#' by \code{sqrt(11 / n_subjects)} to account for wider confidence intervals
+#' with fewer subjects.
+#'
+#' For \code{method = "rank"}, all resolutions are ranked directly by their
+#' median metric values with no filtering applied.
+#'
+#' @return A data frame with one row per resolution (filtered for
+#'   \code{"local_optima"}, all for \code{"rank"}), containing summarized
+#'   median metrics and \code{upper_Hell_95ci}. For \code{"local_optima"}:
+#'   both rank-based (\code{rank_sil}, \code{rank_kl}, \code{rank_hellinger},
+#'   \code{rank_modularity}, \code{mean_rank}) and curvature-based
+#'   (\code{curvature_rank_sil}, etc., \code{curvature_mean_rank}) columns,
+#'   sorted by \code{mean_rank}. For \code{"rank"}: rank-based columns only,
+#'   sorted by \code{mean_rank}.
 #'
 #' @examples
 #' \dontrun{
 #' cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
 #' rankings <- suggest_resolution(cv_results)
-#' rankings
+#' rankings_rank <- suggest_resolution(cv_results, method = "rank")
 #' }
 #'
 #' @seealso \code{\link{clust_opt}}, \code{\link{plot_rank_metrics}},
 #'   \code{\link{plot_mean_rank}}
 #' @export
-suggest_resolution <- function(cv_results) {
+suggest_resolution <- function(cv_results,
+                               method = c("rank", "local_optima"),
+                               upper_Hell_score_thresh = NULL,
+                               upper_Hell_score_thresh_relaxed = NULL,
+                               min_resolutions = 4) {
+
+  method <- match.arg(method)
 
   # --- Summarize CV folds per resolution ---
   summ <- summarize_cv_metrics(cv_results)
-  summ[is.na(summ)] <- 0
 
   # --- Upper confidence bound on Hellinger ---
   summ$upper_Hell_95ci <- summ$median_Hell_score +
     1.96 * summ$standard_error_Hell_score
 
-  # --- Rank-based ranking (direct ranking of median values) ---
-  # Silhouette & modularity: higher is better -> rank descending
+  if (method == "rank") {
+    # --- Rank all resolutions by median metric values ---
+    summ$rank_sil        <- rank(-summ$median_score)
+    summ$rank_kl         <- rank(summ$median_KLD_score)
+    summ$rank_hellinger  <- rank(summ$median_Hell_score)
+    summ$rank_modularity <- rank(-summ$median_modularity_score)
+    summ$mean_rank <- rowMeans(
+      cbind(summ$rank_sil, summ$rank_kl,
+            summ$rank_hellinger, summ$rank_modularity)
+    )
+    summ <- summ[order(summ$mean_rank), ]
+    rownames(summ) <- NULL
+    return(summ)
+  }
 
-  # KL & Hellinger: lower is better -> rank ascending
+  # --- method = "local_optima" ---
+
+  # Scale thresholds dynamically based on number of subjects
+  n_subjects <- max(table(cv_results$resolution))
+  scale_factor <- sqrt(11 / n_subjects)
+  if (is.null(upper_Hell_score_thresh))
+    upper_Hell_score_thresh <- 0.1 * scale_factor
+  if (is.null(upper_Hell_score_thresh_relaxed))
+    upper_Hell_score_thresh_relaxed <- 0.2 * scale_factor
+
+  # --- Curvature on full (unfiltered) resolution sequence ---
+  summ$curv_sil  <- second_order_diff(summ$median_score)
+  summ$curv_kl   <- second_order_diff(summ$median_KLD_score)
+  summ$curv_hell <- second_order_diff(summ$median_Hell_score)
+  summ$curv_mod  <- second_order_diff(summ$median_modularity_score)
+
+  # --- Filter for reproducible resolutions ---
+  min_res <- min(min_resolutions, nrow(summ))
+  keep <- summ$upper_Hell_95ci < upper_Hell_score_thresh
+  if (sum(keep) < min_res)
+    keep <- summ$upper_Hell_95ci < upper_Hell_score_thresh_relaxed
+
+  if (sum(keep) == 0) {
+    stop("No resolutions passed the Hellinger reproducibility filter ",
+         "(upper_Hell_95ci < ", round(upper_Hell_score_thresh_relaxed, 3),
+         ", scaled for ", n_subjects, " subjects). ",
+         "Consider increasing upper_Hell_score_thresh_relaxed or adding ",
+         "more subjects to reduce the confidence interval width.")
+  }
+  summ <- summ[keep, ]
+
+  # --- Rank-based ranking (direct ranking of median values) ---
   summ$rank_sil        <- rank(-summ$median_score)
   summ$rank_kl         <- rank(summ$median_KLD_score)
   summ$rank_hellinger  <- rank(summ$median_Hell_score)
@@ -171,25 +259,22 @@ suggest_resolution <- function(cv_results) {
           summ$rank_hellinger, summ$rank_modularity)
   )
 
-  # --- Curvature-based ranking (second-order finite differences) ---
-  curv_sil  <- second_order_diff(summ$median_score)
-  curv_kl   <- second_order_diff(summ$median_KLD_score)
-  curv_hell <- second_order_diff(summ$median_Hell_score)
-  curv_mod  <- second_order_diff(summ$median_modularity_score)
-
-  # Silhouette, KL, modularity: want local peaks -> rank descending
-  # Hellinger: want local minima -> rank ascending
-  summ$curvature_rank_sil        <- rank(-curv_sil, na.last = "keep")
-  summ$curvature_rank_kl         <- rank(-curv_kl, na.last = "keep")
-  summ$curvature_rank_hellinger  <- rank(curv_hell, na.last = "keep")
-  summ$curvature_rank_modularity <- rank(-curv_mod, na.last = "keep")
+  # --- Curvature-based ranking (rank the pre-filter curvature values) ---
+  summ$curvature_rank_sil        <- rank(-summ$curv_sil, na.last = "keep")
+  summ$curvature_rank_kl         <- rank(-summ$curv_kl, na.last = "keep")
+  summ$curvature_rank_hellinger  <- rank(summ$curv_hell, na.last = "keep")
+  summ$curvature_rank_modularity <- rank(-summ$curv_mod, na.last = "keep")
   summ$curvature_mean_rank <- rowMeans(
     cbind(summ$curvature_rank_sil, summ$curvature_rank_kl,
           summ$curvature_rank_hellinger, summ$curvature_rank_modularity),
     na.rm = TRUE
   )
 
-  # --- Sort by rank-based mean_rank ---
+  # --- Clean up intermediate columns and sort ---
+  summ$curv_sil  <- NULL
+  summ$curv_kl   <- NULL
+  summ$curv_hell <- NULL
+  summ$curv_mod  <- NULL
   summ <- summ[order(summ$mean_rank), ]
   rownames(summ) <- NULL
   summ

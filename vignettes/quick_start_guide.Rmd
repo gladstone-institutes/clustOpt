@@ -109,7 +109,7 @@ This separation ensures that the evaluation is performed on data independent fro
 
 ## Running clustOpt
 
-Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. The repeated messages about "SeuratObject" are a side effect of using the future plan "multisession" and should not occur with other future plans.
+Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 15 minutes.
 
 ```{r clustOpt, warning=FALSE, cache=TRUE}
 plan("multisession", workers = 11)
@@ -143,106 +143,46 @@ The silhouette score distribution shows how consistently clusters are separated 
 - **Low variance across subjects** (narrow boxes) indicates reproducible clustering
 - **Local maxima** may indicate resolutions that capture natural biological structure
 
-The optimal resolution typically shows high median silhouette scores with low variance across subjects, suggesting that the clustering captures cell populations that are consistently distinguishable regardless of which subjects are used for training. Use `suggest_resolution()` to identify the best resolution across all metrics.
+The optimal resolution typically shows high median silhouette scores with low variance across subjects, suggesting that the clustering captures cell populations that are consistently distinguishable regardless of which subjects are used for training.
 
 ## Additional Quality Metrics
 
-The `clust_opt()` function calculates several metrics beyond silhouette scores to help evaluate clustering quality. Let's examine the full output:
+> **Note:** We currently recommend **silhouette scores** for resolution selection. The additional metrics below are still undergoing benchmarking across different experimental settings.
+
+`clust_opt()` also computes the following at each resolution:
+
+| Metric | Measures | Better |
+|--------|----------|--------|
+| **avg_width** | Silhouette score — cluster separation (recommended) | Higher |
+| **KLdivergence** | KL divergence of cluster proportions (experimental) | Lower |
+| **Hellinger** | Hellinger distance of cluster proportions (experimental) | Lower |
+| **modularity** | Graph modularity of cluster assignments (experimental) | Higher |
 
 ```{r metrics_overview}
-# Preview the data
 head(cv_results)
 ```
 
-### Understanding the Metrics
-
-Each metric provides a different perspective on clustering quality:
-
-- **avg_width**: Average silhouette score across all test cells. Measures how well-separated clusters are (range: -1 to +1, higher is better).
-
-- **cluster_median_widths**: Median silhouette score per cluster, then averaged. 
-
-- **KLdivergence**: Kullback-Leibler divergence D_KL(training || predicted). Measures how much the predicted cluster proportions in the test subject differ from the training data. Lower values indicate more reproducible clustering (0 = identical distributions).
-
-- **Hellinger**: Hellinger distance between training and predicted cluster proportions. Similar to KL divergence but symmetric and bounded (0 to 1). Lower is better.
-
-- **modularity**: Measures clustering quality using a k-nearest neighbor graph (k=20). Higher values indicate that cells cluster with their assigned neighbors rather than cells from other clusters (range: -0.5 to 1, higher is better).
-
-### Distribution Similarity (KL Divergence & Hellinger Distance)
-
-These metrics assess whether cluster proportions are **reproducible across subjects**. When a subject is held out:
-
-- The Random Forest predicts cluster assignments for the test subject
-- The predicted cluster proportions are compared to the training cluster proportions
-
-**Lower values** indicate that different subjects produce similar cluster compositions at that resolution. This is important because a reproducible resolution should identify the same underlying cell populations regardless of which subjects are used for training.
-
-- **KL Divergence** is asymmetric and can approach infinity if a cluster is present in training but completely absent in predictions
-- **Hellinger Distance** is symmetric and bounded (0-1), providing a more stable comparison
-
-Both metrics use a pseudocount of 1 to handle clusters that may be missing in predictions.
-
-```{r plot_kl}
-
+```{r plot_metrics, fig.height=10}
 cv_results |>
   drop_na() |>
-  ggplot(aes(x = as.factor(resolution), y = KLdivergence)) +
+  pivot_longer(cols = c(KLdivergence, Hellinger, modularity),
+               names_to = "metric", values_to = "value") |>
+  ggplot(aes(x = as.factor(resolution), y = value)) +
   geom_boxplot() +
+  facet_wrap(~metric, scales = "free_y", ncol = 1) +
   theme_bw() +
-  labs(
-    title = "KL Divergence by Resolution",
-    x = "Resolution",
-    y = "KL Divergence"
-  )
+  labs(x = "Resolution", y = NULL)
 ```
 
-```{r plot_hellinger}
-cv_results |>
-  drop_na() |>
-  ggplot(aes(x = as.factor(resolution), y = Hellinger)) +
-  geom_boxplot() +
-  theme_bw() +
-  labs(
-    title = "Hellinger Distance by Resolution",
-    x = "Resolution",
-    y = "Hellinger Distance"
-  )
-```
+## Suggesting a Resolution
 
-### Graph-Based Clustering Quality (Modularity)
+`suggest_resolution()` provides two approaches for identifying optimal resolutions:
 
-Modularity measures whether the predicted cluster assignments partition the data's neighborhood graph better than expected by chance:
+- **`"rank"`** (default): Ranks all tested resolutions by aggregating their median metric values. Works with any number of subjects.
 
-1. A k-nearest neighbor graph (k=20) is constructed from the test data projected onto the clustering PCs
-2. Modularity compares the fraction of edges within clusters to what would be expected if edges were distributed randomly (while preserving node degrees)
+- **`"local_optima"`**: Filters to resolutions with reproducible clustering (low Hellinger distance across subjects), then ranks the filtered set using both rank aggregation and curvature-based detection of local optima in the metric curves. Recommended when you have >=10 subjects, as the Hellinger filter thresholds scale automatically with the number of subjects.
 
-Modularity complements silhouette scores by capturing local connectivity patterns rather than global distances.
-
-```{r plot_modularity}
-cv_results |>
-  drop_na() |>
-  ggplot(aes(x = as.factor(resolution), y = modularity)) +
-  geom_boxplot() +
-  theme_bw() +
-  labs(
-    title = "Modularity by Resolution",
-    x = "Resolution",
-    y = "Modularity"
-  )
-```
-
-### Interpreting Multiple Metrics
-
-When selecting an optimal resolution, consider these guidelines:
-
-1. **Silhouette scores**: Look for resolutions where scores are high and stable across subjects. Declining silhouette at higher resolutions often indicates over-clustering.
-
-2. **KL Divergence / Hellinger**: Lower values indicate reproducible cluster proportions across subjects. Increasing values at higher resolutions suggest that the clustering becomes subject-specific rather than capturing shared biology.
-
-3. **Modularity**: Higher values indicate predicted clusters that match the local neighborhood structure of the test data. Decreasing modularity at higher resolutions suggests clusters are becoming subject-specific and don't generalize well.
-
-
-We encourage you to look at the plots for all of the metrics before picking a resolution. The `suggest_resolution()` function computes two complementary ranking approaches: a direct rank aggregation of median metric values, and a curvature-based local optima detection using second-order finite differences. Both are returned in a single data frame for comparison.
+`plot_rank_metrics()` shows the per-metric ranks and `plot_mean_rank()` shows the aggregate.
 
 ```{r suggest_resolution}
 rankings <- suggest_resolution(cv_results)
@@ -250,16 +190,14 @@ rankings
 ```
 
 ```{r plot_rankings}
-plot_rank_metrics(rankings, method = "rank")
+plot_rank_metrics(rankings)
 ```
-
-
 
 ```{r plot_mean_rank}
-plot_mean_rank(rankings, method = "rank")
+plot_mean_rank(rankings)
 ```
 
-
+This tutorial uses the default `"rank"` method. The example dataset contains only 3 well-separated celltypes, so a simple rank aggregation is sufficient. For real-world datasets with a denser resolution grid and more ambiguous cluster structure, `method = "local_optima"` can better identify resolutions that sit at natural inflection points in the metric curves. See `?suggest_resolution` for details.
 
 ## Comparison to the cell annotations
 
@@ -273,9 +211,7 @@ DimPlot(input,
 )
 ```
 
-We can see that at the reproducible resolution there are 3 clusters, corresponding to each celltype in the example dataset.
-
-For convenience we provide a function to calculate the adjusted rand index for any 2 metadata columns in a seurat object so that the clustOpt resolution parameter can be compared to clusters derived from other methods.
+At the reproducible resolution there are 3 clusters, corresponding to the 3 celltypes. Use `adjusted_rand_index()` to compare any two metadata columns:
 
 ```{r}
 adjusted_rand_index(input,

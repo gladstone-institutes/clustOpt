@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">clustOpt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
 
       <h1>clustOpt: Quickstart Guide</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2025-12-19</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-03-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/gladstone-institutes/clustOpt/blob/HEAD/vignettes/quick_start_guide.Rmd" class="external-link"><code>vignettes/quick_start_guide.Rmd</code></a></small>
       <div class="d-none name"><code>quick_start_guide.Rmd</code></div>
@@ -116,7 +116,7 @@ function.</p>
 <span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span>verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.org/seurat/reference/ElbowPlot.html" class="external-link">ElbowPlot</a></span><span class="op">(</span><span class="va">input</span>, ndims <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/elbowplot-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/elbowplot-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">input</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -125,21 +125,21 @@ function.</p>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/UMAP-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/UMAP-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  group.by <span class="op">=</span> <span class="st">"broad_cell_type"</span>,</span>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-2-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  group.by <span class="op">=</span> <span class="st">"author_cell_type"</span>,</span>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-3-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="768"></p>
 <div class="section level2">
 <h2 id="how-clustopt-works">How clustOpt Works<a class="anchor" aria-label="anchor" href="#how-clustopt-works"></a>
 </h2>
@@ -167,53 +167,163 @@ providing a more honest assessment of clustering reproducibility.</p>
 <code>future</code> and <code>future.batchtools</code> can be used for
 HPC job schedulers. For details on which plan to use for your setup, see
 the future package documentation. The code below requires a large amount
-of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. The
-repeated messages about “SeuratObject” are a side effect of using the
-future plan “multisession” and should not occur with other future
-plans.</p>
+of RAM (32 GB recommended) and 10 cores to run in about 15 minutes.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"multisession"</span>, workers <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"multisession"</span>, workers <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cv_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clust_opt.html">clust_opt</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  subject_ids <span class="op">=</span> <span class="st">"donor_id"</span>,</span>
 <span>  ndim <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  train_with <span class="op">=</span> <span class="st">"even"</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">progressr</span><span class="fu">::</span><span class="fu"><a href="https://progressr.futureverse.org/reference/with_progress.html" class="external-link">with_progress</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># Optional, just adds progress bar</span></span>
-<span><span class="co">#&gt; Input is small enough to run with all cells</span></span>
-<span><span class="co">#&gt; Using 10 subject(s) that have at least 50 cells:</span></span>
-<span><span class="co">#&gt; JP_RIK_H073 (100 cells)</span></span>
-<span><span class="co">#&gt; JP_RIK_H131 (83 cells)</span></span>
-<span><span class="co">#&gt; KR_SGI_H002 (76 cells)</span></span>
-<span><span class="co">#&gt; KR_SGI_H136 (127 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H09a (52 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H077 (147 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H138 (130 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H153 (85 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H166 (123 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H319 (77 cells)</span></span>
-<span><span class="co">#&gt; Found 110 combinations of test subject and resolution</span></span>
-<span><span class="co">#&gt; Holdout subject: JP_RIK_H073</span></span>
-<span><span class="co">#&gt; Found 2932 (97.73%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: JP_RIK_H131</span></span>
-<span><span class="co">#&gt; Found 2923 (97.43%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: KR_SGI_H002</span></span>
-<span><span class="co">#&gt; Found 2923 (97.43%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: KR_SGI_H136</span></span>
-<span><span class="co">#&gt; Found 2942 (98.07%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H09a</span></span>
-<span><span class="co">#&gt; Found 2820 (94.00%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H077</span></span>
-<span><span class="co">#&gt; Found 2988 (99.60%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H138</span></span>
-<span><span class="co">#&gt; Found 2956 (98.53%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H153</span></span>
-<span><span class="co">#&gt; Found 2922 (97.40%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H166</span></span>
-<span><span class="co">#&gt; Found 2956 (98.53%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H319</span></span>
-<span><span class="co">#&gt; Found 2896 (96.53%) shared genes used for projecting test data</span></span>
+<span><span class="co">#&gt; ── <span style="color: #0000BB;">clustOpt</span> ────────────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Input is small enough to run with all cells</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Using 10 subject(s) with at least 50 cells:</span></span>
+<span><span class="co">#&gt; • JP_RIK_H073 (100 cells)</span></span>
+<span><span class="co">#&gt; • JP_RIK_H131 (83 cells)</span></span>
+<span><span class="co">#&gt; • KR_SGI_H002 (76 cells)</span></span>
+<span><span class="co">#&gt; • KR_SGI_H136 (127 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H09a (52 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H077 (147 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H138 (130 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H153 (85 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H166 (123 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H319 (77 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Found 110 combinations of test subject and resolution</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: JP_RIK_H073</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 38.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 65.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 32.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 900 cells, test: 100 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (100 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.5s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ────────────────────────────────────────────────────────── JP_RIK_H073 139.5s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: JP_RIK_H131</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 29.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 51.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 8.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 917 cells, test: 83 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (83 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.9s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── JP_RIK_H131 92.8s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: KR_SGI_H002</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 924 cells, test: 76 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (76 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.0s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H002 68.1s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: KR_SGI_H136</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 873 cells, test: 127 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (127 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H136 66.8s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H09a</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 32.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 11.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 948 cells, test: 52 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (52 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 4.1s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H09a 68.3s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H077</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 36.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 853 cells, test: 147 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (147 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.5s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H077 69.5s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H138</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 20.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 35.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 870 cells, test: 130 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (130 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H138 69.3s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H153</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 35.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 915 cells, test: 85 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (85 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.8s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H153 70.5s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H166</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 32.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 877 cells, test: 123 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (123 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.5s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H166 67.7s ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H319</span> ──</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 9.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 923 cells, test: 77 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (77 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.8s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H319 65.4s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [total pipeline] 778.0s</span></span>
+<span><span class="co">#&gt; ────────────────────────────────────────────────────────────────────────────────</span></span>
 <span></span>
 <span><span class="co"># Shut down stray workers</span></span>
 <span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"sequential"</span><span class="op">)</span></span></code></pre></div>
@@ -225,16 +335,16 @@ plans.</p>
 <code class="sourceCode R"><span><span class="va">plots</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_sil_plots.html">create_sil_plots</a></span><span class="op">(</span><span class="va">cv_results</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plots</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/plotting-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-2.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/plotting-2.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-3.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/plotting-3.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">[[</span><span class="fl">4</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-4.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/plotting-4.png" class="r-plt" alt="" width="768"></p>
 <p>The silhouette score distribution shows how consistently clusters are
 separated across subjects at each resolution. Key patterns to look
 for:</p>
@@ -253,219 +363,153 @@ natural biological structure</li>
 <p>The optimal resolution typically shows high median silhouette scores
 with low variance across subjects, suggesting that the clustering
 captures cell populations that are consistently distinguishable
-regardless of which subjects are used for training. Use
-<code><a href="../reference/suggest_resolution.html">suggest_resolution()</a></code> to identify the best resolution across
-all metrics.</p>
+regardless of which subjects are used for training.</p>
 </div>
 <div class="section level2">
 <h2 id="additional-quality-metrics">Additional Quality Metrics<a class="anchor" aria-label="anchor" href="#additional-quality-metrics"></a>
 </h2>
-<p>The <code><a href="../reference/clust_opt.html">clust_opt()</a></code> function calculates several metrics
-beyond silhouette scores to help evaluate clustering quality. Let’s
-examine the full output:</p>
+<blockquote>
+<p><strong>Note:</strong> We currently recommend <strong>silhouette
+scores</strong> for resolution selection. The additional metrics below
+are still undergoing benchmarking across different experimental
+settings.</p>
+</blockquote>
+<p><code><a href="../reference/clust_opt.html">clust_opt()</a></code> also computes the following at each
+resolution:</p>
+<table class="table">
+<colgroup>
+<col width="30%">
+<col width="38%">
+<col width="30%">
+</colgroup>
+<thead><tr class="header">
+<th>Metric</th>
+<th>Measures</th>
+<th>Better</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>avg_width</strong></td>
+<td>Silhouette score — cluster separation (recommended)</td>
+<td>Higher</td>
+</tr>
+<tr class="even">
+<td><strong>KLdivergence</strong></td>
+<td>KL divergence of cluster proportions (experimental)</td>
+<td>Lower</td>
+</tr>
+<tr class="odd">
+<td><strong>Hellinger</strong></td>
+<td>Hellinger distance of cluster proportions (experimental)</td>
+<td>Lower</td>
+</tr>
+<tr class="even">
+<td><strong>modularity</strong></td>
+<td>Graph modularity of cluster assignments (experimental)</td>
+<td>Higher</td>
+</tr>
+</tbody>
+</table>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Preview the data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cv_results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   resolution test_sample    avg_width cluster_median_widths</span></span>
-<span><span class="co">#&gt; 1       0.02 JP_RIK_H073  0.037940990            0.04041560</span></span>
-<span><span class="co">#&gt; 2       0.04 JP_RIK_H073  0.030294964            0.04859213</span></span>
-<span><span class="co">#&gt; 3       0.06 JP_RIK_H073  0.030294964            0.04859213</span></span>
-<span><span class="co">#&gt; 4       0.08 JP_RIK_H073  0.004347761           -0.00268237</span></span>
-<span><span class="co">#&gt; 5       0.10 JP_RIK_H073  0.032621864            0.03448975</span></span>
-<span><span class="co">#&gt; 6       0.20 JP_RIK_H073 -0.013269883            0.02387077</span></span>
-<span><span class="co">#&gt;   n_predicted_clusters min_predicted_cell_per_cluster</span></span>
-<span><span class="co">#&gt; 1                    2                             43</span></span>
-<span><span class="co">#&gt; 2                    3                              4</span></span>
-<span><span class="co">#&gt; 3                    3                              4</span></span>
-<span><span class="co">#&gt; 4                    3                              3</span></span>
-<span><span class="co">#&gt; 5                    3                              4</span></span>
-<span><span class="co">#&gt; 6                    4                              6</span></span>
-<span><span class="co">#&gt;   max_predicted_cell_per_cluster      mse      mad KLdivergence  Hellinger</span></span>
-<span><span class="co">#&gt; 1                             57 5.570832 5.747649  0.007760203 0.04396979</span></span>
-<span><span class="co">#&gt; 2                             53 5.220195 5.575228  0.090715865 0.13757951</span></span>
-<span><span class="co">#&gt; 3                             53 5.220195 5.575228  0.090715865 0.13757951</span></span>
-<span><span class="co">#&gt; 4                             52 5.396809 5.634626  0.120647213 0.15612518</span></span>
-<span><span class="co">#&gt; 5                             51 5.228294 5.570249  0.093955617 0.14069579</span></span>
-<span><span class="co">#&gt; 6                             61 5.175014 5.578473  0.063462049 0.11920861</span></span>
-<span><span class="co">#&gt;   modularity</span></span>
-<span><span class="co">#&gt; 1     0.0612</span></span>
-<span><span class="co">#&gt; 2     0.0756</span></span>
-<span><span class="co">#&gt; 3     0.0756</span></span>
-<span><span class="co">#&gt; 4     0.0672</span></span>
-<span><span class="co">#&gt; 5     0.0813</span></span>
-<span><span class="co">#&gt; 6     0.0858</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="understanding-the-metrics">Understanding the Metrics<a class="anchor" aria-label="anchor" href="#understanding-the-metrics"></a>
-</h3>
-<p>Each metric provides a different perspective on clustering
-quality:</p>
-<ul>
-<li><p><strong>avg_width</strong>: Average silhouette score across all
-test cells. Measures how well-separated clusters are (range: -1 to +1,
-higher is better).</p></li>
-<li><p><strong>cluster_median_widths</strong>: Median silhouette score
-per cluster, then averaged.</p></li>
-<li><p><strong>KLdivergence</strong>: Kullback-Leibler divergence
-D_KL(training || predicted). Measures how much the predicted cluster
-proportions in the test subject differ from the training data. Lower
-values indicate more reproducible clustering (0 = identical
-distributions).</p></li>
-<li><p><strong>Hellinger</strong>: Hellinger distance between training
-and predicted cluster proportions. Similar to KL divergence but
-symmetric and bounded (0 to 1). Lower is better.</p></li>
-<li><p><strong>modularity</strong>: Measures clustering quality using a
-k-nearest neighbor graph (k=20). Higher values indicate that cells
-cluster with their assigned neighbors rather than cells from other
-clusters (range: -0.5 to 1, higher is better).</p></li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="distribution-similarity-kl-divergence-hellinger-distance">Distribution Similarity (KL Divergence &amp; Hellinger
-Distance)<a class="anchor" aria-label="anchor" href="#distribution-similarity-kl-divergence-hellinger-distance"></a>
-</h3>
-<p>These metrics assess whether cluster proportions are
-<strong>reproducible across subjects</strong>. When a subject is held
-out:</p>
-<ul>
-<li>The Random Forest predicts cluster assignments for the test
-subject</li>
-<li>The predicted cluster proportions are compared to the training
-cluster proportions</li>
-</ul>
-<p><strong>Lower values</strong> indicate that different subjects
-produce similar cluster compositions at that resolution. This is
-important because a reproducible resolution should identify the same
-underlying cell populations regardless of which subjects are used for
-training.</p>
-<ul>
-<li>
-<strong>KL Divergence</strong> is asymmetric and can approach
-infinity if a cluster is present in training but completely absent in
-predictions</li>
-<li>
-<strong>Hellinger Distance</strong> is symmetric and bounded (0-1),
-providing a more stable comparison</li>
-</ul>
-<p>Both metrics use a pseudocount of 1 to handle clusters that may be
-missing in predictions.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cv_results</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   resolution test_sample  avg_width cluster_median_widths n_predicted_clusters</span></span>
+<span><span class="co">#&gt; 1       0.02 JP_RIK_H073 -0.0278377             0.2201124                    2</span></span>
+<span><span class="co">#&gt; 2       0.04 JP_RIK_H073 -0.2112706             0.2411615                    3</span></span>
+<span><span class="co">#&gt; 3       0.06 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt; 4       0.08 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt; 5       0.10 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt; 6       0.20 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt;   min_predicted_cell_per_cluster max_predicted_cell_per_cluster      mse</span></span>
+<span><span class="co">#&gt; 1                             15                             85 231.3450</span></span>
+<span><span class="co">#&gt; 2                              2                             86 229.7787</span></span>
+<span><span class="co">#&gt; 3                              1                             87 230.9151</span></span>
+<span><span class="co">#&gt; 4                              1                             87 230.9151</span></span>
+<span><span class="co">#&gt; 5                              1                             87 230.9151</span></span>
+<span><span class="co">#&gt; 6                              0                             87 230.9151</span></span>
+<span><span class="co">#&gt;        mad KLdivergence Hellinger modularity</span></span>
+<span><span class="co">#&gt; 1 22.93898    0.3296330 0.2704394  0.1303816</span></span>
+<span><span class="co">#&gt; 2 22.73838    0.6291037 0.3341506  0.1218185</span></span>
+<span><span class="co">#&gt; 3 22.63583    0.7635659 0.3554826  0.1195556</span></span>
+<span><span class="co">#&gt; 4 22.63583    0.7635659 0.3554826  0.1195556</span></span>
+<span><span class="co">#&gt; 5 22.63583    0.7635659 0.3554826  0.1195556</span></span>
+<span><span class="co">#&gt; 6 22.63583    0.6373649 0.3357823  0.1195556</span></span></code></pre></div>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="va">cv_results</span> <span class="op">|&gt;</span></span>
+<code class="sourceCode R"><span><span class="va">cv_results</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">resolution</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">KLdivergence</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">KLdivergence</span>, <span class="va">Hellinger</span>, <span class="va">modularity</span><span class="op">)</span>,</span>
+<span>               names_to <span class="op">=</span> <span class="st">"metric"</span>, values_to <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">resolution</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">metric</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"KL Divergence by Resolution"</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Resolution"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"KL Divergence"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plot_kl-1.png" width="768"></p>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Resolution"</span>, y <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+<p><img src="quick_start_guide_files/figure-html/plot_metrics-1.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level2">
+<h2 id="suggesting-a-resolution">Suggesting a Resolution<a class="anchor" aria-label="anchor" href="#suggesting-a-resolution"></a>
+</h2>
+<p><code><a href="../reference/suggest_resolution.html">suggest_resolution()</a></code> provides two approaches for
+identifying optimal resolutions:</p>
+<ul>
+<li><p><strong><code>"rank"</code></strong> (default): Ranks all tested
+resolutions by aggregating their median metric values. Works with any
+number of subjects.</p></li>
+<li><p><strong><code>"local_optima"</code></strong>: Filters to
+resolutions with reproducible clustering (low Hellinger distance across
+subjects), then ranks the filtered set using both rank aggregation and
+curvature-based detection of local optima in the metric curves.
+Recommended when you have &gt;=10 subjects, as the Hellinger filter
+thresholds scale automatically with the number of subjects.</p></li>
+</ul>
+<p><code><a href="../reference/plot_rank_metrics.html">plot_rank_metrics()</a></code> shows the per-metric ranks and
+<code><a href="../reference/plot_mean_rank.html">plot_mean_rank()</a></code> shows the aggregate.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cv_results</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">resolution</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">Hellinger</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Hellinger Distance by Resolution"</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Resolution"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Hellinger Distance"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plot_hellinger-1.png" width="768"></p>
-</div>
-<div class="section level3">
-<h3 id="graph-based-clustering-quality-modularity">Graph-Based Clustering Quality (Modularity)<a class="anchor" aria-label="anchor" href="#graph-based-clustering-quality-modularity"></a>
-</h3>
-<p>Modularity measures whether the predicted cluster assignments
-partition the data’s neighborhood graph better than expected by
-chance:</p>
-<ol style="list-style-type: decimal">
-<li>A k-nearest neighbor graph (k=20) is constructed from the test data
-projected onto the clustering PCs</li>
-<li>Modularity compares the fraction of edges within clusters to what
-would be expected if edges were distributed randomly (while preserving
-node degrees)</li>
-</ol>
-<p>Modularity complements silhouette scores by capturing local
-connectivity patterns rather than global distances.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cv_results</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">resolution</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">modularity</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Modularity by Resolution"</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Resolution"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Modularity"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plot_modularity-1.png" width="768"></p>
-</div>
-<div class="section level3">
-<h3 id="interpreting-multiple-metrics">Interpreting Multiple Metrics<a class="anchor" aria-label="anchor" href="#interpreting-multiple-metrics"></a>
-</h3>
-<p>When selecting an optimal resolution, consider these guidelines:</p>
-<ol style="list-style-type: decimal">
-<li><p><strong>Silhouette scores</strong>: Look for resolutions where
-scores are high and stable across subjects. Declining silhouette at
-higher resolutions often indicates over-clustering.</p></li>
-<li><p><strong>KL Divergence / Hellinger</strong>: Lower values indicate
-reproducible cluster proportions across subjects. Increasing values at
-higher resolutions suggest that the clustering becomes subject-specific
-rather than capturing shared biology.</p></li>
-<li><p><strong>Modularity</strong>: Higher values indicate predicted
-clusters that match the local neighborhood structure of the test data.
-Decreasing modularity at higher resolutions suggests clusters are
-becoming subject-specific and don’t generalize well.</p></li>
-</ol>
-<p>We encourage you to look at the plots for all of the metrics before
-picking a resolution. The <code><a href="../reference/suggest_resolution.html">suggest_resolution()</a></code> function
-uses a rank aggregation approach to help pick a resolution that performs
-well across all metrics when they conflict:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Get resolution rankings across all metrics</span></span>
-<span><span class="va">rankings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_resolution.html">suggest_resolution</a></span><span class="op">(</span><span class="va">cv_results</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">rankings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_resolution.html">suggest_resolution</a></span><span class="op">(</span><span class="va">cv_results</span><span class="op">)</span></span>
 <span><span class="va">rankings</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 11 × 10</span></span></span>
-<span><span class="co">#&gt;    resolution median_sil median_kl median_hellinger median_modularity rank_sil</span></span>
-<span><span class="co">#&gt;         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>       0.1     0.016<span style="text-decoration: underline;">9</span>     0.050<span style="text-decoration: underline;">1</span>            0.108            0.077<span style="text-decoration: underline;">3</span>        4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>       0.02    0.016<span style="text-decoration: underline;">6</span>     0.045<span style="text-decoration: underline;">6</span>            0.100            0.070<span style="text-decoration: underline;">7</span>        5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>       0.06    0.018<span style="text-decoration: underline;">8</span>     0.063<span style="text-decoration: underline;">4</span>            0.118            0.074<span style="text-decoration: underline;">4</span>        2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>       0.04    0.021<span style="text-decoration: underline;">5</span>     0.063<span style="text-decoration: underline;">3</span>            0.118            0.074<span style="text-decoration: underline;">4</span>        1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>       0.08    0.018<span style="text-decoration: underline;">8</span>     0.059<span style="text-decoration: underline;">4</span>            0.118            0.073<span style="text-decoration: underline;">7</span>        3</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>       0.2     0.002<span style="text-decoration: underline;">26</span>    0.065<span style="text-decoration: underline;">7</span>            0.120            0.076<span style="text-decoration: underline;">4</span>        6</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>       0.4    -<span style="color: #BB0000;">0.066</span><span style="color: #BB0000; text-decoration: underline;">3</span>     0.167             0.185            0.058<span style="text-decoration: underline;">4</span>        7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>       0.8    -<span style="color: #BB0000;">0.098</span><span style="color: #BB0000; text-decoration: underline;">8</span>     0.145             0.180            0.049<span style="text-decoration: underline;">3</span>        9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>       0.6    -<span style="color: #BB0000;">0.078</span><span style="color: #BB0000; text-decoration: underline;">1</span>     0.189             0.202            0.051<span style="text-decoration: underline;">6</span>        8</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>       1.2    -<span style="color: #BB0000;">0.133</span>      0.181             0.198            0.035<span style="text-decoration: underline;">6</span>       10</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span>       1      -<span style="color: #BB0000;">0.152</span>      0.200             0.209            0.037<span style="text-decoration: underline;">0</span>       11</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: rank_kl &lt;dbl&gt;, rank_hellinger &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   rank_modularity &lt;dbl&gt;, mean_rank &lt;dbl&gt;</span></span></span></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Visualize individual metric ranks with mean rank overlay</span></span>
-<span><span class="fu"><a href="../reference/plot_rank_metrics.html">plot_rank_metrics</a></span><span class="op">(</span><span class="va">rankings</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plot_rankings-1.png" width="768"></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Visualize mean rank only</span></span>
-<span><span class="fu"><a href="../reference/plot_mean_rank.html">plot_mean_rank</a></span><span class="op">(</span><span class="va">rankings</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plot_mean_rank-1.png" width="768"></p>
-</div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 11 × 12</span></span></span>
+<span><span class="co">#&gt;    resolution median_score median_KLD_score median_Hell_score</span></span>
+<span><span class="co">#&gt;         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>       0.04      -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.798             0.364</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>       0.02      -<span style="color: #BB0000;">0.033</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.798             0.364</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>       0.2       -<span style="color: #BB0000;">0.052</span><span style="color: #BB0000; text-decoration: underline;">6</span>            0.726             0.354</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>       0.4       -<span style="color: #BB0000;">0.085</span><span style="color: #BB0000; text-decoration: underline;">9</span>            0.670             0.354</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>       1         -<span style="color: #BB0000;">0.034</span><span style="color: #BB0000; text-decoration: underline;">4</span>            0.730             0.389</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>       0.6       -<span style="color: #BB0000;">0.138</span>             0.675             0.362</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>       0.8       -<span style="color: #BB0000;">0.110</span>             0.680             0.369</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>       0.06      -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.849             0.372</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>       0.08      -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.849             0.372</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>       0.1       -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.849             0.372</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span>       1.2       -<span style="color: #BB0000;">0.138</span>             0.716             0.394</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 8 more variables: median_modularity_score &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   standard_error_Hell_score &lt;dbl&gt;, upper_Hell_95ci &lt;dbl&gt;, rank_sil &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   rank_kl &lt;dbl&gt;, rank_hellinger &lt;dbl&gt;, rank_modularity &lt;dbl&gt;, mean_rank &lt;dbl&gt;</span></span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_rank_metrics.html">plot_rank_metrics</a></span><span class="op">(</span><span class="va">rankings</span><span class="op">)</span></span></code></pre></div>
+<p><img src="quick_start_guide_files/figure-html/plot_rankings-1.png" class="r-plt" alt="" width="768"></p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_mean_rank.html">plot_mean_rank</a></span><span class="op">(</span><span class="va">rankings</span><span class="op">)</span></span></code></pre></div>
+<p><img src="quick_start_guide_files/figure-html/plot_mean_rank-1.png" class="r-plt" alt="" width="768"></p>
+<p>This tutorial uses the default <code>"rank"</code> method. The
+example dataset contains only 3 well-separated celltypes, so a simple
+rank aggregation is sufficient. For real-world datasets with a denser
+resolution grid and more ambiguous cluster structure,
+<code>method = "local_optima"</code> can better identify resolutions
+that sit at natural inflection points in the metric curves. See
+<code><a href="../reference/suggest_resolution.html">?suggest_resolution</a></code> for details.</p>
 </div>
 <div class="section level2">
 <h2 id="comparison-to-the-cell-annotations">Comparison to the cell annotations<a class="anchor" aria-label="anchor" href="#comparison-to-the-cell-annotations"></a>
 </h2>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">input</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">input</span>, resolution <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
+<span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">input</span>, resolution <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Number of nodes: 1000</span></span>
 <span><span class="co">#&gt; Number of edges: 31348</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Running Louvain algorithm...</span></span>
-<span><span class="co">#&gt; Maximum modularity in 10 random starts: 0.9636</span></span>
+<span><span class="co">#&gt; Maximum modularity in 10 random starts: 0.9855</span></span>
 <span><span class="co">#&gt; Number of communities: 3</span></span>
 <span><span class="co">#&gt; Elapsed time: 0 seconds</span></span>
 <span></span>
@@ -473,14 +517,11 @@ well across all metrics when they conflict:</p>
 <span>  group.by <span class="op">=</span> <span class="st">"seurat_clusters"</span>,</span>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/cluster-1.png" width="768"></p>
-<p>We can see that at the reproducible resolution there are 3 clusters,
-cooresponding to each celltype in the example dataset.</p>
-<p>For convenience we provide a function to calculate the adjusted rand
-index for any 2 metadata columns in a seurat object so that the clustOpt
-resolution parameter can be compared to clusters derived from other
-methods.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<p><img src="quick_start_guide_files/figure-html/cluster-1.png" class="r-plt" alt="" width="768"></p>
+<p>At the reproducible resolution there are 3 clusters, corresponding to
+the 3 celltypes. Use <code><a href="../reference/adjusted_rand_index.html">adjusted_rand_index()</a></code> to compare any
+two metadata columns:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/adjusted_rand_index.html">adjusted_rand_index</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  meta1 <span class="op">=</span> <span class="st">"seurat_clusters"</span>,</span>
 <span>  meta2 <span class="op">=</span> <span class="st">"broad_cell_type"</span></span>
@@ -501,15 +542,12 @@ of “multisession” and if possible using <code>future.batchtools</code>.
 Additionally we provide a wrapper around <code>Seurat</code>’s
 SketchData using the leverage score method to reduce the size of the
 input data to clustOpt.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/leverage_sketch.html">leverage_sketch</a></span><span class="op">(</span><span class="va">input</span>, sketch_size <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Sketching scRNA data: 1000 -&gt; 100 cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Removing previously calculated leverage scores...</span></span>
-<span><span class="co">#&gt; Normalizing scRNA-seq data...</span></span>
-<span><span class="co">#&gt; Finding variable features for scRNA-seq data...</span></span>
-<span><span class="co">#&gt; Using 2000 variable features for sketching</span></span>
-<span><span class="co">#&gt; Calcuating Leverage Score</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Sketching scRNA data: 1000 -&gt; 100 cells</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Removing previously calculated leverage scores...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Normalizing scRNA-seq data...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Finding variable features for scRNA-seq data...</span></span>
 <span><span class="co">#&gt; Renaming default assay from sketch to RNA</span></span>
 <span><span class="va">input</span></span>
 <span><span class="co">#&gt; An object of class Seurat </span></span>
@@ -528,7 +566,7 @@ input data to clustOpt.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

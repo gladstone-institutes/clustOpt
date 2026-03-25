@@ -4,29 +4,78 @@
 \alias{suggest_resolution}
 \title{suggest_resolution}
 \usage{
-suggest_resolution(cv_results)
+suggest_resolution(
+  cv_results,
+  method = c("rank", "local_optima"),
+  upper_Hell_score_thresh = NULL,
+  upper_Hell_score_thresh_relaxed = NULL,
+  min_resolutions = 4
+)
 }
 \arguments{
 \item{cv_results}{Data frame from \code{\link{clust_opt}} cross-validation.}
+
+\item{method}{Character; \code{"rank"} (default) ranks all resolutions by
+median metric values without filtering, \code{"local_optima"} applies
+the Hellinger reproducibility filter and ranks the filtered set by both
+rank aggregation and curvature.}
+
+\item{upper_Hell_score_thresh}{Numeric. Initial threshold on the upper 95\%
+Hellinger CI for filtering reproducible resolutions. Default is scaled
+dynamically based on the number of subjects (calibrated at 0.1 for 11
+subjects). Only used when \code{method = "local_optima"}.}
+
+\item{upper_Hell_score_thresh_relaxed}{Numeric. Relaxed threshold used when
+fewer than \code{min_resolutions} pass the initial filter. Default is
+scaled dynamically (calibrated at 0.2 for 11 subjects). Only used when
+\code{method = "local_optima"}.}
+
+\item{min_resolutions}{Integer. Minimum number of resolutions required to
+pass the initial threshold before relaxing (default 4). Capped at the
+total number of resolutions tested. Only used when
+\code{method = "local_optima"}.}
 }
 \value{
-A data frame with one row per resolution containing summarized
-  median metrics, rank-based columns (\code{rank_sil}, \code{rank_kl},
-  \code{rank_hellinger}, \code{rank_modularity}, \code{mean_rank}),
-  curvature-based columns (\code{curvature_rank_sil}, etc.,
-  \code{curvature_mean_rank}), and \code{upper_Hell_95ci}. Sorted by
-  \code{mean_rank} ascending.
+A data frame with one row per resolution (filtered for
+  \code{"local_optima"}, all for \code{"rank"}), containing summarized
+  median metrics and \code{upper_Hell_95ci}. For \code{"local_optima"}:
+  both rank-based (\code{rank_sil}, \code{rank_kl}, \code{rank_hellinger},
+  \code{rank_modularity}, \code{mean_rank}) and curvature-based
+  (\code{curvature_rank_sil}, etc., \code{curvature_mean_rank}) columns,
+  sorted by \code{mean_rank}. For \code{"rank"}: rank-based columns only,
+  sorted by \code{mean_rank}.
 }
 \description{
-Compute two complementary resolution rankings and return them in a single
-data frame: a direct rank aggregation of median metric values, and a
-curvature-based local optima detection using second-order finite differences.
+Rank clustering resolutions using one of two methods: \code{"rank"}
+(default) ranks all resolutions by their median metric values, while
+\code{"local_optima"} first filters to reproducible resolutions (low upper
+Hellinger CI), then ranks the filtered set using both direct rank
+aggregation and curvature-based local optima detection.
+}
+\details{
+For \code{method = "local_optima"}, resolutions are filtered to those with
+\code{upper_Hell_95ci < upper_Hell_score_thresh}. If fewer than
+\code{min_resolutions} pass, the threshold is relaxed to
+\code{upper_Hell_score_thresh_relaxed}. An error is raised if no resolutions
+pass the relaxed threshold. Curvature values (\code{second_order_diff}) are
+computed on the full, unfiltered resolution sequence to preserve consecutive
+spacing, then ranked on only the filtered subset. Both rank aggregation
+(\code{mean_rank}) and curvature (\code{curvature_mean_rank}) columns are
+included in the output for comparison.
+
+The base thresholds (0.1 / 0.2) were validated with 11-subject leave-one-out
+cross-validation simulations. When not explicitly set, thresholds are scaled
+by \code{sqrt(11 / n_subjects)} to account for wider confidence intervals
+with fewer subjects.
+
+For \code{method = "rank"}, all resolutions are ranked directly by their
+median metric values with no filtering applied.
 }
 \examples{
 \dontrun{
 cv_results <- clust_opt(seurat_obj, subject_ids = "donor_id")
 rankings <- suggest_resolution(cv_results)
-rankings
+rankings_rank <- suggest_resolution(cv_results, method = "rank")
 }
 
 }

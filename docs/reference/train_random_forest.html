@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">clustOpt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,17 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">train_random_forest</span><span class="op">(</span><span class="va">res</span>, <span class="va">df_list</span>, <span class="va">train_clusters</span>, <span class="va">sam</span>, <span class="va">num_trees</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">train_random_forest</span><span class="op">(</span></span>
+<span>  <span class="va">res</span>,</span>
+<span>  <span class="va">df_list</span>,</span>
+<span>  <span class="va">cluster_by_res</span>,</span>
+<span>  <span class="va">sam</span>,</span>
+<span>  <span class="va">num_trees</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  snn_graph <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  precomputed_dist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rf_num_threads <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -59,8 +69,10 @@
 <dd><p>List containing training and test data</p></dd>
 
 
-<dt id="arg-train-clusters">train_clusters<a class="anchor" aria-label="anchor" href="#arg-train-clusters"></a></dt>
-<dd><p>Cluster assignments for the training data</p></dd>
+<dt id="arg-cluster-by-res">cluster_by_res<a class="anchor" aria-label="anchor" href="#arg-cluster-by-res"></a></dt>
+<dd><p>Named list of cluster assignment vectors, keyed by
+resolution (as character). Pre-extracted from training metadata using
+exact column names.</p></dd>
 
 
 <dt id="arg-sam">sam<a class="anchor" aria-label="anchor" href="#arg-sam"></a></dt>
@@ -69,6 +81,25 @@
 
 <dt id="arg-num-trees">num_trees<a class="anchor" aria-label="anchor" href="#arg-num-trees"></a></dt>
 <dd><p>Number of trees for the random forest</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Integer verbosity level (0 = silent, 1 = milestones,
+2 = detailed, 3 = includes Seurat output)</p></dd>
+
+
+<dt id="arg-snn-graph">snn_graph<a class="anchor" aria-label="anchor" href="#arg-snn-graph"></a></dt>
+<dd><p>Precomputed SNN graph (sparse matrix). Required.</p></dd>
+
+
+<dt id="arg-precomputed-dist">precomputed_dist<a class="anchor" aria-label="anchor" href="#arg-precomputed-dist"></a></dt>
+<dd><p>Optional precomputed distance matrix (output of
+<code><a href="https://rdrr.io/r/stats/dist.html" class="external-link">dist</a></code>). Passed through to
+<code><a href="calculate_silhouette_score.html">calculate_silhouette_score</a></code>.</p></dd>
+
+
+<dt id="arg-rf-num-threads">rf_num_threads<a class="anchor" aria-label="anchor" href="#arg-rf-num-threads"></a></dt>
+<dd><p>Number of threads for ranger (default 1).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -86,7 +117,7 @@ predicted clusters.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

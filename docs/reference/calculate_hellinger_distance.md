@@ -1,0 +1,51 @@
+# calculate_hellinger_distance
+
+Calculate Hellinger distance between two probability distributions. The
+Hellinger distance is a symmetric measure bounded between 0 and 1, where
+0 indicates identical distributions and 1 indicates distributions with
+no overlap.
+
+## Usage
+
+``` r
+calculate_hellinger_distance(q, p)
+```
+
+## Arguments
+
+- q:
+
+  Numeric vector representing the first probability distribution. Must
+  be non-negative and sum to 1.
+
+- p:
+
+  Numeric vector representing the second probability distribution. Must
+  be non-negative, sum to 1, and have the same length as q.
+
+## Value
+
+Numeric value between 0 and 1 representing the Hellinger distance.
+
+## Details
+
+The Hellinger distance is calculated as: H(P, Q) = sqrt(0.5 \*
+sum((sqrt(p) - sqrt(q))^2))
+
+Unlike KL divergence, Hellinger distance is symmetric: H(P, Q) = H(Q,
+P).
+
+## Examples
+
+``` r
+# Identical distributions
+p <- c(0.25, 0.25, 0.25, 0.25)
+calculate_hellinger_distance(p, p)  # Returns 0
+#> [1] 0
+
+# Completely different distributions (no overlap)
+q <- c(1, 0, 0, 0)
+p <- c(0, 1, 0, 0)
+calculate_hellinger_distance(q, p)  # Returns 1
+#> [1] 1
+```
