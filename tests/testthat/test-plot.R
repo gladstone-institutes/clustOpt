@@ -176,7 +176,7 @@ make_cv_data <- function(n_res = 5, n_folds = 5) {
 test_that("suggest_resolution returns a data frame with expected columns", {
   set.seed(42)
   cv_results <- make_cv_data(5, 5)
-  result <- suggest_resolution(cv_results)
+  result <- suggest_resolution(cv_results, method = "local_optima")
 
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 5)
@@ -220,7 +220,7 @@ test_that("suggest_resolution rank-based columns have no NAs", {
 test_that("suggest_resolution curvature endpoints are NA", {
   set.seed(42)
   cv_results <- make_cv_data(5, 5)
-  result <- suggest_resolution(cv_results)
+  result <- suggest_resolution(cv_results, method = "local_optima")
 
   # Re-sort by resolution to find endpoints
   by_res <- result[order(result$resolution), ]
@@ -256,7 +256,7 @@ test_that("suggest_resolution handles NA values in input", {
 test_that("suggest_resolution works with 2 resolutions", {
   set.seed(42)
   cv_results <- make_cv_data(2, 5)
-  result <- suggest_resolution(cv_results)
+  result <- suggest_resolution(cv_results, method = "local_optima")
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 2)
   # All curvature ranks should be NA with only 2 resolutions
@@ -281,7 +281,7 @@ test_that("plot_rank_metrics returns ggplot with rank method (default)", {
 test_that("plot_rank_metrics works with curvature method", {
   set.seed(42)
   cv_results <- make_cv_data(5, 5)
-  rankings <- suggest_resolution(cv_results)
+  rankings <- suggest_resolution(cv_results, method = "local_optima")
 
   p <- plot_rank_metrics(rankings, method = "curvature")
   expect_s3_class(p, "ggplot")
@@ -290,7 +290,7 @@ test_that("plot_rank_metrics works with curvature method", {
 test_that("plot_rank_metrics curvature errors with fewer than 3 resolutions", {
   set.seed(42)
   cv_results <- make_cv_data(2, 5)
-  rankings <- suggest_resolution(cv_results)
+  rankings <- suggest_resolution(cv_results, method = "local_optima")
 
   expect_error(
     plot_rank_metrics(rankings, method = "curvature"),
@@ -316,7 +316,7 @@ test_that("plot_mean_rank returns ggplot with rank method (default)", {
 test_that("plot_mean_rank works with curvature method", {
   set.seed(42)
   cv_results <- make_cv_data(5, 5)
-  rankings <- suggest_resolution(cv_results)
+  rankings <- suggest_resolution(cv_results, method = "local_optima")
 
   p <- plot_mean_rank(rankings, method = "curvature")
   expect_s3_class(p, "ggplot")
@@ -325,7 +325,7 @@ test_that("plot_mean_rank works with curvature method", {
 test_that("plot_mean_rank curvature errors with fewer than 3 resolutions", {
   set.seed(42)
   cv_results <- make_cv_data(2, 5)
-  rankings <- suggest_resolution(cv_results)
+  rankings <- suggest_resolution(cv_results, method = "local_optima")
 
   expect_error(
     plot_mean_rank(rankings, method = "curvature"),
