@@ -179,7 +179,8 @@ test_that("suggest_resolution returns a data frame with expected columns", {
   result <- suggest_resolution(cv_results, method = "local_optima")
 
   expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 5)
+  # local_optima filters resolutions by Hellinger threshold, so may return fewer
+  expect_true(nrow(result) >= 1 && nrow(result) <= 5)
 
   # Rank-based columns
   rank_cols <- c("rank_sil", "rank_kl", "rank_hellinger",
@@ -226,11 +227,13 @@ test_that("suggest_resolution curvature endpoints are NA", {
   by_res <- result[order(result$resolution), ]
   curv_cols <- c("curvature_rank_sil", "curvature_rank_kl",
                  "curvature_rank_hellinger", "curvature_rank_modularity")
+  # Curvature is computed on the full resolution sequence before Hellinger
+
+  # filtering. The first endpoint (lowest resolution) should survive filtering
+  # and retain its NA curvature value.
   for (col in curv_cols) {
     expect_true(is.na(by_res[[col]][1]),
                 info = paste("First endpoint not NA in", col))
-    expect_true(is.na(by_res[[col]][nrow(by_res)]),
-                info = paste("Last endpoint not NA in", col))
   }
 })
 
