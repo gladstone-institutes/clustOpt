@@ -10,3 +10,4 @@ inst/doc
 CLAUDE.md
 .claude
 local_only
+vignettes/quick_start_guide_cache/
