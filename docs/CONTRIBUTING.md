@@ -29,10 +29,9 @@
 4.  [`devtools::test()`](https://devtools.r-lib.org/reference/test.html)
     to run tests.
 
-5.  When ready to merge, rebuild the vignette and site:
+5.  When ready to merge, rebuild the site (includes the vignette):
 
     ``` r
-    devtools::build_vignettes()
     pkgdown::build_site()
     ```
 
@@ -100,18 +99,13 @@ When a version bump is needed, update `Version` and `Date` in
 
 The vignette requires the tutorial dataset and ~32GB RAM, so it cannot
 be built in CI. Before merging any PR that changes package source or
-documentation, rebuild both the vignette and the pkgdown site locally:
+documentation, rebuild the site locally:
 
 ``` r
-devtools::build_vignettes()
 pkgdown::build_site()
 ```
 
-[`devtools::build_vignettes()`](https://devtools.r-lib.org/reference/build_vignettes.html)
-installs the package from source into a temporary library and renders
-the vignette against it, ensuring it reflects current code changes.
-[`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html)
-rebuilds the full site including reference docs.
+This rebuilds the full site including reference docs and the vignette.
 
 Commit the updated `docs/` directory with your PR.
 

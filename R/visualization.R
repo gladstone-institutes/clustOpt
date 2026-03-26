@@ -138,13 +138,11 @@ summarize_cv_metrics <- function(cv_results) {
 #'   the Hellinger reproducibility filter and ranks the filtered set by both
 #'   rank aggregation and curvature.
 #' @param upper_Hell_score_thresh Numeric. Initial threshold on the upper 95\%
-#'   Hellinger CI for filtering reproducible resolutions. Default is scaled
-#'   dynamically based on the number of subjects (calibrated at 0.1 for 11
-#'   subjects). Only used when \code{method = "local_optima"}.
+#'   Hellinger CI for filtering reproducible resolutions (default 0.1).
+#'   Only used when \code{method = "local_optima"}.
 #' @param upper_Hell_score_thresh_relaxed Numeric. Relaxed threshold used when
-#'   fewer than \code{min_resolutions} pass the initial filter. Default is
-#'   scaled dynamically (calibrated at 0.2 for 11 subjects). Only used when
-#'   \code{method = "local_optima"}.
+#'   fewer than \code{min_resolutions} pass the initial filter (default 0.2).
+#'   Only used when \code{method = "local_optima"}.
 #' @param min_resolutions Integer. Minimum number of resolutions required to
 #'   pass the initial threshold before relaxing (default 4). Capped at the
 #'   total number of resolutions tested. Only used when
@@ -161,10 +159,8 @@ summarize_cv_metrics <- function(cv_results) {
 #' (\code{mean_rank}) and curvature (\code{curvature_mean_rank}) columns are
 #' included in the output for comparison.
 #'
-#' The base thresholds (0.1 / 0.2) were validated with 11-subject leave-one-out
-#' cross-validation simulations. When not explicitly set, thresholds are scaled
-#' by \code{sqrt(11 / n_subjects)} to account for wider confidence intervals
-#' with fewer subjects.
+#' The default thresholds (0.1 / 0.2) have straightforward interpretation given
+#' that the Hellinger distance is bounded between 0 and 1.
 #'
 #' For \code{method = "rank"}, all resolutions are ranked directly by their
 #' median metric values with no filtering applied.
@@ -220,13 +216,10 @@ suggest_resolution <- function(cv_results,
 
   # --- method = "local_optima" ---
 
-  # Scale thresholds dynamically based on number of subjects
-  n_subjects <- max(table(cv_results$resolution))
-  scale_factor <- sqrt(11 / n_subjects)
   if (is.null(upper_Hell_score_thresh))
-    upper_Hell_score_thresh <- 0.1 * scale_factor
+    upper_Hell_score_thresh <- 0.1
   if (is.null(upper_Hell_score_thresh_relaxed))
-    upper_Hell_score_thresh_relaxed <- 0.2 * scale_factor
+    upper_Hell_score_thresh_relaxed <- 0.2
 
   # --- Curvature on full (unfiltered) resolution sequence ---
   summ$curv_sil  <- second_order_diff(summ$median_score)
@@ -243,8 +236,7 @@ suggest_resolution <- function(cv_results,
   if (sum(keep) == 0) {
     stop("No resolutions passed the Hellinger reproducibility filter ",
          "(upper_Hell_95ci < ", round(upper_Hell_score_thresh_relaxed, 3),
-         ", scaled for ", n_subjects, " subjects). ",
-         "Consider increasing upper_Hell_score_thresh_relaxed or adding ",
+         "). Consider increasing upper_Hell_score_thresh_relaxed or adding ",
          "more subjects to reduce the confidence interval width.")
   }
   summ <- summ[keep, ]

@@ -36,15 +36,14 @@ suggest_resolution(
 - upper_Hell_score_thresh:
 
   Numeric. Initial threshold on the upper 95% Hellinger CI for filtering
-  reproducible resolutions. Default is scaled dynamically based on the
-  number of subjects (calibrated at 0.1 for 11 subjects). Only used when
+  reproducible resolutions (default 0.1). Only used when
   `method = "local_optima"`.
 
 - upper_Hell_score_thresh_relaxed:
 
   Numeric. Relaxed threshold used when fewer than `min_resolutions` pass
-  the initial filter. Default is scaled dynamically (calibrated at 0.2
-  for 11 subjects). Only used when `method = "local_optima"`.
+  the initial filter (default 0.2). Only used when
+  `method = "local_optima"`.
 
 - min_resolutions:
 
@@ -74,10 +73,8 @@ consecutive spacing, then ranked on only the filtered subset. Both rank
 aggregation (`mean_rank`) and curvature (`curvature_mean_rank`) columns
 are included in the output for comparison.
 
-The base thresholds (0.1 / 0.2) were validated with 11-subject
-leave-one-out cross-validation simulations. When not explicitly set,
-thresholds are scaled by `sqrt(11 / n_subjects)` to account for wider
-confidence intervals with fewer subjects.
+The default thresholds (0.1 / 0.2) have straightforward interpretation
+given that the Hellinger distance is bounded between 0 and 1.
 
 For `method = "rank"`, all resolutions are ranked directly by their
 median metric values with no filtering applied.

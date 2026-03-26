@@ -57,10 +57,9 @@
 <li><p><code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> to regenerate roxygen docs.</p></li>
 <li><p><code><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">devtools::test()</a></code> to run tests.</p></li>
 <li>
-<p>When ready to merge, rebuild the vignette and site:</p>
+<p>When ready to merge, rebuild the site (includes the vignette):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/build_vignettes.html" class="external-link">build_vignettes</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </li>
 <li><p>Commit everything including <code>docs/</code>.</p></li>
 <li><p>Open a pull request against <code>main</code>. CI will run R-CMD-check and verify the vignette compile date is current.</p></li>
@@ -105,11 +104,10 @@
 </div>
 <div class="section level2">
 <h2 id="rebuilding-the-vignette-and-site">Rebuilding the Vignette and Site<a class="anchor" aria-label="anchor" href="#rebuilding-the-vignette-and-site"></a></h2>
-<p>The vignette requires the tutorial dataset and ~32GB RAM, so it cannot be built in CI. Before merging any PR that changes package source or documentation, rebuild both the vignette and the pkgdown site locally:</p>
+<p>The vignette requires the tutorial dataset and ~32GB RAM, so it cannot be built in CI. Before merging any PR that changes package source or documentation, rebuild the site locally:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/build_vignettes.html" class="external-link">build_vignettes</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="https://devtools.r-lib.org/reference/build_vignettes.html" class="external-link">devtools::build_vignettes()</a></code> installs the package from source into a temporary library and renders the vignette against it, ensuring it reflects current code changes. <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> rebuilds the full site including reference docs.</p>
+<code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This rebuilds the full site including reference docs and the vignette.</p>
 <p>Commit the updated <code>docs/</code> directory with your PR.</p>
 <p>The CI will warn on PRs if the vignette’s compile date is older than the most recent source change. The check uses day granularity, so rebuild after all source changes are finalized – any source commits made after the vignette was last rendered will trigger the warning.</p>
 </div>

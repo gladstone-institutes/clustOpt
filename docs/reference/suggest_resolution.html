@@ -82,16 +82,14 @@ rank aggregation and curvature.</p></dd>
 
 <dt id="arg-upper-hell-score-thresh">upper_Hell_score_thresh<a class="anchor" aria-label="anchor" href="#arg-upper-hell-score-thresh"></a></dt>
 <dd><p>Numeric. Initial threshold on the upper 95%
-Hellinger CI for filtering reproducible resolutions. Default is scaled
-dynamically based on the number of subjects (calibrated at 0.1 for 11
-subjects). Only used when <code>method = "local_optima"</code>.</p></dd>
+Hellinger CI for filtering reproducible resolutions (default 0.1).
+Only used when <code>method = "local_optima"</code>.</p></dd>
 
 
 <dt id="arg-upper-hell-score-thresh-relaxed">upper_Hell_score_thresh_relaxed<a class="anchor" aria-label="anchor" href="#arg-upper-hell-score-thresh-relaxed"></a></dt>
 <dd><p>Numeric. Relaxed threshold used when
-fewer than <code>min_resolutions</code> pass the initial filter. Default is
-scaled dynamically (calibrated at 0.2 for 11 subjects). Only used when
-<code>method = "local_optima"</code>.</p></dd>
+fewer than <code>min_resolutions</code> pass the initial filter (default 0.2).
+Only used when <code>method = "local_optima"</code>.</p></dd>
 
 
 <dt id="arg-min-resolutions">min_resolutions<a class="anchor" aria-label="anchor" href="#arg-min-resolutions"></a></dt>
@@ -123,10 +121,8 @@ computed on the full, unfiltered resolution sequence to preserve consecutive
 spacing, then ranked on only the filtered subset. Both rank aggregation
 (<code>mean_rank</code>) and curvature (<code>curvature_mean_rank</code>) columns are
 included in the output for comparison.</p>
-<p>The base thresholds (0.1 / 0.2) were validated with 11-subject leave-one-out
-cross-validation simulations. When not explicitly set, thresholds are scaled
-by <code>sqrt(11 / n_subjects)</code> to account for wider confidence intervals
-with fewer subjects.</p>
+<p>The default thresholds (0.1 / 0.2) have straightforward interpretation
+given that the Hellinger distance is bounded between 0 and 1.</p>
 <p>For <code>method = "rank"</code>, all resolutions are ranked directly by their
 median metric values with no filtering applied.</p>
     </div>

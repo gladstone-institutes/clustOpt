@@ -21,14 +21,12 @@ the Hellinger reproducibility filter and ranks the filtered set by both
 rank aggregation and curvature.}
 
 \item{upper_Hell_score_thresh}{Numeric. Initial threshold on the upper 95\%
-Hellinger CI for filtering reproducible resolutions. Default is scaled
-dynamically based on the number of subjects (calibrated at 0.1 for 11
-subjects). Only used when \code{method = "local_optima"}.}
+Hellinger CI for filtering reproducible resolutions (default 0.1).
+Only used when \code{method = "local_optima"}.}
 
 \item{upper_Hell_score_thresh_relaxed}{Numeric. Relaxed threshold used when
-fewer than \code{min_resolutions} pass the initial filter. Default is
-scaled dynamically (calibrated at 0.2 for 11 subjects). Only used when
-\code{method = "local_optima"}.}
+fewer than \code{min_resolutions} pass the initial filter (default 0.2).
+Only used when \code{method = "local_optima"}.}
 
 \item{min_resolutions}{Integer. Minimum number of resolutions required to
 pass the initial threshold before relaxing (default 4). Capped at the
@@ -63,10 +61,8 @@ spacing, then ranked on only the filtered subset. Both rank aggregation
 (\code{mean_rank}) and curvature (\code{curvature_mean_rank}) columns are
 included in the output for comparison.
 
-The base thresholds (0.1 / 0.2) were validated with 11-subject leave-one-out
-cross-validation simulations. When not explicitly set, thresholds are scaled
-by \code{sqrt(11 / n_subjects)} to account for wider confidence intervals
-with fewer subjects.
+The default thresholds (0.1 / 0.2) have straightforward interpretation
+given that the Hellinger distance is bounded between 0 and 1.
 
 For \code{method = "rank"}, all resolutions are ranked directly by their
 median metric values with no filtering applied.
