@@ -153,6 +153,11 @@ plots <- create_sil_plots(results)
 
 **Requirements**: R ≥ 4.4.0, Seurat (>= 5.3.0), install BPCells for large datasets
 
+## AI Disclosure Statement
+
+Generative AI tools (Claude Code, Anthropic) were used as coding assistants during the development of this package. The authors maintain full responsibility for the accuracy, reproducibility, and scientific validity of all code. AI-assisted outputs were reviewed and validated against expected behavior before integration. The research questions, analytical approaches, parameter selections, and scientific interpretations were determined independently by the authors without AI input.
+
+
 ## Citation
 
 ```

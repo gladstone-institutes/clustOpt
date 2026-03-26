@@ -97,15 +97,27 @@ DimPlot(input,
   coord_fixed()
 ```
 
-Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. The repeated messages about "SeuratObject" are a side effect of using the future plan "multisession" and should not occur with other future plans.
+## How clustOpt Works
+
+clustOpt uses subject-wise leave-one-out cross-validation to find clustering resolutions that generalize across biological replicates:
+
+1. **PC Splitting**: Principal components are split into two independent sets (odd: PC1, PC3, PC5... and even: PC2, PC4, PC6...)
+2. **Training**: For each held-out subject, a Random Forest is trained on one PC set to predict cluster assignments
+3. **Evaluation**: Clustering quality metrics are calculated on the opposite PC set
+
+This separation ensures that the evaluation is performed on data independent from what was used for training, preventing overfitting and providing a more honest assessment of clustering reproducibility.
+
+## Running clustOpt
+
+Subject-wise cross validation is parallelized with `future` and `future.batchtools` can be used for HPC job schedulers. For details on which plan to use for your setup, see the future package documentation. The code below requires a large amount of RAM (32 GB recommended) and 10 cores to run in about 15 minutes.
 
 ```{r clustOpt, warning=FALSE, cache=TRUE}
-plan("multisession", workers = 10)
+plan("multisession", workers = 11)
 
-sil_dist <- clust_opt(input,
+cv_results <- clust_opt(input,
   subject_ids = "donor_id",
   ndim = 20,
-  verbose = FALSE,
+  verbose = 1,
   train_with = "even"
 ) |>
   progressr::with_progress() # Optional, just adds progress bar
@@ -117,7 +129,7 @@ plan("sequential")
 ## Plotting the silhouette score distributions
 
 ```{r plotting}
-plots <- create_sil_plots(sil_dist |> drop_na())
+plots <- create_sil_plots(cv_results |> drop_na())
 
 plots[[1]]
 plots[[2]]
@@ -125,13 +137,73 @@ plots[[3]]
 plots[[4]]
 ```
 
-The median silhouette scores across all cells start to fall off at 0.2, indicating that this clustering resolution is the most reproducible across all biological replicates. It is also possible to see a local maximum which would indicate a reproducible resolution.
+The silhouette score distribution shows how consistently clusters are separated across subjects at each resolution. Key patterns to look for:
+
+- **Declining scores at higher resolutions** indicate over-clustering, where cells are forced into clusters that don't represent distinct populations
+- **Low variance across subjects** (narrow boxes) indicates reproducible clustering
+- **Local maxima** may indicate resolutions that capture natural biological structure
+
+The optimal resolution typically shows high median silhouette scores with low variance across subjects, suggesting that the clustering captures cell populations that are consistently distinguishable regardless of which subjects are used for training.
+
+## Additional Quality Metrics
+
+> **Note:** We currently recommend **silhouette scores** for resolution selection. The additional metrics below are still undergoing benchmarking across different experimental settings.
+
+`clust_opt()` also computes the following at each resolution:
+
+| Metric | Measures | Better |
+|--------|----------|--------|
+| **avg_width** | Silhouette score — cluster separation (recommended) | Higher |
+| **KLdivergence** | KL divergence of cluster proportions (experimental) | Lower |
+| **Hellinger** | Hellinger distance of cluster proportions (experimental) | Lower |
+| **modularity** | Graph modularity of cluster assignments (experimental) | Higher |
+
+```{r metrics_overview}
+head(cv_results)
+```
+
+```{r plot_metrics, fig.height=10}
+cv_results |>
+  drop_na() |>
+  pivot_longer(cols = c(KLdivergence, Hellinger, modularity),
+               names_to = "metric", values_to = "value") |>
+  ggplot(aes(x = as.factor(resolution), y = value)) +
+  geom_boxplot() +
+  facet_wrap(~metric, scales = "free_y", ncol = 1) +
+  theme_bw() +
+  labs(x = "Resolution", y = NULL)
+```
+
+## Suggesting a Resolution
+
+`suggest_resolution()` provides two approaches for identifying optimal resolutions:
+
+- **`"rank"`** (default): Ranks all tested resolutions by aggregating their median metric values. Works with any number of subjects.
+
+- **`"local_optima"`**: Filters to resolutions with reproducible clustering (low Hellinger distance across subjects), then ranks the filtered set using both rank aggregation and curvature-based detection of local optima in the metric curves. Recommended when you have >=10 subjects, as the Hellinger filter thresholds scale automatically with the number of subjects.
+
+`plot_rank_metrics()` shows the per-metric ranks and `plot_mean_rank()` shows the aggregate.
+
+```{r suggest_resolution}
+rankings <- suggest_resolution(cv_results)
+rankings
+```
+
+```{r plot_rankings}
+plot_rank_metrics(rankings)
+```
+
+```{r plot_mean_rank}
+plot_mean_rank(rankings)
+```
+
+This tutorial uses the default `"rank"` method. The example dataset contains only 3 well-separated celltypes, so a simple rank aggregation is sufficient. For real-world datasets with a denser resolution grid and more ambiguous cluster structure, `method = "local_optima"` can better identify resolutions that sit at natural inflection points in the metric curves. See `?suggest_resolution` for details.
 
 ## Comparison to the cell annotations
 
 ```{r cluster}
 input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
-input <- FindClusters(input, resolution = 0.2)
+input <- FindClusters(input, resolution = 0.04)
 
 DimPlot(input,
   group.by = "seurat_clusters",
@@ -139,9 +211,7 @@ DimPlot(input,
 )
 ```
 
-We can see that at the reproducible resolution there are 4 clusters, with the naive B cells being distinct enough to be separated into their own cluster based on the ability to detect them across the CV folds. In other words the naive B cells are present in high enough amounts across the subjects and transcriptomically distinct enough to be consistently detected.
-
-For convenience we provide a function to calculate the adjusted rand index for any 2 metadata columns in a seurat object so that the clustOpt resolution parameter can be compared to clusters derived from other methods.
+At the reproducible resolution there are 3 clusters, corresponding to the 3 celltypes. Use `adjusted_rand_index()` to compare any two metadata columns:
 
 ```{r}
 adjusted_rand_index(input,

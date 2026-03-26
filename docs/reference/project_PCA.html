@@ -11,7 +11,7 @@ principal components derived from the training data."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">clustOpt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@ principal components derived from the training data."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>project_pca</h1>
-      <small class="dont-index">Source: <a href="https://github.com/gladstone-institutes/clustOpt/blob/HEAD/R/clustOpt.R" class="external-link"><code>R/clustOpt.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/gladstone-institutes/clustOpt/blob/HEAD/R/data_preparation.R" class="external-link"><code>R/data_preparation.R</code></a></small>
       <div class="d-none name"><code>project_pca.Rd</code></div>
     </div>
 
@@ -56,7 +56,8 @@ principal components derived from the training data.</p>
 <span>  <span class="va">train_with_pcs</span>,</span>
 <span>  <span class="va">clust_pcs</span>,</span>
 <span>  <span class="va">dtype</span>,</span>
-<span>  <span class="va">verbose</span></span>
+<span>  verbose <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  compute_train_eval <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,15 +87,33 @@ principal components derived from the training data.</p>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>print messages</p></dd>
+<dd><p>Integer verbosity level (0 = silent, 1 = milestones,
+2 = detailed, 3 = includes Seurat output)</p></dd>
+
+
+<dt id="arg-compute-train-eval">compute_train_eval<a class="anchor" aria-label="anchor" href="#arg-compute-train-eval"></a></dt>
+<dd><p>Logical; if <code>TRUE</code>, also compute the
+training data projected onto clustering PCs (<code>train_proj_clust_pcs</code>).
+Default is <code>FALSE</code> because this projection is not used in the
+standard <code><a href="clust_opt.html">clust_opt</a></code> pipeline.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing two elements: `train_df` and `test_df`. Each is a matrix
-of the projected data for the training and test sets, respectively, using
-the specified number of principal components.</p>
-    </div>
+    <p>A list containing projected data frames/matrices:</p><dl><dt>train_proj_train_with_pcs</dt>
+<dd><p>Training data projected onto training PCs (data.frame)</p></dd>
+
+  <dt>test_proj_train_with_pcs</dt>
+<dd><p>Test data projected onto training PCs (data.frame)</p></dd>
+
+  <dt>test_proj_clust_pcs</dt>
+<dd><p>Test data projected onto clustering PCs (matrix)</p></dd>
+
+  <dt>train_proj_clust_pcs</dt>
+<dd><p>Training data projected onto clustering PCs (data.frame); only present when <code>compute_train_eval = TRUE</code></p></dd>
+
+
+</dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Identifies features that are common between the training
@@ -112,7 +131,7 @@ loadings. Data is projected onto loadings for 2 PC sets (odd and even)</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

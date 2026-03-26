@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">clustOpt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
 
       <h1>clustOpt: Quickstart Guide</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2025-08-01</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-03-26</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/gladstone-institutes/clustOpt/blob/HEAD/vignettes/quick_start_guide.Rmd" class="external-link"><code>vignettes/quick_start_guide.Rmd</code></a></small>
       <div class="d-none name"><code>quick_start_guide.Rmd</code></div>
@@ -116,7 +116,7 @@ function.</p>
 <span>  <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span>verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.org/seurat/reference/ElbowPlot.html" class="external-link">ElbowPlot</a></span><span class="op">(</span><span class="va">input</span>, ndims <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/elbowplot-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/elbowplot-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html" class="external-link">RunUMAP</a></span><span class="op">(</span><span class="va">input</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -125,279 +125,413 @@ function.</p>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/UMAP-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/UMAP-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  group.by <span class="op">=</span> <span class="st">"broad_cell_type"</span>,</span>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-2-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  group.by <span class="op">=</span> <span class="st">"author_cell_type"</span>,</span>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-3-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="768"></p>
+<div class="section level2">
+<h2 id="how-clustopt-works">How clustOpt Works<a class="anchor" aria-label="anchor" href="#how-clustopt-works"></a>
+</h2>
+<p>clustOpt uses subject-wise leave-one-out cross-validation to find
+clustering resolutions that generalize across biological replicates:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>PC Splitting</strong>: Principal components are split into
+two independent sets (odd: PC1, PC3, PC5… and even: PC2, PC4, PC6…)</li>
+<li>
+<strong>Training</strong>: For each held-out subject, a Random
+Forest is trained on one PC set to predict cluster assignments</li>
+<li>
+<strong>Evaluation</strong>: Clustering quality metrics are
+calculated on the opposite PC set</li>
+</ol>
+<p>This separation ensures that the evaluation is performed on data
+independent from what was used for training, preventing overfitting and
+providing a more honest assessment of clustering reproducibility.</p>
+</div>
+<div class="section level2">
+<h2 id="running-clustopt">Running clustOpt<a class="anchor" aria-label="anchor" href="#running-clustopt"></a>
+</h2>
 <p>Subject-wise cross validation is parallelized with
 <code>future</code> and <code>future.batchtools</code> can be used for
 HPC job schedulers. For details on which plan to use for your setup, see
 the future package documentation. The code below requires a large amount
-of RAM (32 GB recommended) and 10 cores to run in about 20 minutes. The
-repeated messages about “SeuratObject” are a side effect of using the
-future plan “multisession” and should not occur with other future
-plans.</p>
+of RAM (32 GB recommended) and 10 cores to run in about 15 minutes.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"multisession"</span>, workers <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"multisession"</span>, workers <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sil_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clust_opt.html">clust_opt</a></span><span class="op">(</span><span class="va">input</span>,</span>
+<span><span class="va">cv_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clust_opt.html">clust_opt</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  subject_ids <span class="op">=</span> <span class="st">"donor_id"</span>,</span>
 <span>  ndim <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  train_with <span class="op">=</span> <span class="st">"even"</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">progressr</span><span class="fu">::</span><span class="fu"><a href="https://progressr.futureverse.org/reference/with_progress.html" class="external-link">with_progress</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># Optional, just adds progress bar</span></span>
-<span><span class="co">#&gt; Input is small enough to run with all cells</span></span>
-<span><span class="co">#&gt; Using 10 subject(s) that have at least 50 cells:</span></span>
-<span><span class="co">#&gt; JP_RIK_H073 (100 cells)</span></span>
-<span><span class="co">#&gt; JP_RIK_H131 (83 cells)</span></span>
-<span><span class="co">#&gt; KR_SGI_H002 (76 cells)</span></span>
-<span><span class="co">#&gt; KR_SGI_H136 (127 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H09a (52 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H077 (147 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H138 (130 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H153 (85 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H166 (123 cells)</span></span>
-<span><span class="co">#&gt; SG_HEL_H319 (77 cells)</span></span>
-<span><span class="co">#&gt; Found 110 combinations of test subject and resolution</span></span>
-<span><span class="co">#&gt; Holdout subject: JP_RIK_H073</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; ── <span style="color: #0000BB;">clustOpt</span> ────────────────────────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Input is small enough to run with all cells</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Using 10 subject(s) with at least 50 cells:</span></span>
+<span><span class="co">#&gt; • JP_RIK_H073 (100 cells)</span></span>
+<span><span class="co">#&gt; • JP_RIK_H131 (83 cells)</span></span>
+<span><span class="co">#&gt; • KR_SGI_H002 (76 cells)</span></span>
+<span><span class="co">#&gt; • KR_SGI_H136 (127 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H09a (52 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H077 (147 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H138 (130 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H153 (85 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H166 (123 cells)</span></span>
+<span><span class="co">#&gt; • SG_HEL_H319 (77 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Found 110 combinations of test subject and resolution</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: JP_RIK_H073</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 38.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 65.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 32.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 900 cells, test: 100 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (100 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.5s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ────────────────────────────────────────────────────────── JP_RIK_H073 139.5s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: JP_RIK_H131</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 29.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 51.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 8.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 917 cells, test: 83 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (83 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.9s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── JP_RIK_H131 92.8s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: KR_SGI_H002</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 924 cells, test: 76 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (76 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.0s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H002 68.1s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: KR_SGI_H136</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 873 cells, test: 127 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (127 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H136 66.8s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H09a</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 32.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 11.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 948 cells, test: 52 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (52 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 4.1s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H09a 68.3s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H077</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 36.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 853 cells, test: 147 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (147 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.5s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H077 69.5s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H138</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 20.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 35.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 870 cells, test: 130 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (130 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H138 69.3s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H153</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 35.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 915 cells, test: 85 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (85 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.8s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H153 70.5s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H166</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 32.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 877 cells, test: 123 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (123 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.5s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H166 67.7s ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H319</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Loading required package: SeuratObject</span></span>
-<span><span class="co">#&gt; Loading required package: sp</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: ‘SeuratObject’</span></span>
-<span><span class="co">#&gt; The following objects are masked from ‘package:base’:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
-<span><span class="co">#&gt; Found 2932 (97.73%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: JP_RIK_H131</span></span>
-<span><span class="co">#&gt; Found 2923 (97.43%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: KR_SGI_H002</span></span>
-<span><span class="co">#&gt; Found 2923 (97.43%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: KR_SGI_H136</span></span>
-<span><span class="co">#&gt; Found 2942 (98.07%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H09a</span></span>
-<span><span class="co">#&gt; Found 2820 (94.00%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H077</span></span>
-<span><span class="co">#&gt; Found 2988 (99.60%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H138</span></span>
-<span><span class="co">#&gt; Found 2956 (98.53%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H153</span></span>
-<span><span class="co">#&gt; Found 2922 (97.40%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H166</span></span>
-<span><span class="co">#&gt; Found 2956 (98.53%) shared genes used for projecting test data</span></span>
-<span><span class="co">#&gt; Holdout subject: SG_HEL_H319</span></span>
-<span><span class="co">#&gt; Found 2896 (96.53%) shared genes used for projecting test data</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 9.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 923 cells, test: 77 cells, 10 PCs, 11 resolutions</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (77 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.8s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H319 65.4s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [total pipeline] 778.0s</span></span>
+<span><span class="co">#&gt; ────────────────────────────────────────────────────────────────────────────────</span></span>
 <span></span>
 <span><span class="co"># Shut down stray workers</span></span>
 <span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"sequential"</span><span class="op">)</span></span></code></pre></div>
+</div>
 <div class="section level2">
 <h2 id="plotting-the-silhouette-score-distributions">Plotting the silhouette score distributions<a class="anchor" aria-label="anchor" href="#plotting-the-silhouette-score-distributions"></a>
 </h2>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plots</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_sil_plots.html">create_sil_plots</a></span><span class="op">(</span><span class="va">sil_dist</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">plots</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_sil_plots.html">create_sil_plots</a></span><span class="op">(</span><span class="va">cv_results</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plots</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-1.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/plotting-1.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-2.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/plotting-2.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-3.png" width="768"></p>
+<p><img src="quick_start_guide_files/figure-html/plotting-3.png" class="r-plt" alt="" width="768"></p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plots</span><span class="op">[[</span><span class="fl">4</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/plotting-4.png" width="768"></p>
-<p>The median silhouette scores across all cells start to fall off at
-0.2, indicating that this clustering resolution is the most reproducible
-across all biological replicates. It is also possible to see a local
-maximum which would indicate a reproducible resolution.</p>
+<p><img src="quick_start_guide_files/figure-html/plotting-4.png" class="r-plt" alt="" width="768"></p>
+<p>The silhouette score distribution shows how consistently clusters are
+separated across subjects at each resolution. Key patterns to look
+for:</p>
+<ul>
+<li>
+<strong>Declining scores at higher resolutions</strong> indicate
+over-clustering, where cells are forced into clusters that don’t
+represent distinct populations</li>
+<li>
+<strong>Low variance across subjects</strong> (narrow boxes)
+indicates reproducible clustering</li>
+<li>
+<strong>Local maxima</strong> may indicate resolutions that capture
+natural biological structure</li>
+</ul>
+<p>The optimal resolution typically shows high median silhouette scores
+with low variance across subjects, suggesting that the clustering
+captures cell populations that are consistently distinguishable
+regardless of which subjects are used for training.</p>
+</div>
+<div class="section level2">
+<h2 id="additional-quality-metrics">Additional Quality Metrics<a class="anchor" aria-label="anchor" href="#additional-quality-metrics"></a>
+</h2>
+<blockquote>
+<p><strong>Note:</strong> We currently recommend <strong>silhouette
+scores</strong> for resolution selection. The additional metrics below
+are still undergoing benchmarking across different experimental
+settings.</p>
+</blockquote>
+<p><code><a href="../reference/clust_opt.html">clust_opt()</a></code> also computes the following at each
+resolution:</p>
+<table class="table">
+<colgroup>
+<col width="30%">
+<col width="38%">
+<col width="30%">
+</colgroup>
+<thead><tr class="header">
+<th>Metric</th>
+<th>Measures</th>
+<th>Better</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>avg_width</strong></td>
+<td>Silhouette score — cluster separation (recommended)</td>
+<td>Higher</td>
+</tr>
+<tr class="even">
+<td><strong>KLdivergence</strong></td>
+<td>KL divergence of cluster proportions (experimental)</td>
+<td>Lower</td>
+</tr>
+<tr class="odd">
+<td><strong>Hellinger</strong></td>
+<td>Hellinger distance of cluster proportions (experimental)</td>
+<td>Lower</td>
+</tr>
+<tr class="even">
+<td><strong>modularity</strong></td>
+<td>Graph modularity of cluster assignments (experimental)</td>
+<td>Higher</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cv_results</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   resolution test_sample  avg_width cluster_median_widths n_predicted_clusters</span></span>
+<span><span class="co">#&gt; 1       0.02 JP_RIK_H073 -0.0278377             0.2201124                    2</span></span>
+<span><span class="co">#&gt; 2       0.04 JP_RIK_H073 -0.2112706             0.2411615                    3</span></span>
+<span><span class="co">#&gt; 3       0.06 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt; 4       0.08 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt; 5       0.10 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt; 6       0.20 JP_RIK_H073 -0.2299488             0.0000000                    3</span></span>
+<span><span class="co">#&gt;   min_predicted_cell_per_cluster max_predicted_cell_per_cluster      mse</span></span>
+<span><span class="co">#&gt; 1                             15                             85 231.3450</span></span>
+<span><span class="co">#&gt; 2                              2                             86 229.7787</span></span>
+<span><span class="co">#&gt; 3                              1                             87 230.9151</span></span>
+<span><span class="co">#&gt; 4                              1                             87 230.9151</span></span>
+<span><span class="co">#&gt; 5                              1                             87 230.9151</span></span>
+<span><span class="co">#&gt; 6                              0                             87 230.9151</span></span>
+<span><span class="co">#&gt;        mad KLdivergence Hellinger modularity</span></span>
+<span><span class="co">#&gt; 1 22.93898    0.3296330 0.2704394  0.1303816</span></span>
+<span><span class="co">#&gt; 2 22.73838    0.6291037 0.3341506  0.1218185</span></span>
+<span><span class="co">#&gt; 3 22.63583    0.7635659 0.3554826  0.1195556</span></span>
+<span><span class="co">#&gt; 4 22.63583    0.7635659 0.3554826  0.1195556</span></span>
+<span><span class="co">#&gt; 5 22.63583    0.7635659 0.3554826  0.1195556</span></span>
+<span><span class="co">#&gt; 6 22.63583    0.6373649 0.3357823  0.1195556</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cv_results</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">KLdivergence</span>, <span class="va">Hellinger</span>, <span class="va">modularity</span><span class="op">)</span>,</span>
+<span>               names_to <span class="op">=</span> <span class="st">"metric"</span>, values_to <span class="op">=</span> <span class="st">"value"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">resolution</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">metric</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Resolution"</span>, y <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+<p><img src="quick_start_guide_files/figure-html/plot_metrics-1.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level2">
+<h2 id="suggesting-a-resolution">Suggesting a Resolution<a class="anchor" aria-label="anchor" href="#suggesting-a-resolution"></a>
+</h2>
+<p><code><a href="../reference/suggest_resolution.html">suggest_resolution()</a></code> provides two approaches for
+identifying optimal resolutions:</p>
+<ul>
+<li><p><strong><code>"rank"</code></strong> (default): Ranks all tested
+resolutions by aggregating their median metric values. Works with any
+number of subjects.</p></li>
+<li><p><strong><code>"local_optima"</code></strong>: Filters to
+resolutions with reproducible clustering (low Hellinger distance across
+subjects), then ranks the filtered set using both rank aggregation and
+curvature-based detection of local optima in the metric curves.
+Recommended when you have &gt;=10 subjects, as the Hellinger filter
+thresholds scale automatically with the number of subjects.</p></li>
+</ul>
+<p><code><a href="../reference/plot_rank_metrics.html">plot_rank_metrics()</a></code> shows the per-metric ranks and
+<code><a href="../reference/plot_mean_rank.html">plot_mean_rank()</a></code> shows the aggregate.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rankings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/suggest_resolution.html">suggest_resolution</a></span><span class="op">(</span><span class="va">cv_results</span><span class="op">)</span></span>
+<span><span class="va">rankings</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 11 × 12</span></span></span>
+<span><span class="co">#&gt;    resolution median_score median_KLD_score median_Hell_score</span></span>
+<span><span class="co">#&gt;         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>       0.04      -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.798             0.364</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>       0.02      -<span style="color: #BB0000;">0.033</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.798             0.364</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>       0.2       -<span style="color: #BB0000;">0.052</span><span style="color: #BB0000; text-decoration: underline;">6</span>            0.726             0.354</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>       0.4       -<span style="color: #BB0000;">0.085</span><span style="color: #BB0000; text-decoration: underline;">9</span>            0.670             0.354</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>       1         -<span style="color: #BB0000;">0.034</span><span style="color: #BB0000; text-decoration: underline;">4</span>            0.730             0.389</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>       0.6       -<span style="color: #BB0000;">0.138</span>             0.675             0.362</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>       0.8       -<span style="color: #BB0000;">0.110</span>             0.680             0.369</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>       0.06      -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.849             0.372</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>       0.08      -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.849             0.372</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>       0.1       -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span>            0.849             0.372</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span>       1.2       -<span style="color: #BB0000;">0.138</span>             0.716             0.394</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 8 more variables: median_modularity_score &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   standard_error_Hell_score &lt;dbl&gt;, upper_Hell_95ci &lt;dbl&gt;, rank_sil &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   rank_kl &lt;dbl&gt;, rank_hellinger &lt;dbl&gt;, rank_modularity &lt;dbl&gt;, mean_rank &lt;dbl&gt;</span></span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_rank_metrics.html">plot_rank_metrics</a></span><span class="op">(</span><span class="va">rankings</span><span class="op">)</span></span></code></pre></div>
+<p><img src="quick_start_guide_files/figure-html/plot_rankings-1.png" class="r-plt" alt="" width="768"></p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_mean_rank.html">plot_mean_rank</a></span><span class="op">(</span><span class="va">rankings</span><span class="op">)</span></span></code></pre></div>
+<p><img src="quick_start_guide_files/figure-html/plot_mean_rank-1.png" class="r-plt" alt="" width="768"></p>
+<p>This tutorial uses the default <code>"rank"</code> method. The
+example dataset contains only 3 well-separated celltypes, so a simple
+rank aggregation is sufficient. For real-world datasets with a denser
+resolution grid and more ambiguous cluster structure,
+<code>method = "local_optima"</code> can better identify resolutions
+that sit at natural inflection points in the metric curves. See
+<code><a href="../reference/suggest_resolution.html">?suggest_resolution</a></code> for details.</p>
 </div>
 <div class="section level2">
 <h2 id="comparison-to-the-cell-annotations">Comparison to the cell annotations<a class="anchor" aria-label="anchor" href="#comparison-to-the-cell-annotations"></a>
 </h2>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindNeighbors.html" class="external-link">FindNeighbors</a></span><span class="op">(</span><span class="va">input</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">input</span>, resolution <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
+<span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/FindClusters.html" class="external-link">FindClusters</a></span><span class="op">(</span><span class="va">input</span>, resolution <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Number of nodes: 1000</span></span>
 <span><span class="co">#&gt; Number of edges: 31348</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Running Louvain algorithm...</span></span>
-<span><span class="co">#&gt; Maximum modularity in 10 random starts: 0.9287</span></span>
-<span><span class="co">#&gt; Number of communities: 4</span></span>
+<span><span class="co">#&gt; Maximum modularity in 10 random starts: 0.9855</span></span>
+<span><span class="co">#&gt; Number of communities: 3</span></span>
 <span><span class="co">#&gt; Elapsed time: 0 seconds</span></span>
 <span></span>
 <span><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html" class="external-link">DimPlot</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  group.by <span class="op">=</span> <span class="st">"seurat_clusters"</span>,</span>
 <span>  pt.size <span class="op">=</span> <span class="fl">.8</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="quick_start_guide_files/figure-html/cluster-1.png" width="768"></p>
-<p>We can see that at the reproducible resolution there are 4 clusters,
-with the naive B cells being distinct enough to be separated into their
-own cluster based on the ability to detect them across the CV folds. In
-other words the naive B cells are present in high enough amounts across
-the subjects and transcriptomically distinct enough to be consistently
-detected.</p>
-<p>For convenience we provide a function to calculate the adjusted rand
-index for any 2 metadata columns in a seurat object so that the clustOpt
-resolution parameter can be compared to clusters derived from other
-methods.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<p><img src="quick_start_guide_files/figure-html/cluster-1.png" class="r-plt" alt="" width="768"></p>
+<p>At the reproducible resolution there are 3 clusters, corresponding to
+the 3 celltypes. Use <code><a href="../reference/adjusted_rand_index.html">adjusted_rand_index()</a></code> to compare any
+two metadata columns:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/adjusted_rand_index.html">adjusted_rand_index</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  meta1 <span class="op">=</span> <span class="st">"seurat_clusters"</span>,</span>
 <span>  meta2 <span class="op">=</span> <span class="st">"broad_cell_type"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.9765531</span></span>
+<span><span class="co">#&gt; [1] 1</span></span>
 <span><span class="fu"><a href="../reference/adjusted_rand_index.html">adjusted_rand_index</a></span><span class="op">(</span><span class="va">input</span>,</span>
 <span>  meta1 <span class="op">=</span> <span class="st">"seurat_clusters"</span>,</span>
 <span>  meta2 <span class="op">=</span> <span class="st">"author_cell_type"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.8265365</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.8056774</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="larger-datasets">Larger Datasets<a class="anchor" aria-label="anchor" href="#larger-datasets"></a>
@@ -408,15 +542,12 @@ of “multisession” and if possible using <code>future.batchtools</code>.
 Additionally we provide a wrapper around <code>Seurat</code>’s
 SketchData using the leverage score method to reduce the size of the
 input data to clustOpt.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">input</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/leverage_sketch.html">leverage_sketch</a></span><span class="op">(</span><span class="va">input</span>, sketch_size <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Sketching scRNA data: 1000 -&gt; 100 cells</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Removing previously calculated leverage scores...</span></span>
-<span><span class="co">#&gt; Normalizing scRNA-seq data...</span></span>
-<span><span class="co">#&gt; Finding variable features for scRNA-seq data...</span></span>
-<span><span class="co">#&gt; Using 2000 variable features for sketching</span></span>
-<span><span class="co">#&gt; Calcuating Leverage Score</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Sketching scRNA data: 1000 -&gt; 100 cells</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Removing previously calculated leverage scores...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Normalizing scRNA-seq data...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Finding variable features for scRNA-seq data...</span></span>
 <span><span class="co">#&gt; Renaming default assay from sketch to RNA</span></span>
 <span><span class="va">input</span></span>
 <span><span class="co">#&gt; An object of class Seurat </span></span>
@@ -435,7 +566,7 @@ input data to clustOpt.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

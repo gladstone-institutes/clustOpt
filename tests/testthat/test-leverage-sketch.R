@@ -27,7 +27,7 @@ test_that("leverage_sketch works with on_disk=TRUE and properly reduces cell cou
     dtype = "scRNA",
     on_disk = TRUE,
     output_dir = temp_dir,
-    verbose = FALSE
+    verbose = 0
   )
 
   # Tests to verify the sketching worked correctly

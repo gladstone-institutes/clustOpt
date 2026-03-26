@@ -13,12 +13,12 @@ test_that("split_pca_dimensions works", {
     ScaleData() |>
     RunPCA(
       features = VariableFeatures(seurat_obj),
-      verbose = FALSE
+      verbose = 0
     )
 
   # Split PCA dimensions by odd/even
   result_obj <- split_pca_dimensions(seurat_obj,
-    verbose = FALSE
+    verbose = 0
   )
 
   # Check the result is still a Seurat object

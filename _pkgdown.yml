@@ -62,6 +62,10 @@ reference:
   - prep_test
   - train_random_forest
   - calculate_silhouette_score
+  - calculate_kl_divergence
+  - calculate_hellinger_distance
+  - calculate_mse_score
+  - calculate_modularity
   - project_pca
 
 - title: Visualization
@@ -69,6 +73,10 @@ reference:
   contents:
   - create_sil_plots
   - sil_summary
+  - summarize_cv_metrics
+  - suggest_resolution
+  - plot_rank_metrics
+  - plot_mean_rank
 
 - title: Internal Functions
   desc: Internal helper functions
