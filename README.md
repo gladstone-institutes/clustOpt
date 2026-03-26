@@ -4,6 +4,7 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/gladstone-institutes/clustOpt/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gladstone-institutes/clustOpt/actions/workflows/R-CMD-check.yaml)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![DOI](https://zenodo.org/badge/649821232.svg)](https://doi.org/10.5281/zenodo.19242291)
 <!-- badges: end -->
    
 
@@ -160,12 +161,7 @@ Generative AI tools (Claude Code, Anthropic) were used as coding assistants duri
 
 ## Citation
 
-```
-Gill N, Shin MG, Agrawal A, Thomas R (2025). Optimizing Clustering Resolution 
-for Multi-subject Single Cell Studies. Presented at Intelligent Systems for 
-Molecular Biology (ISMB), July 23, 2025. R package version 1.0. 
-https://github.com/gladstone-institutes/clustOpt
-```
+[![DOI](https://zenodo.org/badge/649821232.svg)](https://doi.org/10.5281/zenodo.19242291)
 
 ## Support
 
