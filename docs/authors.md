@@ -17,18 +17,16 @@
 Source:
 [`inst/CITATION`](https://github.com/gladstone-institutes/clustOpt/blob/HEAD/inst/CITATION)
 
-Gill, N, Shin, MG, Agrawal, A, Perez, E, Thomas, R (2025). “Optimizing
-Clustering Resolution for Multi-subject Single Cell Studies.” Presented
-at Intelligent Systems for Molecular Biology (ISMB). R package version
-1.0, <https://github.com/gladstone-institutes/clustOpt>.
+Gill, Natalie, Shin, Min-Gyoung, Agrawal, Ayushi, Perez, Erwin, Thomas,
+Reuben (2026). “gladstone-institutes/clustOpt: v1.2.0.”
+[doi:10.5281/zenodo.19242292](https://doi.org/10.5281/zenodo.19242292),
+R package version 1.2.0, <https://doi.org/10.5281/zenodo.19242292>.
 
     @Misc{,
-      title = {Optimizing Clustering Resolution for Multi-subject Single Cell Studies},
-      author = {{Gill} and {N} and {Shin} and {MG} and {Agrawal} and {A} and {Perez} and {E} and {Thomas} and {R}},
-      howpublished = {Presented at Intelligent Systems for Molecular Biology (ISMB)},
-      year = {2025},
-      month = {July},
-      day = {23},
-      note = {R package version 1.0},
-      url = {https://github.com/gladstone-institutes/clustOpt},
+      title = {gladstone-institutes/clustOpt: v1.2.0},
+      author = {{Gill} and {Natalie} and {Shin} and {Min-Gyoung} and {Agrawal} and {Ayushi} and {Perez} and {Erwin} and {Thomas} and {Reuben}},
+      year = {2026},
+      note = {R package version 1.2.0},
+      doi = {10.5281/zenodo.19242292},
+      url = {https://doi.org/10.5281/zenodo.19242292},
     }
