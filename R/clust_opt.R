@@ -354,5 +354,5 @@ clust_opt <- function(input,
     cli::cli_rule()
   }
   res <- unlist(res, recursive = FALSE)
-  purrr::map_df(res, .f = as.data.frame)
+  purrr::list_rbind(purrr::map(res, as.data.frame))
 }

@@ -1,3 +1,26 @@
+# clustOpt 1.2.1
+
+## Bug fixes
+
+- `prep_train()` and `prep_test()` now drop any pre-existing SCT assay (reset to
+  `RNA` and `DietSeurat()`) before calling `SCTransform()`, avoiding warnings about
+  mismatched cells/features when an SCT assay built on a different cell subset would
+  otherwise be overwritten.
+
+## Dependencies
+
+- Raised major dependency floors to current releases: `ggplot2 (>= 4.0.0)`,
+  `purrr (>= 1.0.0)`, `Seurat (>= 5.4.0)`, `dplyr (>= 1.2.0)`, and added explicit
+  floors for `cli (>= 3.4.0)` and `SeuratObject (>= 5.3.0)`. The previous
+  `ggplot2 (>= 3.3.5)` floor was too low: the plotting code uses `scale_linewidth_manual()`
+  and the `linewidth` aesthetic, which require ggplot2 3.4.0+.
+
+## Internal
+
+- Migrated remaining base `warning()` calls to `cli::cli_warn()` for consistent
+  cli-based messaging.
+- Replaced superseded `purrr::map_df()` with `purrr::list_rbind(purrr::map(...))`.
+
 # clustOpt 1.2
 
 ## New features
