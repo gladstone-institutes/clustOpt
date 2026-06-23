@@ -98,9 +98,8 @@ get_valid_samples <- function(input, subject_ids, min_cells, verbose = 0) {
   }
 
   if (nrow(sufficient_samples) < 3) {
-    warning(
-      "There are fewer than 3 samples with at least ",
-      min_cells, " cells."
+    cli::cli_warn(
+      "There are fewer than 3 samples with at least {min_cells} cells."
     )
     return(NULL)
   }

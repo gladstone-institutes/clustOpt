@@ -106,6 +106,12 @@ prep_train <- function(input,
         rownames()
       train_seurat <- subset(input, cells = train_cells)
 
+      # Drop any pre-existing SCT assay so SCTransform doesn't warn about
+      # mismatched cells/features when overwriting one built on a different
+      # cell subset
+      Seurat::DefaultAssay(train_seurat) <- "RNA"
+      train_seurat <- Seurat::DietSeurat(train_seurat, assays = "RNA")
+
       # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = "RNA",
@@ -122,9 +128,16 @@ prep_train <- function(input,
         invert = TRUE
       )
       train_seurat <- subset(input, cells = train_cells)
+
+      # Drop any pre-existing SCT assay so SCTransform doesn't warn about
+      # mismatched cells/features when overwriting one built on a different
+      # cell subset
+      Seurat::DefaultAssay(train_seurat) <- "RNA"
+      train_seurat <- Seurat::DietSeurat(train_seurat, assays = "RNA")
+
       # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
-        assay = Seurat::DefaultAssay(train_seurat),
+        assay = "RNA",
         verbose = (verbose >= 3)
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
@@ -187,6 +200,12 @@ prep_test <- function(input,
     Seurat::Idents(input) <- subject_ids
     test_cells <- Seurat::WhichCells(object = input, idents = test_id)
     test_seurat <- subset(input, cells = test_cells)
+
+    # Drop any pre-existing SCT assay so SCTransform doesn't warn about
+    # mismatched cells/features when overwriting one built on a different
+    # cell subset
+    Seurat::DefaultAssay(test_seurat) <- "RNA"
+    test_seurat <- Seurat::DietSeurat(test_seurat, assays = "RNA")
 
     test_seurat <- Seurat::SCTransform(test_seurat,
       assay = "RNA",
@@ -293,7 +312,7 @@ project_pca <- function(train_seurat,
   }
 
   if ((n_shared_genes / total_genes) * 100 < 80) {
-    warning("Less than 80% of genes available for projection.")
+    cli::cli_warn("Less than 80% of genes available for projection.")
   }
 
 
