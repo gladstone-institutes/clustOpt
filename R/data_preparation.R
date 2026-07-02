@@ -395,28 +395,29 @@ train_random_forest <- function(res, df_list, cluster_by_res,
                                 snn_graph = NULL,
                                 precomputed_dist = NULL,
                                 rf_num_threads = 1) {
-  # Get cluster assignments for this res
-  train_df <- df_list[["train_proj_train_with_pcs"]]
-  train_df$clusters <- cluster_by_res[[as.character(res)]]
+  # Cluster assignments for this res (already a factor from Seurat metadata)
+  train_clusters <- as.factor(cluster_by_res[[as.character(res)]])
 
-  # proportion of clusters in train_df
-  qx <- data.frame(base::table(train_df$clusters))
+  # proportion of clusters in the training assignments
+  qx <- data.frame(base::table(train_clusters))
   colnames(qx) <- c("clusters", "Freq_q")
-  # Train model
-  rf <- ranger::ranger(as.factor(clusters) ~ .,
-    data = train_df,
+  # Train model on the projected training PCs. The x/y interface avoids the
+  # formula/model.frame overhead and the per-call data.frame copy.
+  rf <- ranger::ranger(
+    x = df_list[["train_proj_train_with_pcs"]],
+    y = train_clusters,
     num.trees = num_trees,
     write.forest = TRUE,
     num.threads = rf_num_threads
   )
-  rm(train_df)
 
   # Predict on the hold out sample
   predicted <- stats::predict(rf, df_list[["test_proj_train_with_pcs"]])
   predicted <- ranger::predictions(predicted)
+  predicted_char <- as.character(predicted)
   predicted_clusters_table <- base::table(predicted)
 
-  px <- data.frame(base::table(predicted))
+  px <- data.frame(predicted_clusters_table)
   colnames(px) <- c("clusters", "Freq_p")
 
   probs <- base::merge(qx, px, all = TRUE)
@@ -453,7 +454,7 @@ train_random_forest <- function(res, df_list, cluster_by_res,
     test_sample = sam,
     avg_width = sil$avg_width,
     cluster_median_widths = sil$group_median_width,
-    n_predicted_clusters = length(unique(as.character(predicted))),
+    n_predicted_clusters = length(unique(predicted_char)),
     min_predicted_cell_per_cluster = min(predicted_clusters_table),
     max_predicted_cell_per_cluster = max(predicted_clusters_table),
     mse = mse_value$mse,

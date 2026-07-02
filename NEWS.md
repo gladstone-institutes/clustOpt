@@ -1,3 +1,18 @@
+# clustOpt 1.2.3
+
+## Internal
+
+- `train_random_forest()` now fits `ranger` through the x/y interface instead of
+  the formula interface, avoiding the per-call `model.frame` construction and the
+  copy of the projected training matrix, and computes `table(predicted)` and
+  `as.character(predicted)` once each instead of twice. Output is verified
+  bit-identical; the avoided per-call allocation grows with the number of training
+  cells and PCs, so it is neutral on small inputs and helps on large ones.
+- Verbose per-step timings are now printed in a human-readable format: sub-second
+  durations show as milliseconds and durations of a minute or more are split into
+  minutes and hours (e.g. `142ms`, `6.3s`, `2m 0s`, `1h 3m 7s`) instead of always
+  reporting raw seconds.
+
 # clustOpt 1.2.2
 
 ## Performance improvements

@@ -2,9 +2,29 @@
 #' @importFrom rlang .data
 NULL
 
-# Internal timing helper
+# Internal timing helpers
+# Format a duration (in seconds) in a human-readable way: sub-second as
+# milliseconds, seconds with one decimal, and a minute or more split into
+# whole-second components (e.g. "142ms", "6.3s", "2m 0s", "1h 3m 7s").
+.format_duration <- function(secs) {
+  if (!is.finite(secs)) {
+    return(sprintf("%.1fs", secs))
+  }
+  if (secs < 1) {
+    return(sprintf("%.0fms", secs * 1000))
+  }
+  if (secs < 60) {
+    return(sprintf("%.1fs", secs))
+  }
+  total <- round(secs)
+  if (total < 3600) {
+    return(sprintf("%dm %ds", total %/% 60, total %% 60))
+  }
+  sprintf("%dh %dm %ds", total %/% 3600, (total %% 3600) %/% 60, total %% 60)
+}
+
 .elapsed <- function(t0) {
-  sprintf("%.1fs", as.numeric(difftime(Sys.time(), t0, units = "secs")))
+  .format_duration(as.numeric(difftime(Sys.time(), t0, units = "secs")))
 }
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
