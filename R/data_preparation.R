@@ -186,6 +186,10 @@ prep_train <- function(input,
 #' @param test_id subject_id for the test sample
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
 #' 2 = detailed, 3 = includes Seurat output)
+#' @param residual_features Character vector of features to restrict the SCT
+#' residual computation to (passed to \code{SCTransform(residual.features=)}).
+#' Only used for scRNA data. Default \code{NULL} preserves prior behavior
+#' (residuals computed for all genes).
 #' @return Training data formatted for sil_score, format depends on dtype
 #'
 #' @export
@@ -195,7 +199,8 @@ prep_test <- function(input,
                       subject_ids,
                       dtype = "scRNA",
                       test_id,
-                      verbose = 0) {
+                      verbose = 0,
+                      residual_features = NULL) {
   if (dtype == "scRNA") {
     Seurat::Idents(input) <- subject_ids
     test_cells <- Seurat::WhichCells(object = input, idents = test_id)
@@ -207,13 +212,27 @@ prep_test <- function(input,
     Seurat::DefaultAssay(test_seurat) <- "RNA"
     test_seurat <- Seurat::DietSeurat(test_seurat, assays = "RNA")
 
-    test_seurat <- Seurat::SCTransform(test_seurat,
-      assay = "RNA",
-      verbose = (verbose >= 3),
-      variable.features.n = length(rownames(test_seurat)),
-      return.only.var.genes = FALSE,
-      min_cells = 1
-    )
+    if (!is.null(residual_features)) {
+      # Restrict SCT residuals to the requested features (typically the
+      # training variable features that project_pca() actually uses),
+      # intersecting first to avoid asking SCTransform for absent genes.
+      residual_features <- intersect(residual_features, rownames(test_seurat))
+      test_seurat <- Seurat::SCTransform(test_seurat,
+        assay = "RNA",
+        verbose = (verbose >= 3),
+        residual.features = residual_features,
+        return.only.var.genes = FALSE,
+        min_cells = 1
+      )
+    } else {
+      test_seurat <- Seurat::SCTransform(test_seurat,
+        assay = "RNA",
+        verbose = (verbose >= 3),
+        variable.features.n = length(rownames(test_seurat)),
+        return.only.var.genes = FALSE,
+        min_cells = 1
+      )
+    }
     test_seurat <- Seurat::DietSeurat(test_seurat, assays = "SCT")
 
     return(test_seurat)

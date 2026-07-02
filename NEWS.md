@@ -1,3 +1,24 @@
+# clustOpt 1.2.2
+
+## Performance improvements
+
+- `prep_test()` now accepts a `residual_features` argument that restricts the
+  test-side `SCTransform()` residual computation to a supplied set of features.
+  `clust_opt()` passes the training SCT variable features, which are the only
+  features `project_pca()` ever uses, so per-fold residuals are no longer
+  materialized for the full transcriptome. The projected output is unchanged
+  (verified bit-identical); the redundant work avoided grows with the number of
+  cells per held-out subject, so the saving is negligible on small subjects and
+  matters on large ones.
+- `clust_opt()` no longer serializes the dense O(n^2) silhouette distance matrix
+  to every parallel worker. Under a socket-cluster plan (`multisession` or remote)
+  the per-subject `dist()` is skipped and each worker recomputes it in parallel
+  from the already-shipped low-dimensional coordinates, cutting peak memory and
+  inter-process transfer. Sequential and forked (`multicore`) plans keep the
+  single shared precompute, so there is no regression on the default path. The
+  per-resolution `future_lapply()` closure now also captures only the scalar
+  hold-out subject id and resolution vector instead of the full run grid.
+
 # clustOpt 1.2.1
 
 ## Bug fixes
