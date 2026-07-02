@@ -32,6 +32,7 @@
 5.  When ready to merge, rebuild the site (includes the vignette):
 
     ``` r
+
     pkgdown::build_site()
     ```
 
@@ -43,6 +44,7 @@
 ## Development Setup
 
 ``` r
+
 # Install dependencies
 devtools::install_deps(dependencies = TRUE)
 
@@ -64,6 +66,7 @@ guide](https://style.tidyverse.org/). The
 automatically:
 
 ``` r
+
 # Style a single file
 styler::style_file("R/clust_opt.R")
 
@@ -102,6 +105,7 @@ be built in CI. Before merging any PR that changes package source or
 documentation, rebuild the site locally:
 
 ``` r
+
 pkgdown::build_site()
 ```
 

@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>clustOpt: Quickstart Guide • clustOpt</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="clustOpt: Quickstart Guide">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">clustOpt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
 
       <h1>clustOpt: Quickstart Guide</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2026-03-27</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-07-02</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/gladstone-institutes/clustOpt/blob/HEAD/vignettes/quick_start_guide.Rmd" class="external-link"><code>vignettes/quick_start_guide.Rmd</code></a></small>
       <div class="d-none name"><code>quick_start_guide.Rmd</code></div>
@@ -195,134 +195,134 @@ of RAM (32 GB recommended) and 10 cores to run in about 15 minutes.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: JP_RIK_H073</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 38.3s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 65.0s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 32.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 37.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 14.8s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 80ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 31.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 10ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 900 cells, test: 100 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.3s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (100 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.5s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ────────────────────────────────────────────────────────── JP_RIK_H073 139.5s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 299ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (100 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.6s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ────────────────────────────────────────────────────────── JP_RIK_H073 1m 28s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: JP_RIK_H131</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 29.3s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 51.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 8.9s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 28.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 14.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 84ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 5.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 11ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 917 cells, test: 83 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.5s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (83 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.9s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── JP_RIK_H131 92.8s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 381ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (83 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.4s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── JP_RIK_H131 51.9s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: KR_SGI_H002</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.0s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.5s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 18.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 14.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 102ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 5.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 9ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 924 cells, test: 76 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (76 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.0s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H002 68.1s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 310ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (76 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.4s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H002 42.4s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: KR_SGI_H136</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.6s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.3s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.7s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 20.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 16.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 99ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 6.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 10ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 873 cells, test: 127 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (127 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H136 66.8s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 341ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (127 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.4s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── KR_SGI_H136 45.8s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H09a</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.5s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 32.9s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 11.2s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 18.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 16.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 89ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 7.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 9ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 948 cells, test: 52 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (52 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 4.1s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H09a 68.3s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 401ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (52 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H09a 44.6s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H077</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.6s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 36.6s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.2s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.8s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 15.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 82ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 6.7s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 9ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 853 cells, test: 147 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (147 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.5s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H077 69.5s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 341ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (147 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.2s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H077 44.6s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H138</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 20.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 35.5s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 20.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 15.8s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 89ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 7.2s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 10ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 870 cells, test: 130 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (130 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H138 69.3s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 449ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (130 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.3s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H138 46.0s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H153</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.6s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 35.3s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.3s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 20.6s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 15.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 81ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 6.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 10ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 915 cells, test: 85 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (85 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.8s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H153 70.5s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 328ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (85 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.5s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H153 45.6s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H166</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 21.0s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 32.7s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 10.9s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.5s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 16.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 110ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 6.3s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 9ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 877 cells, test: 123 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (123 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.5s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H166 67.7s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 330ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (123 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.6s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H166 45.7s ──</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Holdout subject: SG_HEL_H319</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.7s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 33.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 0.1s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 9.2s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 0.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_train] 19.9s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [prep_test] 17.1s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [RunPCA + split_pca_dimensions] 114ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [FindNeighbors + FindClusters] 5.8s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [project_pca] 12ms</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> train: 923 cells, test: 77 cells, 10 PCs, 11 resolutions</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 0.4s</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute dist] 0.0s (77 cells)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 2.8s (11 resolutions)</span></span>
-<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H319 65.4s ──</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [total pipeline] 778.0s</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [precompute SNN] 432ms</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> [precompute dist] skipped (parallel plan; workers compute dist) (77 cells)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [future_lapply RF] 3.2s (11 resolutions)</span></span>
+<span><span class="co">#&gt; ─────────────────────────────────────────────────────────── SG_HEL_H319 46.6s ──</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> [total pipeline] 8m 21s</span></span>
 <span><span class="co">#&gt; ────────────────────────────────────────────────────────────────────────────────</span></span>
 <span></span>
 <span><span class="co"># Shut down stray workers</span></span>
@@ -390,7 +390,7 @@ resolution:</p>
 <tbody>
 <tr class="odd">
 <td><strong>avg_width</strong></td>
-<td>Silhouette score — cluster separation (recommended)</td>
+<td>Silhouette score: cluster separation (recommended)</td>
 <td>Higher</td>
 </tr>
 <tr class="even">

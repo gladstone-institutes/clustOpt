@@ -1,6 +1,7 @@
 # clustOpt: Quickstart Guide
 
 ``` r
+
 library(Seurat)
 # Only v5 Seurat Assays are supported
 options(Seurat.object.assay.version = "v5")
@@ -21,6 +22,7 @@ donors which have been sketched to a total of 1000 cells using the
 leverage score based method of Seurat’s SketchData function.
 
 ``` r
+
 input <- readRDS(
   system.file(
     "extdata",
@@ -31,6 +33,7 @@ input <- readRDS(
 ```
 
 ``` r
+
 input@meta.data |>
   summarize(
     Donors = n_distinct(donor_id),
@@ -51,18 +54,21 @@ input@meta.data |>
 ```
 
 ``` r
+
 input <- input |>
   SCTransform(verbose = FALSE) |>
   RunPCA(verbose = FALSE)
 ```
 
 ``` r
+
 ElbowPlot(input, ndims = 50)
 ```
 
 ![](quick_start_guide_files/figure-html/elbowplot-1.png)
 
 ``` r
+
 input <- RunUMAP(input, dims = 1:20, verbose = FALSE)
 
 DimPlot(input,
@@ -75,6 +81,7 @@ DimPlot(input,
 ![](quick_start_guide_files/figure-html/UMAP-1.png)
 
 ``` r
+
 DimPlot(input,
   group.by = "broad_cell_type",
   pt.size = .8
@@ -85,6 +92,7 @@ DimPlot(input,
 ![](quick_start_guide_files/figure-html/unnamed-chunk-2-1.png)
 
 ``` r
+
 DimPlot(input,
   group.by = "author_cell_type",
   pt.size = .8
@@ -119,6 +127,7 @@ The code below requires a large amount of RAM (32 GB recommended) and 10
 cores to run in about 15 minutes.
 
 ``` r
+
 plan("multisession", workers = 11)
 
 cv_results <- clust_opt(input,
@@ -145,134 +154,134 @@ cv_results <- clust_opt(input,
 #> 
 #> ── Holdout subject: JP_RIK_H073 ──
 #> 
-#> ✔ [prep_train] 38.3s
-#> ✔ [prep_test] 65.0s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 32.4s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 37.3s
+#> ✔ [prep_test] 14.8s
+#> ✔ [RunPCA + split_pca_dimensions] 80ms
+#> ✔ [FindNeighbors + FindClusters] 31.7s
+#> ✔ [project_pca] 10ms
 #> ℹ train: 900 cells, test: 100 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.3s
-#> ✔ [precompute dist] 0.0s (100 cells)
-#> ✔ [future_lapply RF] 3.5s (11 resolutions)
-#> ────────────────────────────────────────────────────────── JP_RIK_H073 139.5s ──
+#> ✔ [precompute SNN] 299ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (100 cells)
+#> ✔ [future_lapply RF] 3.6s (11 resolutions)
+#> ────────────────────────────────────────────────────────── JP_RIK_H073 1m 28s ──
 #> 
 #> ── Holdout subject: JP_RIK_H131 ──
 #> 
-#> ✔ [prep_train] 29.3s
-#> ✔ [prep_test] 51.1s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 8.9s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 28.0s
+#> ✔ [prep_test] 14.7s
+#> ✔ [RunPCA + split_pca_dimensions] 84ms
+#> ✔ [FindNeighbors + FindClusters] 5.2s
+#> ✔ [project_pca] 11ms
 #> ℹ train: 917 cells, test: 83 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.5s
-#> ✔ [precompute dist] 0.0s (83 cells)
-#> ✔ [future_lapply RF] 2.9s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── JP_RIK_H131 92.8s ──
+#> ✔ [precompute SNN] 381ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (83 cells)
+#> ✔ [future_lapply RF] 3.4s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── JP_RIK_H131 51.9s ──
 #> 
 #> ── Holdout subject: KR_SGI_H002 ──
 #> 
-#> ✔ [prep_train] 21.0s
-#> ✔ [prep_test] 33.5s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 10.1s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 18.6s
+#> ✔ [prep_test] 14.6s
+#> ✔ [RunPCA + split_pca_dimensions] 102ms
+#> ✔ [FindNeighbors + FindClusters] 5.3s
+#> ✔ [project_pca] 9ms
 #> ℹ train: 924 cells, test: 76 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (76 cells)
-#> ✔ [future_lapply RF] 3.0s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── KR_SGI_H002 68.1s ──
+#> ✔ [precompute SNN] 310ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (76 cells)
+#> ✔ [future_lapply RF] 3.4s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── KR_SGI_H002 42.4s ──
 #> 
 #> ── Holdout subject: KR_SGI_H136 ──
 #> 
-#> ✔ [prep_train] 19.6s
-#> ✔ [prep_test] 33.3s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 10.7s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 20.0s
+#> ✔ [prep_test] 16.2s
+#> ✔ [RunPCA + split_pca_dimensions] 99ms
+#> ✔ [FindNeighbors + FindClusters] 6.7s
+#> ✔ [project_pca] 10ms
 #> ℹ train: 873 cells, test: 127 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (127 cells)
-#> ✔ [future_lapply RF] 2.6s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── KR_SGI_H136 66.8s ──
+#> ✔ [precompute SNN] 341ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (127 cells)
+#> ✔ [future_lapply RF] 2.4s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── KR_SGI_H136 45.8s ──
 #> 
 #> ── Holdout subject: SG_HEL_H09a ──
 #> 
-#> ✔ [prep_train] 19.5s
-#> ✔ [prep_test] 32.9s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 11.2s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 18.2s
+#> ✔ [prep_test] 16.3s
+#> ✔ [RunPCA + split_pca_dimensions] 89ms
+#> ✔ [FindNeighbors + FindClusters] 7.1s
+#> ✔ [project_pca] 9ms
 #> ℹ train: 948 cells, test: 52 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (52 cells)
-#> ✔ [future_lapply RF] 4.1s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── SG_HEL_H09a 68.3s ──
+#> ✔ [precompute SNN] 401ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (52 cells)
+#> ✔ [future_lapply RF] 2.6s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── SG_HEL_H09a 44.6s ──
 #> 
 #> ── Holdout subject: SG_HEL_H077 ──
 #> 
-#> ✔ [prep_train] 19.6s
-#> ✔ [prep_test] 36.6s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 10.2s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 19.8s
+#> ✔ [prep_test] 15.5s
+#> ✔ [RunPCA + split_pca_dimensions] 82ms
+#> ✔ [FindNeighbors + FindClusters] 6.7s
+#> ✔ [project_pca] 9ms
 #> ℹ train: 853 cells, test: 147 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (147 cells)
-#> ✔ [future_lapply RF] 2.5s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── SG_HEL_H077 69.5s ──
+#> ✔ [precompute SNN] 341ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (147 cells)
+#> ✔ [future_lapply RF] 2.2s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── SG_HEL_H077 44.6s ──
 #> 
 #> ── Holdout subject: SG_HEL_H138 ──
 #> 
-#> ✔ [prep_train] 20.4s
-#> ✔ [prep_test] 35.5s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 10.4s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 20.0s
+#> ✔ [prep_test] 15.8s
+#> ✔ [RunPCA + split_pca_dimensions] 89ms
+#> ✔ [FindNeighbors + FindClusters] 7.2s
+#> ✔ [project_pca] 10ms
 #> ℹ train: 870 cells, test: 130 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (130 cells)
-#> ✔ [future_lapply RF] 2.6s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── SG_HEL_H138 69.3s ──
+#> ✔ [precompute SNN] 449ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (130 cells)
+#> ✔ [future_lapply RF] 2.3s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── SG_HEL_H138 46.0s ──
 #> 
 #> ── Holdout subject: SG_HEL_H153 ──
 #> 
-#> ✔ [prep_train] 21.6s
-#> ✔ [prep_test] 35.3s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 10.3s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 20.6s
+#> ✔ [prep_test] 15.9s
+#> ✔ [RunPCA + split_pca_dimensions] 81ms
+#> ✔ [FindNeighbors + FindClusters] 6.1s
+#> ✔ [project_pca] 10ms
 #> ℹ train: 915 cells, test: 85 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (85 cells)
-#> ✔ [future_lapply RF] 2.8s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── SG_HEL_H153 70.5s ──
+#> ✔ [precompute SNN] 328ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (85 cells)
+#> ✔ [future_lapply RF] 2.5s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── SG_HEL_H153 45.6s ──
 #> 
 #> ── Holdout subject: SG_HEL_H166 ──
 #> 
-#> ✔ [prep_train] 21.0s
-#> ✔ [prep_test] 32.7s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 10.9s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 19.5s
+#> ✔ [prep_test] 16.9s
+#> ✔ [RunPCA + split_pca_dimensions] 110ms
+#> ✔ [FindNeighbors + FindClusters] 6.3s
+#> ✔ [project_pca] 9ms
 #> ℹ train: 877 cells, test: 123 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (123 cells)
-#> ✔ [future_lapply RF] 2.5s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── SG_HEL_H166 67.7s ──
+#> ✔ [precompute SNN] 330ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (123 cells)
+#> ✔ [future_lapply RF] 2.6s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── SG_HEL_H166 45.7s ──
 #> 
 #> ── Holdout subject: SG_HEL_H319 ──
 #> 
-#> ✔ [prep_train] 19.7s
-#> ✔ [prep_test] 33.1s
-#> ✔ [RunPCA + split_pca_dimensions] 0.1s
-#> ✔ [FindNeighbors + FindClusters] 9.2s
-#> ✔ [project_pca] 0.0s
+#> ✔ [prep_train] 19.9s
+#> ✔ [prep_test] 17.1s
+#> ✔ [RunPCA + split_pca_dimensions] 114ms
+#> ✔ [FindNeighbors + FindClusters] 5.8s
+#> ✔ [project_pca] 12ms
 #> ℹ train: 923 cells, test: 77 cells, 10 PCs, 11 resolutions
-#> ✔ [precompute SNN] 0.4s
-#> ✔ [precompute dist] 0.0s (77 cells)
-#> ✔ [future_lapply RF] 2.8s (11 resolutions)
-#> ─────────────────────────────────────────────────────────── SG_HEL_H319 65.4s ──
-#> ✔ [total pipeline] 778.0s
+#> ✔ [precompute SNN] 432ms
+#> ℹ [precompute dist] skipped (parallel plan; workers compute dist) (77 cells)
+#> ✔ [future_lapply RF] 3.2s (11 resolutions)
+#> ─────────────────────────────────────────────────────────── SG_HEL_H319 46.6s ──
+#> ✔ [total pipeline] 8m 21s
 #> ────────────────────────────────────────────────────────────────────────────────
 
 # Shut down stray workers
@@ -282,6 +291,7 @@ plan("sequential")
 ## Plotting the silhouette score distributions
 
 ``` r
+
 plots <- create_sil_plots(cv_results |> drop_na())
 
 plots[[1]]
@@ -290,18 +300,21 @@ plots[[1]]
 ![](quick_start_guide_files/figure-html/plotting-1.png)
 
 ``` r
+
 plots[[2]]
 ```
 
 ![](quick_start_guide_files/figure-html/plotting-2.png)
 
 ``` r
+
 plots[[3]]
 ```
 
 ![](quick_start_guide_files/figure-html/plotting-3.png)
 
 ``` r
+
 plots[[4]]
 ```
 
@@ -334,12 +347,13 @@ also computes the following at each resolution:
 
 | Metric | Measures | Better |
 |----|----|----|
-| **avg_width** | Silhouette score — cluster separation (recommended) | Higher |
+| **avg_width** | Silhouette score: cluster separation (recommended) | Higher |
 | **KLdivergence** | KL divergence of cluster proportions (experimental) | Lower |
 | **Hellinger** | Hellinger distance of cluster proportions (experimental) | Lower |
 | **modularity** | Graph modularity of cluster assignments (experimental) | Higher |
 
 ``` r
+
 head(cv_results)
 #>   resolution test_sample  avg_width cluster_median_widths n_predicted_clusters
 #> 1       0.02 JP_RIK_H073 -0.0278377             0.2201124                    2
@@ -365,6 +379,7 @@ head(cv_results)
 ```
 
 ``` r
+
 cv_results |>
   drop_na() |>
   pivot_longer(cols = c(KLdivergence, Hellinger, modularity),
@@ -399,6 +414,7 @@ shows the per-metric ranks and
 shows the aggregate.
 
 ``` r
+
 rankings <- suggest_resolution(cv_results)
 rankings
 #> # A tibble: 11 × 12
@@ -421,12 +437,14 @@ rankings
 ```
 
 ``` r
+
 plot_rank_metrics(rankings)
 ```
 
 ![](quick_start_guide_files/figure-html/plot_rankings-1.png)
 
 ``` r
+
 plot_mean_rank(rankings)
 ```
 
@@ -444,6 +462,7 @@ for details.
 ## Comparison to the cell annotations
 
 ``` r
+
 input <- FindNeighbors(input, dims = 1:20, verbose = FALSE)
 input <- FindClusters(input, resolution = 0.04)
 #> Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
@@ -470,6 +489,7 @@ the 3 celltypes. Use
 to compare any two metadata columns:
 
 ``` r
+
 adjusted_rand_index(input,
   meta1 = "seurat_clusters",
   meta2 = "broad_cell_type"
@@ -491,6 +511,7 @@ we provide a wrapper around `Seurat`’s SketchData using the leverage
 score method to reduce the size of the input data to clustOpt.
 
 ``` r
+
 input <- leverage_sketch(input, sketch_size = 100)
 #> ℹ Sketching scRNA data: 1000 -> 100 cells
 #> ℹ Removing previously calculated leverage scores...
