@@ -1,0 +1,42 @@
+# Version control (largest single contributor to the build context)
+.git
+.gitignore
+
+# renv is removed inside the Dockerfile; no need to ship it into the context
+renv
+renv.lock
+.Rprofile
+
+# Generated pkgdown site and rendered vignette artifacts (not needed to install)
+docs
+doc
+Meta
+
+# knitr vignette caches (also excluded from R builds via .Rbuildignore)
+vignettes/*_cache
+vignettes/*_files
+
+# CI, editor, and IDE metadata
+.github
+.vscode
+.claude
+.Rproj.user
+*.Rproj
+
+# Local scratch / reproducible-example files
+local_only
+
+# R session state
+.RData
+.Rhistory
+.Ruserdata
+
+# OS cruft
+.DS_Store
+**/.DS_Store
+
+# This build tooling itself
+build.sh
+
+# Duplicate license (DESCRIPTION references LICENSE, not LICENSE.md)
+LICENSE.md
