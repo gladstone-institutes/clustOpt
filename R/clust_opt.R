@@ -2,9 +2,29 @@
 #' @importFrom rlang .data
 NULL
 
-# Internal timing helper
+# Internal timing helpers
+# Format a duration (in seconds) in a human-readable way: sub-second as
+# milliseconds, seconds with one decimal, and a minute or more split into
+# whole-second components (e.g. "142ms", "6.3s", "2m 0s", "1h 3m 7s").
+.format_duration <- function(secs) {
+  if (!is.finite(secs)) {
+    return(sprintf("%.1fs", secs))
+  }
+  if (secs < 1) {
+    return(sprintf("%.0fms", secs * 1000))
+  }
+  if (secs < 60) {
+    return(sprintf("%.1fs", secs))
+  }
+  total <- round(secs)
+  if (total < 3600) {
+    return(sprintf("%dm %ds", total %/% 60, total %% 60))
+  }
+  sprintf("%dh %dm %ds", total %/% 3600, (total %% 3600) %/% 60, total %% 60)
+}
+
 .elapsed <- function(t0) {
-  sprintf("%.1fs", as.numeric(difftime(Sys.time(), t0, units = "secs")))
+  .format_duration(as.numeric(difftime(Sys.time(), t0, units = "secs")))
 }
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -177,7 +197,8 @@ clust_opt <- function(input,
       dtype = dtype,
       subject_ids = subject_ids,
       test_id = sam,
-      verbose = verbose
+      verbose = verbose,
+      residual_features = if (dtype == "scRNA") Seurat::VariableFeatures(train) else NULL
     )
     if (verbose >= 1) cli::cli_alert_success("[prep_test] {(.elapsed(t0_prep_test))}")
 
@@ -313,23 +334,40 @@ clust_opt <- function(input,
     )[["snn"]]
     if (verbose >= 1) cli::cli_alert_success("[precompute SNN] {(.elapsed(t0_snn))}")
 
-    # Precompute distance matrix for silhouette (resolution-invariant)
+    # Precompute distance matrix for silhouette (resolution-invariant).
+    # Under a socket-cluster plan (multisession / remote) globals are serialized
+    # to every worker, so shipping the dense O(n^2) dist is wasteful. Skip it and
+    # let workers recompute dist() in parallel from the already-shipped small
+    # coords via the precomputed_dist = NULL fallback in calculate_silhouette_score().
     t0_dist <- Sys.time()
-    precomputed_dist <- dist(df_list[["test_proj_clust_pcs"]])
+    serializing_plan <- inherits(future::plan(), "cluster")
+    precomputed_dist <- if (serializing_plan) {
+      NULL
+    } else {
+      dist(df_list[["test_proj_clust_pcs"]])
+    }
     if (verbose >= 1) {
       n_cells <- nrow(df_list[["test_proj_clust_pcs"]])
-      cli::cli_alert_success("[precompute dist] {(.elapsed(t0_dist))} ({n_cells} cells)")
+      if (serializing_plan) {
+        cli::cli_alert_info(
+          "[precompute dist] skipped (parallel plan; workers compute dist) ({n_cells} cells)"
+        )
+      } else {
+        cli::cli_alert_success("[precompute dist] {(.elapsed(t0_dist))} ({n_cells} cells)")
+      }
     }
 
     t0_rf <- Sys.time()
+    # Iterate the resolution vector directly and capture sam as a scalar so the
+    # full runs data.frame is not pulled into (and serialized with) the closure.
     this_result <- future.apply::future_lapply(
-      rownames(runs[runs$Var1 == sam, ]),
-      function(i) {
+      res_range,
+      function(r) {
         train_random_forest(
-          res = runs[i, 2],
+          res = r,
           df_list = df_list,
           cluster_by_res = cluster_by_res,
-          sam = runs[i, 1],
+          sam = sam,
           num_trees = num_trees,
           verbose = verbose,
           snn_graph = precomputed_snn,
@@ -354,5 +392,5 @@ clust_opt <- function(input,
     cli::cli_rule()
   }
   res <- unlist(res, recursive = FALSE)
-  purrr::map_df(res, .f = as.data.frame)
+  purrr::list_rbind(purrr::map(res, as.data.frame))
 }

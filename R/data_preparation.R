@@ -106,6 +106,12 @@ prep_train <- function(input,
         rownames()
       train_seurat <- subset(input, cells = train_cells)
 
+      # Drop any pre-existing SCT assay so SCTransform doesn't warn about
+      # mismatched cells/features when overwriting one built on a different
+      # cell subset
+      Seurat::DefaultAssay(train_seurat) <- "RNA"
+      train_seurat <- Seurat::DietSeurat(train_seurat, assays = "RNA")
+
       # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
         assay = "RNA",
@@ -122,9 +128,16 @@ prep_train <- function(input,
         invert = TRUE
       )
       train_seurat <- subset(input, cells = train_cells)
+
+      # Drop any pre-existing SCT assay so SCTransform doesn't warn about
+      # mismatched cells/features when overwriting one built on a different
+      # cell subset
+      Seurat::DefaultAssay(train_seurat) <- "RNA"
+      train_seurat <- Seurat::DietSeurat(train_seurat, assays = "RNA")
+
       # Normalize the training subjects
       train_seurat <- Seurat::SCTransform(train_seurat,
-        assay = Seurat::DefaultAssay(train_seurat),
+        assay = "RNA",
         verbose = (verbose >= 3)
       )
       train_seurat <- Seurat::DietSeurat(train_seurat, assays = "SCT")
@@ -173,6 +186,10 @@ prep_train <- function(input,
 #' @param test_id subject_id for the test sample
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
 #' 2 = detailed, 3 = includes Seurat output)
+#' @param residual_features Character vector of features to restrict the SCT
+#' residual computation to (passed to \code{SCTransform(residual.features=)}).
+#' Only used for scRNA data. Default \code{NULL} preserves prior behavior
+#' (residuals computed for all genes).
 #' @return Training data formatted for sil_score, format depends on dtype
 #'
 #' @export
@@ -182,19 +199,40 @@ prep_test <- function(input,
                       subject_ids,
                       dtype = "scRNA",
                       test_id,
-                      verbose = 0) {
+                      verbose = 0,
+                      residual_features = NULL) {
   if (dtype == "scRNA") {
     Seurat::Idents(input) <- subject_ids
     test_cells <- Seurat::WhichCells(object = input, idents = test_id)
     test_seurat <- subset(input, cells = test_cells)
 
-    test_seurat <- Seurat::SCTransform(test_seurat,
-      assay = "RNA",
-      verbose = (verbose >= 3),
-      variable.features.n = length(rownames(test_seurat)),
-      return.only.var.genes = FALSE,
-      min_cells = 1
-    )
+    # Drop any pre-existing SCT assay so SCTransform doesn't warn about
+    # mismatched cells/features when overwriting one built on a different
+    # cell subset
+    Seurat::DefaultAssay(test_seurat) <- "RNA"
+    test_seurat <- Seurat::DietSeurat(test_seurat, assays = "RNA")
+
+    if (!is.null(residual_features)) {
+      # Restrict SCT residuals to the requested features (typically the
+      # training variable features that project_pca() actually uses),
+      # intersecting first to avoid asking SCTransform for absent genes.
+      residual_features <- intersect(residual_features, rownames(test_seurat))
+      test_seurat <- Seurat::SCTransform(test_seurat,
+        assay = "RNA",
+        verbose = (verbose >= 3),
+        residual.features = residual_features,
+        return.only.var.genes = FALSE,
+        min_cells = 1
+      )
+    } else {
+      test_seurat <- Seurat::SCTransform(test_seurat,
+        assay = "RNA",
+        verbose = (verbose >= 3),
+        variable.features.n = length(rownames(test_seurat)),
+        return.only.var.genes = FALSE,
+        min_cells = 1
+      )
+    }
     test_seurat <- Seurat::DietSeurat(test_seurat, assays = "SCT")
 
     return(test_seurat)
@@ -293,7 +331,7 @@ project_pca <- function(train_seurat,
   }
 
   if ((n_shared_genes / total_genes) * 100 < 80) {
-    warning("Less than 80% of genes available for projection.")
+    cli::cli_warn("Less than 80% of genes available for projection.")
   }
 
 
@@ -357,28 +395,29 @@ train_random_forest <- function(res, df_list, cluster_by_res,
                                 snn_graph = NULL,
                                 precomputed_dist = NULL,
                                 rf_num_threads = 1) {
-  # Get cluster assignments for this res
-  train_df <- df_list[["train_proj_train_with_pcs"]]
-  train_df$clusters <- cluster_by_res[[as.character(res)]]
+  # Cluster assignments for this res (already a factor from Seurat metadata)
+  train_clusters <- as.factor(cluster_by_res[[as.character(res)]])
 
-  # proportion of clusters in train_df
-  qx <- data.frame(base::table(train_df$clusters))
+  # proportion of clusters in the training assignments
+  qx <- data.frame(base::table(train_clusters))
   colnames(qx) <- c("clusters", "Freq_q")
-  # Train model
-  rf <- ranger::ranger(as.factor(clusters) ~ .,
-    data = train_df,
+  # Train model on the projected training PCs. The x/y interface avoids the
+  # formula/model.frame overhead and the per-call data.frame copy.
+  rf <- ranger::ranger(
+    x = df_list[["train_proj_train_with_pcs"]],
+    y = train_clusters,
     num.trees = num_trees,
     write.forest = TRUE,
     num.threads = rf_num_threads
   )
-  rm(train_df)
 
   # Predict on the hold out sample
   predicted <- stats::predict(rf, df_list[["test_proj_train_with_pcs"]])
   predicted <- ranger::predictions(predicted)
+  predicted_char <- as.character(predicted)
   predicted_clusters_table <- base::table(predicted)
 
-  px <- data.frame(base::table(predicted))
+  px <- data.frame(predicted_clusters_table)
   colnames(px) <- c("clusters", "Freq_p")
 
   probs <- base::merge(qx, px, all = TRUE)
@@ -415,7 +454,7 @@ train_random_forest <- function(res, df_list, cluster_by_res,
     test_sample = sam,
     avg_width = sil$avg_width,
     cluster_median_widths = sil$group_median_width,
-    n_predicted_clusters = length(unique(as.character(predicted))),
+    n_predicted_clusters = length(unique(predicted_char)),
     min_predicted_cell_per_cluster = min(predicted_clusters_table),
     max_predicted_cell_per_cluster = max(predicted_clusters_table),
     mse = mse_value$mse,

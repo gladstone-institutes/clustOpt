@@ -1,6 +1,8 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main, master]
   workflow_dispatch:
@@ -25,6 +27,9 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # Disable the project's renv autoloader in CI so that use-public-rspm's
+      # P3M binary packages are used instead of compiling from source CRAN.
+      RENV_CONFIG_AUTOLOADER_ENABLED: false
 
     steps:
       - uses: actions/checkout@v3

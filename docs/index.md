@@ -33,6 +33,7 @@ space while training and predicting in the even PC space.
 Install the development version from GitHub using `devtools`:
 
 ``` r
+
 # Install devtools if needed
 if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
@@ -47,6 +48,7 @@ devtools::install_github("gladstone-institutes/clustOpt")
 For complete functionality including large dataset support:
 
 ``` r
+
 # Install core package
 devtools::install_github("gladstone-institutes/clustOpt")
 
@@ -72,6 +74,7 @@ For convenience we maintain a clustOpt docker image:
 If you encounter GitHub authentication issues:
 
 ``` r
+
 # Set up Git configuration
 install.packages("usethis")
 usethis::use_git_config(user.name = "YourName", user.email = "your@email.com")
@@ -89,6 +92,7 @@ devtools::install_github("gladstone-institutes/clustOpt")
 For permission or dependency issues:
 
 ``` r
+
 # Install with dependencies
 devtools::install_github("gladstone-institutes/clustOpt", dependencies = TRUE)
 ```
@@ -105,6 +109,7 @@ devtools::install_github("gladstone-institutes/clustOpt", dependencies = TRUE)
 ## Quick Start
 
 ``` r
+
 library(clustOpt)
 
 # Basic usage for scRNA-seq

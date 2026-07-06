@@ -5,7 +5,14 @@ Prepare test data for random forest
 ## Usage
 
 ``` r
-prep_test(input, subject_ids, dtype = "scRNA", test_id, verbose = 0)
+prep_test(
+  input,
+  subject_ids,
+  dtype = "scRNA",
+  test_id,
+  verbose = 0,
+  residual_features = NULL
+)
 ```
 
 ## Arguments
@@ -31,6 +38,13 @@ prep_test(input, subject_ids, dtype = "scRNA", test_id, verbose = 0)
 
   Integer verbosity level (0 = silent, 1 = milestones, 2 = detailed, 3 =
   includes Seurat output)
+
+- residual_features:
+
+  Character vector of features to restrict the SCT residual computation
+  to (passed to `SCTransform(residual.features=)`). Only used for scRNA
+  data. Default `NULL` preserves prior behavior (residuals computed for
+  all genes).
 
 ## Value
 

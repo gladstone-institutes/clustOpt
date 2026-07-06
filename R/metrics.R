@@ -172,7 +172,7 @@ calculate_silhouette_score <- function(predicted, data_frame,
       d
     )
   }, error = function(e) {
-    warning(sprintf("Silhouette calculation failed: %s", e$message))
+    cli::cli_warn("Silhouette calculation failed: {e$message}")
     return(NULL)
   })
 
@@ -384,7 +384,7 @@ adjusted_rand_index <- function(seurat_obj, meta1, meta2) {
 
   # Check for missing values
   if (any(is.na(group1)) || any(is.na(group2))) {
-    warning("Missing values detected in clustering assignments")
+    cli::cli_warn("Missing values detected in clustering assignments")
     # Remove cells with missing values in either grouping
     valid_cells <- !is.na(group1) & !is.na(group2)
     group1 <- group1[valid_cells]

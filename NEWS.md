@@ -1,3 +1,62 @@
+# clustOpt 1.2.3
+
+## Internal
+
+- `train_random_forest()` now fits `ranger` through the x/y interface instead of
+  the formula interface, avoiding the per-call `model.frame` construction and the
+  copy of the projected training matrix, and computes `table(predicted)` and
+  `as.character(predicted)` once each instead of twice. Output is verified
+  bit-identical; the avoided per-call allocation grows with the number of training
+  cells and PCs, so it is neutral on small inputs and helps on large ones.
+- Verbose per-step timings are now printed in a human-readable format: sub-second
+  durations show as milliseconds and durations of a minute or more are split into
+  minutes and hours (e.g. `142ms`, `6.3s`, `2m 0s`, `1h 3m 7s`) instead of always
+  reporting raw seconds.
+
+# clustOpt 1.2.2
+
+## Performance improvements
+
+- `prep_test()` now accepts a `residual_features` argument that restricts the
+  test-side `SCTransform()` residual computation to a supplied set of features.
+  `clust_opt()` passes the training SCT variable features, which are the only
+  features `project_pca()` ever uses, so per-fold residuals are no longer
+  materialized for the full transcriptome. The projected output is unchanged
+  (verified bit-identical); the redundant work avoided grows with the number of
+  cells per held-out subject, so the saving is negligible on small subjects and
+  matters on large ones.
+- `clust_opt()` no longer serializes the dense O(n^2) silhouette distance matrix
+  to every parallel worker. Under a socket-cluster plan (`multisession` or remote)
+  the per-subject `dist()` is skipped and each worker recomputes it in parallel
+  from the already-shipped low-dimensional coordinates, cutting peak memory and
+  inter-process transfer. Sequential and forked (`multicore`) plans keep the
+  single shared precompute, so there is no regression on the default path. The
+  per-resolution `future_lapply()` closure now also captures only the scalar
+  hold-out subject id and resolution vector instead of the full run grid.
+
+# clustOpt 1.2.1
+
+## Bug fixes
+
+- `prep_train()` and `prep_test()` now drop any pre-existing SCT assay (reset to
+  `RNA` and `DietSeurat()`) before calling `SCTransform()`, avoiding warnings about
+  mismatched cells/features when an SCT assay built on a different cell subset would
+  otherwise be overwritten.
+
+## Dependencies
+
+- Raised major dependency floors to current releases: `ggplot2 (>= 4.0.0)`,
+  `purrr (>= 1.0.0)`, `Seurat (>= 5.4.0)`, `dplyr (>= 1.2.0)`, and added explicit
+  floors for `cli (>= 3.4.0)` and `SeuratObject (>= 5.3.0)`. The previous
+  `ggplot2 (>= 3.3.5)` floor was too low: the plotting code uses `scale_linewidth_manual()`
+  and the `linewidth` aesthetic, which require ggplot2 3.4.0+.
+
+## Internal
+
+- Migrated remaining base `warning()` calls to `cli::cli_warn()` for consistent
+  cli-based messaging.
+- Replaced superseded `purrr::map_df()` with `purrr::list_rbind(purrr::map(...))`.
+
 # clustOpt 1.2
 
 ## New features

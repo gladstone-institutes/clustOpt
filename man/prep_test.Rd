@@ -4,7 +4,14 @@
 \alias{prep_test}
 \title{prep_test}
 \usage{
-prep_test(input, subject_ids, dtype = "scRNA", test_id, verbose = 0)
+prep_test(
+  input,
+  subject_ids,
+  dtype = "scRNA",
+  test_id,
+  verbose = 0,
+  residual_features = NULL
+)
 }
 \arguments{
 \item{input}{Seurat object}
@@ -18,6 +25,11 @@ is "scRNA". CyTOF data is expected to be arcsinh normalized.}
 
 \item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
 2 = detailed, 3 = includes Seurat output)}
+
+\item{residual_features}{Character vector of features to restrict the SCT
+residual computation to (passed to \code{SCTransform(residual.features=)}).
+Only used for scRNA data. Default \code{NULL} preserves prior behavior
+(residuals computed for all genes).}
 }
 \value{
 Training data formatted for sil_score, format depends on dtype

@@ -1,9 +1,9 @@
-pandoc: 3.6.3
+pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   quick_start_guide: quick_start_guide.html
-last_built: 2026-03-27T16:48Z
+last_built: 2026-07-02T22:06Z
 urls:
   reference: https://gladstone-institutes.github.io/clustOpt/reference
   article: https://gladstone-institutes.github.io/clustOpt/articles

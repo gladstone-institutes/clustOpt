@@ -153,7 +153,7 @@ The optimal resolution typically shows high median silhouette scores with low va
 
 | Metric | Measures | Better |
 |--------|----------|--------|
-| **avg_width** | Silhouette score — cluster separation (recommended) | Higher |
+| **avg_width** | Silhouette score: cluster separation (recommended) | Higher |
 | **KLdivergence** | KL divergence of cluster proportions (experimental) | Lower |
 | **Hellinger** | Hellinger distance of cluster proportions (experimental) | Lower |
 | **modularity** | Graph modularity of cluster assignments (experimental) | Higher |

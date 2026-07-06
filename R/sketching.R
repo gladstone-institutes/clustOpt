@@ -199,10 +199,9 @@ convert_seurat_to_bpcells <- function(seurat_obj, output_dir = NULL,
   # Iterate over each specified assay in the Seurat object
   for (assay_name in assays) {
     if (!assay_name %in% names(seurat_obj@assays)) {
-      warning(paste(
-        "Assay", assay_name,
-        "not found in the Seurat object. Skipping."
-      ))
+      cli::cli_warn(
+        "Assay {.field {assay_name}} not found in the Seurat object. Skipping."
+      )
       next
     }
 
