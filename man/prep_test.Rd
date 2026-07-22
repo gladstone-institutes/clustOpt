@@ -24,7 +24,8 @@ is "scRNA". CyTOF data is expected to be arcsinh normalized.}
 \item{test_id}{subject_id for the test sample}
 
 \item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
-2 = detailed, 3 = includes Seurat output)}
+2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+packages such as ranger)}
 
 \item{residual_features}{Character vector of features to restrict the SCT
 residual computation to (passed to \code{SCTransform(residual.features=)}).

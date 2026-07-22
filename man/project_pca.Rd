@@ -27,7 +27,8 @@ project_pca(
 \item{dtype}{Type of data in the Seurat object "scRNA" or "CyTOF"}
 
 \item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
-2 = detailed, 3 = includes Seurat output)}
+2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+packages such as ranger)}
 
 \item{compute_train_eval}{Logical; if \code{TRUE}, also compute the
 training data projected onto clustering PCs (\code{train_proj_clust_pcs}).

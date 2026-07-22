@@ -45,7 +45,8 @@ NULL
 #' @param subject_ids Metadata field that identifies unique subjects.
 #' @param res_range Range of resolutions to test.
 #' @param verbose Integer verbosity level: 0 = silent, 1 = key milestones,
-#' 2 = detailed progress, 3 = includes Seurat function output.
+#' 2 = detailed progress, 3 = includes Seurat function output, 4 = includes
+#' output from other packages such as ranger.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
 #' @param num_trees Number of trees to use in the random forest.

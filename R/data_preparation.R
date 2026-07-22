@@ -13,7 +13,8 @@ NULL
 #'
 #' @param input Seurat object
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
-#' 2 = detailed, 3 = includes Seurat output)
+#' 2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+#' packages such as ranger)
 #'
 #' @return Seurat object with new PCA reductions
 #' @keywords internal
@@ -72,7 +73,8 @@ split_pca_dimensions <- function(input,
 #' same value for the batch variable will be used for training.
 #' @param test_id subject_id for the test sample
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
-#' 2 = detailed, 3 = includes Seurat output)
+#' 2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+#' packages such as ranger)
 #' @return Training data formatted for sil_score, format depends on dtype
 #'
 #' @export
@@ -185,7 +187,8 @@ prep_train <- function(input,
 #' is "scRNA". CyTOF data is expected to be arcsinh normalized.
 #' @param test_id subject_id for the test sample
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
-#' 2 = detailed, 3 = includes Seurat output)
+#' 2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+#' packages such as ranger)
 #' @param residual_features Character vector of features to restrict the SCT
 #' residual computation to (passed to \code{SCTransform(residual.features=)}).
 #' Only used for scRNA data. Default \code{NULL} preserves prior behavior
@@ -258,7 +261,8 @@ prep_test <- function(input,
 #' @param clust_pcs Which reduction was used for clustering
 #' @param dtype Type of data in the Seurat object "scRNA" or "CyTOF"
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
-#' 2 = detailed, 3 = includes Seurat output)
+#' 2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+#' packages such as ranger)
 #' @param compute_train_eval Logical; if \code{TRUE}, also compute the
 #'   training data projected onto clustering PCs (\code{train_proj_clust_pcs}).
 #'   Default is \code{FALSE} because this projection is not used in the
@@ -378,7 +382,8 @@ project_pca <- function(train_seurat,
 #' @param sam Test sample
 #' @param num_trees Number of trees for the random forest
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
-#' 2 = detailed, 3 = includes Seurat output)
+#' 2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+#' packages such as ranger)
 #' @param snn_graph Precomputed SNN graph (sparse matrix). Required.
 #' @param precomputed_dist Optional precomputed distance matrix (output of
 #'   \code{\link[stats]{dist}}). Passed through to
@@ -408,11 +413,13 @@ train_random_forest <- function(res, df_list, cluster_by_res,
     y = train_clusters,
     num.trees = num_trees,
     write.forest = TRUE,
-    num.threads = rf_num_threads
+    num.threads = rf_num_threads,
+    verbose = (verbose >= 4)
   )
 
   # Predict on the hold out sample
-  predicted <- stats::predict(rf, df_list[["test_proj_train_with_pcs"]])
+  predicted <- stats::predict(rf, df_list[["test_proj_train_with_pcs"]],
+                              verbose = (verbose >= 4))
   predicted <- ranger::predictions(predicted)
   predicted_char <- as.character(predicted)
   predicted_clusters_table <- base::table(predicted)

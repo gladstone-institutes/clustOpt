@@ -42,7 +42,8 @@ slot). Sketching is supported for both data types.}
 same value for the batch variable will be used for training.}
 
 \item{verbose}{Integer verbosity level: 0 = silent, 1 = key milestones,
-2 = detailed progress, 3 = includes Seurat function output.}
+2 = detailed progress, 3 = includes Seurat function output, 4 = includes
+output from other packages such as ranger.}
 
 \item{num_trees}{Number of trees to use in the random forest.}
 

@@ -1,3 +1,12 @@
+# clustOpt 1.2.4
+
+## Bug fixes
+
+- `ranger`'s "Growing trees.." and "Predicting.." progress lines are no longer
+  printed regardless of `verbose`. They are now gated behind a new verbosity
+  level 4, which covers output from packages other than Seurat (level 3 remains
+  Seurat-only). Long runs at the default `verbose = 0` are now silent.
+
 # clustOpt 1.2.3
 
 ## Internal

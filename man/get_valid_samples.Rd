@@ -14,7 +14,8 @@ get_valid_samples(input, subject_ids, min_cells, verbose = 0)
 \item{min_cells}{Minimum cells per subject}
 
 \item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
-2 = detailed, 3 = includes Seurat output)}
+2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+packages such as ranger)}
 }
 \value{
 A vector of sample names meeting the criteria, or NULL if the

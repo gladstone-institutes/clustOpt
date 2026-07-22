@@ -54,7 +54,8 @@ check_size <- function(input) {
 #' @param subject_ids The name of the metadata column containing subject IDs
 #' @param min_cells Minimum cells per subject
 #' @param verbose Integer verbosity level (0 = silent, 1 = milestones,
-#' 2 = detailed, 3 = includes Seurat output)
+#' 2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+#' packages such as ranger)
 #' @return A vector of sample names meeting the criteria, or NULL if the
 #' requirement is not met
 #' @details

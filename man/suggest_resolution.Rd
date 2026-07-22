@@ -61,8 +61,8 @@ spacing, then ranked on only the filtered subset. Both rank aggregation
 (\code{mean_rank}) and curvature (\code{curvature_mean_rank}) columns are
 included in the output for comparison.
 
-The default thresholds (0.1 / 0.2) have straightforward interpretation
-given that the Hellinger distance is bounded between 0 and 1.
+The default thresholds (0.1 / 0.2) have straightforward interpretation given
+that the Hellinger distance is bounded between 0 and 1.
 
 For \code{method = "rank"}, all resolutions are ranked directly by their
 median metric values with no filtering applied.
