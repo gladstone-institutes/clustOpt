@@ -1,3 +1,19 @@
+# clustOpt 1.3.0
+
+## New features
+
+- `clust_opt()` gains a `checkpoint_dir` argument for checkpoint/resume of long
+  runs. When set, each holdout subject's result is written to disk as it
+  completes and reloaded on a rerun pointed at the same directory, so a run
+  killed by an HPC wall-clock timeout resumes instead of restarting from zero.
+  The sketched input and run seed are persisted too, so a resumed run is
+  bit-identical to an uninterrupted one. All checkpoint I/O happens in the main
+  process, never in `future` workers, so there is no parallel file-connection
+  contention. Reusing a directory with a different configuration or input is an
+  error. Enabling checkpointing switches to deterministic per-subject seeding, so
+  results differ from a non-checkpointed run but are stable across resumes.
+  Default `checkpoint_dir = NULL` leaves existing behavior unchanged.
+
 # clustOpt 1.2.4
 
 ## Bug fixes

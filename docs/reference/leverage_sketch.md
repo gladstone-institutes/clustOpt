@@ -55,7 +55,8 @@ leverage_sketch(
 - verbose:
 
   Integer verbosity level: 0 = silent, 1 = milestones, 2 = detailed
-  progress, 3 = includes Seurat function output (default 1)
+  progress, 3 = includes Seurat function output, 4 = includes output
+  from other packages such as ranger (default 1)
 
 ## Value
 

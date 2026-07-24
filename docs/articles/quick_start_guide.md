@@ -124,7 +124,7 @@ Subject-wise cross validation is parallelized with `future` and
 `future.batchtools` can be used for HPC job schedulers. For details on
 which plan to use for your setup, see the future package documentation.
 The code below requires a large amount of RAM (32 GB recommended) and 10
-cores to run in about 15 minutes.
+cores to run in about 10 minutes.
 
 ``` r
 
@@ -523,4 +523,21 @@ input
 #> 13855 features across 100 samples within 1 assay 
 #> Active assay: RNA (13855 features, 2000 variable features)
 #>  3 layers present: counts, data, scale.data
+```
+
+For long runs on an HPC cluster, pass a `checkpoint_dir` to guard
+against job timeouts. Each holdout subject’s result is written there as
+it completes, so rerunning with the same directory resumes from where
+the job stopped instead of starting over. The sketched input and run
+seed are saved too, making a resumed run reproducible. Use a fresh
+directory per analysis: reusing one with a different configuration or
+input is rejected.
+
+``` r
+
+clust_opt(input,
+  ndim = 10,
+  subject_ids = "donor_id",
+  checkpoint_dir = "clustopt_checkpoints"
+)
 ```

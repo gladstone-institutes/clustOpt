@@ -42,7 +42,7 @@ Functions for preparing and analyzing data
   : calculate_mse_score
 - [`calculate_modularity()`](https://gladstone-institutes.github.io/clustOpt/reference/calculate_modularity.md)
   : calculate_modularity
-- [`project_pca()`](https://gladstone-institutes.github.io/clustOpt/reference/project_PCA.md)
+- [`project_pca()`](https://gladstone-institutes.github.io/clustOpt/reference/project_pca.md)
   : project_pca
 
 ## Visualization

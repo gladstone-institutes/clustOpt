@@ -21,6 +21,11 @@
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/compute_knn_graph.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/convert_seurat_to_bpcells.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/create_sil_plots.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/dot-checkpoint_config.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/dot-checkpoint_init_manifest.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/dot-save_rds_atomic.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/dot-subject_checkpoint_path.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/dot-subject_seed.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/get_valid_samples.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/index.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/leverage_sketch.html</loc></url>
@@ -29,7 +34,7 @@
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/plot_rank_metrics.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/prep_test.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/prep_train.html</loc></url>
-<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/project_PCA.html</loc></url>
+<url><loc>https://gladstone-institutes.github.io/clustOpt/reference/project_pca.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/second_order_diff.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/sil_summary.html</loc></url>
 <url><loc>https://gladstone-institutes.github.io/clustOpt/reference/split_pca_dimensions.html</loc></url>

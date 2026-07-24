@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">clustOpt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,8 @@
 <span>  num_trees <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  train_with <span class="op">=</span> <span class="st">"even"</span>,</span>
 <span>  min_cells <span class="op">=</span> <span class="fl">50</span>,</span>
-<span>  rf_num_threads <span class="op">=</span> <span class="fl">1</span></span>
+<span>  rf_num_threads <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  checkpoint_dir <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,7 +104,8 @@ same value for the batch variable will be used for training.</p></dd>
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Integer verbosity level: 0 = silent, 1 = key milestones,
-2 = detailed progress, 3 = includes Seurat function output.</p></dd>
+2 = detailed progress, 3 = includes Seurat function output, 4 = includes
+output from other packages such as ranger.</p></dd>
 
 
 <dt id="arg-num-trees">num_trees<a class="anchor" aria-label="anchor" href="#arg-num-trees"></a></dt>
@@ -125,6 +127,14 @@ that the 1st PC is in the set used to calculate silhouette scores.</p></dd>
 1 to avoid contention with <code><a href="https://future.apply.futureverse.org/reference/future_lapply.html" class="external-link">future_lapply</a></code> workers.
 When using <code>future::plan(sequential)</code> (the default), increase to utilize
 available cores.</p></dd>
+
+
+<dt id="arg-checkpoint-dir">checkpoint_dir<a class="anchor" aria-label="anchor" href="#arg-checkpoint-dir"></a></dt>
+<dd><p>Optional directory enabling checkpoint/resume (default
+<code>NULL</code>, off). Each holdout subject's result is saved as it completes;
+rerunning with the same directory skips finished subjects, so a timed-out HPC
+job resumes instead of restarting. Reusing a directory with a different
+configuration or input throws an error.</p></dd>
 
 </dl></div>
     <div class="section level2">

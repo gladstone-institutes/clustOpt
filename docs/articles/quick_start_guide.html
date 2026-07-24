@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">clustOpt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
 
       <h1>clustOpt: Quickstart Guide</h1>
             
-            <h4 data-toc-skip class="date">Compiled: 2026-07-02</h4>
+            <h4 data-toc-skip class="date">Compiled: 2026-07-24</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/gladstone-institutes/clustOpt/blob/HEAD/vignettes/quick_start_guide.Rmd" class="external-link"><code>vignettes/quick_start_guide.Rmd</code></a></small>
       <div class="d-none name"><code>quick_start_guide.Rmd</code></div>
@@ -167,7 +167,7 @@ providing a more honest assessment of clustering reproducibility.</p>
 <code>future</code> and <code>future.batchtools</code> can be used for
 HPC job schedulers. For details on which plan to use for your setup, see
 the future package documentation. The code below requires a large amount
-of RAM (32 GB recommended) and 10 cores to run in about 15 minutes.</p>
+of RAM (32 GB recommended) and 10 cores to run in about 10 minutes.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"multisession"</span>, workers <span class="op">=</span> <span class="fl">11</span><span class="op">)</span></span>
 <span></span>
@@ -554,6 +554,19 @@ input data to clustOpt.</p>
 <span><span class="co">#&gt; 13855 features across 100 samples within 1 assay </span></span>
 <span><span class="co">#&gt; Active assay: RNA (13855 features, 2000 variable features)</span></span>
 <span><span class="co">#&gt;  3 layers present: counts, data, scale.data</span></span></code></pre></div>
+<p>For long runs on an HPC cluster, pass a <code>checkpoint_dir</code>
+to guard against job timeouts. Each holdout subject’s result is written
+there as it completes, so rerunning with the same directory resumes from
+where the job stopped instead of starting over. The sketched input and
+run seed are saved too, making a resumed run reproducible. Use a fresh
+directory per analysis: reusing one with a different configuration or
+input is rejected.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/clust_opt.html">clust_opt</a></span><span class="op">(</span><span class="va">input</span>,</span>
+<span>  ndim <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  subject_ids <span class="op">=</span> <span class="st">"donor_id"</span>,</span>
+<span>  checkpoint_dir <span class="op">=</span> <span class="st">"clustopt_checkpoints"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
