@@ -56,22 +56,43 @@ NULL
   )
 }
 
+#' Installed clustOpt version as a string
+#'
+#' Wrapped in a helper so it can be stubbed in tests.
+#'
+#' @keywords internal
+.clustopt_version <- function() {
+  as.character(utils::packageVersion("clustOpt"))
+}
+
 #' Initialize or validate the checkpoint manifest
 #'
-#' On first run, writes a manifest holding the config fingerprint and the
-#' resolved seed. On resume, validates that the config matches (erroring on
-#' drift) and returns the persisted seed so the sketch and per-subject seeding
-#' are identical to the original run.
+#' On first run, writes a manifest holding the clustOpt version, the config
+#' fingerprint, and the resolved seed. On resume, validates that the version and
+#' config both match (erroring on drift, version first for a clear diagnostic)
+#' and returns the persisted seed so the sketch and per-subject seeding are
+#' identical to the original run.
 #'
 #' @param dir Checkpoint directory.
 #' @param config Config list from \code{.checkpoint_config()}.
 #' @param seed Resolved integer seed for this run.
+#' @param version Installed clustOpt version string.
 #' @return The seed to actually use (persisted seed on resume, else \code{seed}).
 #' @keywords internal
-.checkpoint_init_manifest <- function(dir, config, seed) {
+.checkpoint_init_manifest <- function(dir, config, seed, version) {
   path <- file.path(dir, "manifest.rds")
   if (file.exists(path)) {
     prev <- readRDS(path)
+    if (!identical(prev$version, version)) {
+      stop(
+        "checkpoint_dir '", dir, "' was created with clustOpt ", prev$version,
+        " but this session is running clustOpt ", version, ". Resuming across ",
+        "versions could mix results from different algorithm versions. Use a ",
+        "fresh checkpoint_dir, or reinstall clustOpt ", prev$version,
+        " to resume this run.",
+        call. = FALSE
+      )
+    }
     if (!identical(prev$config, config)) {
       stop(
         "checkpoint_dir '", dir, "' was created with a different clust_opt() ",
@@ -83,7 +104,7 @@ NULL
     }
     return(prev$seed)
   }
-  .save_rds_atomic(list(config = config, seed = seed), path)
+  .save_rds_atomic(list(version = version, config = config, seed = seed), path)
   seed
 }
 

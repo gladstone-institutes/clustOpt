@@ -1,14 +1,15 @@
 # Initialize or validate the checkpoint manifest
 
-On first run, writes a manifest holding the config fingerprint and the
-resolved seed. On resume, validates that the config matches (erroring on
-drift) and returns the persisted seed so the sketch and per-subject
-seeding are identical to the original run.
+On first run, writes a manifest holding the clustOpt version, the config
+fingerprint, and the resolved seed. On resume, validates that the
+version and config both match (erroring on drift, version first for a
+clear diagnostic) and returns the persisted seed so the sketch and
+per-subject seeding are identical to the original run.
 
 ## Usage
 
 ``` r
-.checkpoint_init_manifest(dir, config, seed)
+.checkpoint_init_manifest(dir, config, seed, version)
 ```
 
 ## Arguments
@@ -25,6 +26,10 @@ seeding are identical to the original run.
 - seed:
 
   Resolved integer seed for this run.
+
+- version:
+
+  Installed clustOpt version string.
 
 ## Value
 

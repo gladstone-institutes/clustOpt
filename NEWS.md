@@ -9,8 +9,9 @@
   The sketched input and run seed are persisted too, so a resumed run is
   bit-identical to an uninterrupted one. All checkpoint I/O happens in the main
   process, never in `future` workers, so there is no parallel file-connection
-  contention. Reusing a directory with a different configuration or input is an
-  error. Enabling checkpointing switches to deterministic per-subject seeding, so
+  contention. Reusing a directory with a different configuration, input, or
+  clustOpt version is an error, so checkpoints are never mixed across algorithm
+  versions. Enabling checkpointing switches to deterministic per-subject seeding, so
   results differ from a non-checkpointed run but are stable across resumes.
   Default `checkpoint_dir = NULL` leaves existing behavior unchanged.
 

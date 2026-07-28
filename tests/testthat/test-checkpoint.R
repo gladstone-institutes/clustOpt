@@ -65,6 +65,20 @@ test_that("reusing a checkpoint_dir with a different config errors", {
   )
 })
 
+test_that("resuming a checkpoint_dir from a different clustOpt version errors", {
+  dir <- tempfile("ckpt")
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+
+  # First run writes the manifest under a stubbed old version.
+  local_mocked_bindings(.clustopt_version = function() "0.0.1")
+  set.seed(1)
+  run_co(dir)
+
+  # Resuming while the installed version reports something else must be rejected.
+  local_mocked_bindings(.clustopt_version = function() "9.9.9")
+  expect_error(run_co(dir), "created with clustOpt 0.0.1")
+})
+
 test_that("the sketched input is persisted and reused on resume", {
   dir <- tempfile("ckpt")
   on.exit(unlink(dir, recursive = TRUE), add = TRUE)

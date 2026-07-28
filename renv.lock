@@ -187,7 +187,7 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.1.1-1.1",
+      "Version": "1.1.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -195,7 +195,7 @@
         "methods",
         "utils"
       ],
-      "Hash": "8842cfd023a523ec9e011b9e4aab50ef"
+      "Hash": "f481f89daa906a34eab8ef8658c8a89c"
     },
     "RcppAnnoy": {
       "Package": "RcppAnnoy",
@@ -211,7 +211,7 @@
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
-      "Version": "15.4.0-1",
+      "Version": "15.4.2-1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -221,7 +221,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "43d8eef474955c50ce48955557a44686"
+      "Hash": "f7694f9bd161314b273073279998a69b"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -477,14 +477,14 @@
     },
     "caTools": {
       "Package": "caTools",
-      "Version": "1.18.3",
+      "Version": "1.18.4",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "bitops"
       ],
-      "Hash": "ab79c733080d83b4ad8a2cc33c1ef393"
+      "Hash": "0e885f8ee5d5af8c308c4c3c451b8e81"
     },
     "cachem": {
       "Package": "cachem",
@@ -842,7 +842,7 @@
     },
     "future": {
       "Package": "future",
-      "Version": "1.70.0",
+      "Version": "1.75.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -855,7 +855,7 @@
         "tools",
         "utils"
       ],
-      "Hash": "b6e82bb76281ac612788232b3cdfa3d9"
+      "Hash": "4de585b60e8ae1881bd1e541363214c4"
     },
     "future.apply": {
       "Package": "future.apply",
@@ -1560,7 +1560,7 @@
     },
     "plotly": {
       "Package": "plotly",
-      "Version": "4.12.0",
+      "Version": "4.12.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1576,7 +1576,6 @@
         "htmlwidgets",
         "httr",
         "jsonlite",
-        "lazyeval",
         "magrittr",
         "promises",
         "purrr",
@@ -1588,7 +1587,7 @@
         "vctrs",
         "viridisLite"
       ],
-      "Hash": "282f8b208bc767c67a370b47bff6ada7"
+      "Hash": "3609e47f0d9713dfd7f68bd6e731e27b"
     },
     "plyr": {
       "Package": "plyr",
@@ -1667,7 +1666,7 @@
     },
     "progressr": {
       "Package": "progressr",
-      "Version": "0.19.0",
+      "Version": "1.0.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1675,7 +1674,7 @@
         "digest",
         "utils"
       ],
-      "Hash": "a134996d150fb0e53c652d95233a51c3"
+      "Hash": "7f152f2be3670bc9a70a03f1777374f4"
     },
     "promises": {
       "Package": "promises",
@@ -1824,14 +1823,14 @@
     },
     "rlang": {
       "Package": "rlang",
-      "Version": "1.2.0",
+      "Version": "1.3.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "utils"
       ],
-      "Hash": "f88151fb9ca15e72dc351deb1328716e"
+      "Hash": "8d05afdb0b0dd5ef01b306db289fe21f"
     },
     "rmarkdown": {
       "Package": "rmarkdown",
@@ -1995,7 +1994,7 @@
     },
     "sp": {
       "Package": "sp",
-      "Version": "2.2-1",
+      "Version": "2.2-3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2008,7 +2007,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "850a810e2c595694187a8ee286472fcc"
+      "Hash": "84b76fcd88df205cbbe558ac8b835e60"
     },
     "spam": {
       "Package": "spam",
@@ -2038,7 +2037,7 @@
     },
     "spatstat.explore": {
       "Package": "spatstat.explore",
-      "Version": "3.8-1",
+      "Version": "3.8-2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2059,11 +2058,11 @@
         "stats",
         "utils"
       ],
-      "Hash": "c6dcfb96b0977360eff970dcb67e337a"
+      "Hash": "e735161628de71b27d7f8a34a287ccb8"
     },
     "spatstat.geom": {
       "Package": "spatstat.geom",
-      "Version": "3.8-1",
+      "Version": "3.8-2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2079,11 +2078,11 @@
         "stats",
         "utils"
       ],
-      "Hash": "43b011643ad9b1d8c0f5edc0b7977719"
+      "Hash": "1845cc2baa22ffc7bb17f11719234532"
     },
     "spatstat.random": {
       "Package": "spatstat.random",
-      "Version": "3.5-0",
+      "Version": "3.5-1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2099,7 +2098,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "46ec385936ea36147055b9e955477fcd"
+      "Hash": "6512704e553612633c0b196d9ae708f4"
     },
     "spatstat.sparse": {
       "Package": "spatstat.sparse",
@@ -2133,7 +2132,7 @@
     },
     "spatstat.utils": {
       "Package": "spatstat.utils",
-      "Version": "3.2-3",
+      "Version": "3.2-4",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2144,7 +2143,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "822498b1f25acd76d3f2ade421ae6b09"
+      "Hash": "dd4c04775caa52160354d66ad778ac08"
     },
     "stringi": {
       "Package": "stringi",
@@ -2460,7 +2459,7 @@
     },
     "xfun": {
       "Package": "xfun",
-      "Version": "0.59",
+      "Version": "0.60",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2469,7 +2468,7 @@
         "stats",
         "tools"
       ],
-      "Hash": "d1d49bb7455ec484ba5b17369ee06544"
+      "Hash": "8304c2894061f6ae062996f09dd1528e"
     },
     "xml2": {
       "Package": "xml2",

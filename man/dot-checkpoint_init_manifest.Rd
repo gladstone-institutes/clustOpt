@@ -4,7 +4,7 @@
 \alias{.checkpoint_init_manifest}
 \title{Initialize or validate the checkpoint manifest}
 \usage{
-.checkpoint_init_manifest(dir, config, seed)
+.checkpoint_init_manifest(dir, config, seed, version)
 }
 \arguments{
 \item{dir}{Checkpoint directory.}
@@ -12,14 +12,17 @@
 \item{config}{Config list from \code{.checkpoint_config()}.}
 
 \item{seed}{Resolved integer seed for this run.}
+
+\item{version}{Installed clustOpt version string.}
 }
 \value{
 The seed to actually use (persisted seed on resume, else \code{seed}).
 }
 \description{
-On first run, writes a manifest holding the config fingerprint and the
-resolved seed. On resume, validates that the config matches (erroring on
-drift) and returns the persisted seed so the sketch and per-subject seeding
-are identical to the original run.
+On first run, writes a manifest holding the clustOpt version, the config
+fingerprint, and the resolved seed. On resume, validates that the version and
+config both match (erroring on drift, version first for a clear diagnostic)
+and returns the persisted seed so the sketch and per-subject seeding are
+identical to the original run.
 }
 \keyword{internal}

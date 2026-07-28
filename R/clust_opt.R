@@ -62,7 +62,7 @@ NULL
 #' \code{NULL}, off). Each holdout subject's result is saved as it completes;
 #' rerunning with the same directory skips finished subjects, so a timed-out HPC
 #' job resumes instead of restarting. Reusing a directory with a different
-#' configuration or input throws an error.
+#' configuration, input, or clustOpt version throws an error.
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
 #'
@@ -153,7 +153,9 @@ clust_opt <- function(input,
       input, ndim, dtype, sketch_size, skip_sketch, subject_ids, res_range,
       within_batch, num_trees, train_with, min_cells
     )
-    run_seed <- .checkpoint_init_manifest(checkpoint_dir, config, run_seed)
+    run_seed <- .checkpoint_init_manifest(
+      checkpoint_dir, config, run_seed, .clustopt_version()
+    )
     set.seed(run_seed)
     sketch_path <- file.path(checkpoint_dir, "sketch.rds")
   }
