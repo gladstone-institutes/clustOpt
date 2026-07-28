@@ -45,7 +45,8 @@ train_random_forest(
 - verbose:
 
   Integer verbosity level (0 = silent, 1 = milestones, 2 = detailed, 3 =
-  includes Seurat output)
+  includes Seurat output, 4 = includes output from other packages such
+  as ranger)
 
 - snn_graph:
 

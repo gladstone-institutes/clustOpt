@@ -27,7 +27,8 @@ same value for the batch variable will be used for training.}
 \item{test_id}{subject_id for the test sample}
 
 \item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
-2 = detailed, 3 = includes Seurat output)}
+2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+packages such as ranger)}
 }
 \value{
 Training data formatted for sil_score, format depends on dtype

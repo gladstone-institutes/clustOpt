@@ -1,4 +1,4 @@
-#' @include validation.R sketching.R data_preparation.R
+#' @include validation.R sketching.R data_preparation.R checkpoint.R
 #' @importFrom rlang .data
 NULL
 
@@ -45,7 +45,8 @@ NULL
 #' @param subject_ids Metadata field that identifies unique subjects.
 #' @param res_range Range of resolutions to test.
 #' @param verbose Integer verbosity level: 0 = silent, 1 = key milestones,
-#' 2 = detailed progress, 3 = includes Seurat function output.
+#' 2 = detailed progress, 3 = includes Seurat function output, 4 = includes
+#' output from other packages such as ranger.
 #' @param within_batch Batch variable, for a given sample only those with the
 #' same value for the batch variable will be used for training.
 #' @param num_trees Number of trees to use in the random forest.
@@ -57,6 +58,11 @@ NULL
 #' 1 to avoid contention with \code{\link[future.apply]{future_lapply}} workers.
 #' When using \code{future::plan(sequential)} (the default), increase to utilize
 #' available cores.
+#' @param checkpoint_dir Optional directory enabling checkpoint/resume (default
+#' \code{NULL}, off). Each holdout subject's result is saved as it completes;
+#' rerunning with the same directory skips finished subjects, so a timed-out HPC
+#' job resumes instead of restarting. Reusing a directory with a different
+#' configuration, input, or clustOpt version throws an error.
 #' @return A data.frame containing a distribution of silhouette scores for each
 #' resolution.
 #'
@@ -113,7 +119,8 @@ clust_opt <- function(input,
                       num_trees = 1000,
                       train_with = "even",
                       min_cells = 50,
-                      rf_num_threads = 1) {
+                      rf_num_threads = 1,
+                      checkpoint_dir = NULL) {
   verbose <- normalize_verbose(verbose)
   t0_total <- Sys.time()
   if (verbose >= 1) cli::cli_rule(left = "{.pkg clustOpt}")
@@ -132,13 +139,40 @@ clust_opt <- function(input,
     stop("dtype is not one of 'CyTOF' or 'scRNA'")
   }
 
+  # Checkpoint setup. Resolve a concrete integer run seed (deterministic from the
+  # caller's RNG state, so an upstream set.seed() still controls it) and persist
+  # it plus a config fingerprint. On resume the manifest supplies the original
+  # seed and rejects a mismatched config.
+  checkpointing <- !is.null(checkpoint_dir)
+  run_seed <- NULL
+  sketch_path <- NULL
+  if (checkpointing) {
+    if (!dir.exists(checkpoint_dir)) dir.create(checkpoint_dir, recursive = TRUE)
+    run_seed <- sample.int(.Machine$integer.max, 1L)
+    config <- .checkpoint_config(
+      input, ndim, dtype, sketch_size, skip_sketch, subject_ids, res_range,
+      within_batch, num_trees, train_with, min_cells
+    )
+    run_seed <- .checkpoint_init_manifest(
+      checkpoint_dir, config, run_seed, .clustopt_version()
+    )
+    set.seed(run_seed)
+    sketch_path <- file.path(checkpoint_dir, "sketch.rds")
+  }
 
-  if (!skip_sketch) {
+  if (checkpointing && file.exists(sketch_path)) {
+    if (verbose >= 1) {
+      cli::cli_alert_info("Resuming: loading sketched input from checkpoint")
+    }
+    input <- readRDS(sketch_path)
+  } else if (!skip_sketch) {
     if (check_size(input) || !is.null(sketch_size)) {
       if (verbose >= 1) cli::cli_alert_info("Sketching input data")
       t0_sketch <- Sys.time()
       input <- leverage_sketch(input, sketch_size, dtype, verbose = verbose)
       if (verbose >= 1) cli::cli_alert_success("[sketch] {(.elapsed(t0_sketch))}")
+      # Persist the sketched object so a timeout does not force a re-sketch
+      if (checkpointing) .save_rds_atomic(input, sketch_path)
     } else {
       if (verbose >= 1) cli::cli_alert_info("Input is small enough to run with all cells")
     }
@@ -171,6 +205,27 @@ clust_opt <- function(input,
   for (sam_idx in seq_along(unique_samples)) {
     sam <- unique_samples[sam_idx]
     t0_sam <- Sys.time()
+
+    # Resume: reload a completed subject and skip its work entirely. Otherwise
+    # seed this subject deterministically from its name so its computation (PCA,
+    # clustering, and the future.seed RF fan-out) reproduces regardless of which
+    # subjects ran before it in this process.
+    ckpt_path <- NULL
+    if (checkpointing) {
+      ckpt_path <- .subject_checkpoint_path(
+        checkpoint_dir, sam_idx, sam, length(unique_samples)
+      )
+      if (file.exists(ckpt_path)) {
+        if (verbose >= 1) {
+          cli::cli_alert_info("Resuming: loaded subject {sam} from checkpoint")
+        }
+        res[[sam_idx]] <- readRDS(ckpt_path)
+        p()
+        next
+      }
+      set.seed(.subject_seed(run_seed, sam))
+    }
+
     if (verbose >= 1) cli::cli_h2("Holdout subject: {sam}")
     if (verbose >= 2) {
       cli::cli_alert_info("Preparing training data...")
@@ -383,6 +438,8 @@ clust_opt <- function(input,
       cli::cli_alert_success("[future_lapply RF] {(.elapsed(t0_rf))} ({n_res} resolutions)")
     }
     res[[sam_idx]] <- this_result
+    # Checkpoint this subject atomically (temp file + rename) in the main process
+    if (checkpointing) .save_rds_atomic(this_result, ckpt_path)
     p()
     if (verbose >= 1) cli::cli_rule(right = "{sam} {(.elapsed(t0_sam))}")
   }

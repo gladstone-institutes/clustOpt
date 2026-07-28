@@ -17,7 +17,8 @@ clust_opt(
   num_trees = 1000,
   train_with = "even",
   min_cells = 50,
-  rf_num_threads = 1
+  rf_num_threads = 1,
+  checkpoint_dir = NULL
 )
 }
 \arguments{
@@ -42,7 +43,8 @@ slot). Sketching is supported for both data types.}
 same value for the batch variable will be used for training.}
 
 \item{verbose}{Integer verbosity level: 0 = silent, 1 = key milestones,
-2 = detailed progress, 3 = includes Seurat function output.}
+2 = detailed progress, 3 = includes Seurat function output, 4 = includes
+output from other packages such as ranger.}
 
 \item{num_trees}{Number of trees to use in the random forest.}
 
@@ -56,6 +58,12 @@ that the 1st PC is in the set used to calculate silhouette scores.}
 1 to avoid contention with \code{\link[future.apply]{future_lapply}} workers.
 When using \code{future::plan(sequential)} (the default), increase to utilize
 available cores.}
+
+\item{checkpoint_dir}{Optional directory enabling checkpoint/resume (default
+\code{NULL}, off). Each holdout subject's result is saved as it completes;
+rerunning with the same directory skips finished subjects, so a timed-out HPC
+job resumes instead of restarting. Reusing a directory with a different
+configuration, input, or clustOpt version throws an error.}
 }
 \value{
 A data.frame containing a distribution of silhouette scores for each

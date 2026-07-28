@@ -18,7 +18,8 @@ clust_opt(
   num_trees = 1000,
   train_with = "even",
   min_cells = 50,
-  rf_num_threads = 1
+  rf_num_threads = 1,
+  checkpoint_dir = NULL
 )
 ```
 
@@ -63,7 +64,8 @@ clust_opt(
 - verbose:
 
   Integer verbosity level: 0 = silent, 1 = key milestones, 2 = detailed
-  progress, 3 = includes Seurat function output.
+  progress, 3 = includes Seurat function output, 4 = includes output
+  from other packages such as ranger.
 
 - num_trees:
 
@@ -86,6 +88,14 @@ clust_opt(
   [`future_lapply`](https://future.apply.futureverse.org/reference/future_lapply.html)
   workers. When using `future::plan(sequential)` (the default), increase
   to utilize available cores.
+
+- checkpoint_dir:
+
+  Optional directory enabling checkpoint/resume (default `NULL`, off).
+  Each holdout subject's result is saved as it completes; rerunning with
+  the same directory skips finished subjects, so a timed-out HPC job
+  resumes instead of restarting. Reusing a directory with a different
+  configuration, input, or clustOpt version throws an error.
 
 ## Value
 

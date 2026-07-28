@@ -25,7 +25,8 @@ NULL
 #' @param output_dir Character. Directory path for storing on-disk count
 #'   matrices when `on_disk = TRUE`. If NULL, uses temporary directory
 #' @param verbose Integer verbosity level: 0 = silent, 1 = milestones,
-#'   2 = detailed progress, 3 = includes Seurat function output (default 1)
+#'   2 = detailed progress, 3 = includes Seurat function output, 4 = includes
+#'   output from other packages such as ranger (default 1)
 #'
 #' @return A Seurat object containing only the sketch assay, renamed to "RNA"
 #'   for compatibility with downstream functions

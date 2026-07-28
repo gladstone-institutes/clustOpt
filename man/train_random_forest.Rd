@@ -30,7 +30,8 @@ exact column names.}
 \item{num_trees}{Number of trees for the random forest}
 
 \item{verbose}{Integer verbosity level (0 = silent, 1 = milestones,
-2 = detailed, 3 = includes Seurat output)}
+2 = detailed, 3 = includes Seurat output, 4 = includes output from other
+packages such as ranger)}
 
 \item{snn_graph}{Precomputed SNN graph (sparse matrix). Required.}
 
